@@ -1,0 +1,15 @@
+.container {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    width: 40vw;
+    max-width: 400px; /* Prevents excessive stretching */
+    min-width: 280px;
+    transition: transform 0.3s ease-in-out;
+    margin-top: 10px;
+}
+
+.container:hover {
+    transform: translateY(-5px);
+}

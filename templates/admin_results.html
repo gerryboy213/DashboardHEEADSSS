@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='framework.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_dashboard.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&amp;display=swap" rel="stylesheet">
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 215px; /* Adjusted width to be a bit smaller */
+            overflow: hidden;
+            background-color: #fff; /* Ensure background color is set */
+        }
+        .content {
+            margin-left: 214px; /* Adjust this value based on the new width of your sidebar */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page d-flex">
+        <div class="sidebar bg-white p-20 p-relative" >
+            <h3 class="p-relative text-center mt-0">HEADSSS</h3>
+            <ul>
+                <li>
+                    <a href="{{ url_for('admin_dashboard') }}" class=" d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-tachometer-alt fa-fw"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ url_for('admin_messages') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span>Messages</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ url_for('admin_list') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-people-group"></i>
+                        <span>List of Client</span>
+                    </a>
+                </li>
+                
+                
+                <li>
+                    <a href="{{ url_for('admin_results')}}" class="active d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-square-poll-horizontal"></i>
+                        <span>Results</span>
+                    </a>
+                </li>
+               
+               <!-- <li>
+                    <a href="{{ url_for('admin_files')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-file fa-fw"></i>
+                        <span>Files</span>
+                    </a>
+                </li>  -->
+               
+                <li>
+                    <a href="{{ url_for('admin_settings') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-cog fa-fw"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+
+               
+                
+            </ul>
+        </div>
+
+        <div class="content w-full">
+             <!-- Start Header -->
+             <div class="header bg-white p-15 between-flex">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input id="searchInput" class="search-box" type="search" placeholder="Search Control Number">
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+                <div class="user d-flex align-items-center">
+
+                    <!-- Notification Bell -->
+                    <span class="notification p-relative" onclick="toggleNotifications()">
+                        <i class="fa-regular fa-bell fa-lg p-relative"></i>
+                        <span id="unread-count" class="unread-count" style="display: none;"></span>
+                    </span>
+                    
+                    <!-- Notification Dropdown -->
+                    <div id="notification-dropdown" class="dropdown-menu">
+                        <strong>Notifications</strong>
+                        <div id="notification-list" style=" overflow: hidden; margin-left:-200px; margin-top: 20px;"></div>
+                        <div class="footer">
+                            <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a>
+                        </div>
+                    </div>
+            
+                    <!-- User Info -->
+                    <div class="user-info d-flex align-items-center">
+                        <div class="user-img" id="userDropdownToggle">
+                            <img src="/static/images/user.png" alt="User">
+                        </div>
+                    </div>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="userDropdown" class="dropdown-menu">
+                        <ul>
+                            <li>
+                                <a href="{{ url_for('admin_profile') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                                    <i class="fas fa-user fa-fw"></i>
+                                    <span>Profile</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('admin_logout') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                                    <i class="fas fa-sign-out-alt fa-fw"></i>
+                                    <span>Logout</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                </div>
+            </div>
+            <!-- End Header -->
+
+            <h1 class="p-relative">Results</h1>
+            
+
+            <!-- Flex container for side-by-side charts -->
+            <div style="
+                display: flex; 
+                justify-content: center; 
+                align-items: flex-start;
+                gap: 20px; 
+                max-width: 1200px; 
+                margin: auto;
+                padding: 0 30px;
+            ">
+            
+                <!-- Age Group Chart -->
+                <div class="overview bg-white p-20 rad-10" style="
+                display: flex; 
+                flex-direction: column; 
+                align-items: center; 
+                gap: 15px; 
+                padding: 20px; 
+                border-radius: 10px; 
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
+                background: #fff;
+                width: 50%;
+                min-width: 500px;
+                
+            ">
+                <h2 style="font-size: 22px; color: #333; font-weight: bold; margin-bottom: 10px;">
+                   Age Group Distribution by Gender
+                </h2>
+                <div style="width: 100%; height: 400px; padding: 15px;">
+                    <canvas id="agegroupchart"></canvas>
+                </div>
+            </div>
+        
+            
+                <!-- Yes and No Chart -->
+                <div class="overview bg-white p-20 rad-10" style="
+                    display: flex; 
+                    flex-direction: column; 
+                    align-items: center; 
+                    gap: 15px; 
+                    padding: 20px; 
+                    border-radius: 10px; 
+                    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
+                    background: #fff;
+                    width: 50%;
+                    min-width: 500px;
+                    
+                ">
+                    <h2 style="font-size: 22px; color: #333; font-weight: bold; margin-bottom: 10px;">
+                        Rapid HEADSSS Results
+                    </h2>
+                    
+                    <div style="width: 100%; height: 400px; padding: 15px;">
+                        <canvas id="yesnochart" width="800" height="700"></canvas>
+                    </div>
+                </div>
+
+                
+            
+            </div>
+
+
+             <!-- Flex container for side-by-side charts -->
+             <div style="
+             display: flex; 
+             justify-content: center; 
+             align-items: flex-start;
+             gap: 20px; 
+             max-width: 1200px; 
+             margin: auto;
+             padding: 0 40px;
+             margin-top: 30px
+         ">
+          <!-- Yes and No Chart -->
+          <div class="overview bg-white p-20 rad-10" style="
+          display: flex; 
+          flex-direction: column; 
+          align-items: center; 
+          gap: 15px; 
+          padding: 20px; 
+          border-radius: 10px; 
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
+          background: #fff;
+          width: 50%;
+          min-width: 500px;
+          
+      ">
+          <h2 style="font-size: 22px; color: #333; font-weight: bold; margin-bottom: 10px;">
+              Yes and No Frequency
+          </h2>
+          
+          <div style="width: 100%; height: 400px; padding: 15px;">
+              <canvas id="yesnochart"></canvas>
+          </div>
+      </div>
+
+            
+             <!-- Yes and No Chart -->
+             <div class="overview bg-white p-20 rad-10" style="
+                 display: flex; 
+                 flex-direction: column; 
+                 align-items: center; 
+                 gap: 15px; 
+                 padding: 20px; 
+                 border-radius: 10px; 
+                 box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
+                 background: #fff;
+                 width: 50%;
+                 min-width: 500px;
+                 margin-bottom: 40px;
+             ">
+                 <h2 style="font-size: 22px; color: #333; font-weight: bold; margin-bottom: 10px;">
+                     Yes and No Frequency
+                 </h2>
+                 
+                 <div style="width: 100%; height: 400px; padding: 15px;">
+                    <canvas id="yesNoChart"></canvas>
+                 </div>
+             </div>
+         
+         </div>
+            
+            
+        <!-- Use Chart.js v3+ -->
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@kurkle/color"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js/helpers"></script>
+        
+        <!--  1st row chart  -->
+        
+
+        <script>
+
+           document.addEventListener("DOMContentLoaded", function () {
+    fetch('/get_yes_no_distribution')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error("Error fetching data:", data.error);
+                return;
+            }
+
+            // Remove "Question 0" if present and ensure correct numbering
+            delete data["0"];  
+
+            // Extract question numbers (ensuring 1-12)
+            const validQuestions = Object.keys(data)
+                .filter(q => Number(q) >= 1 && Number(q) <= 12) // Ensure only 1 to 12
+                .sort((a, b) => a - b); // Sort in numerical order
+
+            const labels = validQuestions.map(q => `Question ${q}`);
+            const yesCounts = validQuestions.map(q => -(data[q]?.Yes || 0)); // Negative for left bar
+
+            const noCounts = validQuestions.map(q => data[q]?.No || 0); // No changes
+
+            const ctx = document.getElementById('yesnochart').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Yes',
+                            data: yesCounts,
+                            backgroundColor: '#36A2EB',
+                            borderColor: '#36A2EB',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'No',
+                            data: noCounts,
+                            backgroundColor: '#FF6384',
+                            borderColor: '#FF6384',
+                            borderWidth: 1
+                        }
+                    ],
+                    options: {
+                        layout: {
+                            padding: {
+                                bottom: 2 // Add space at the bottom
+                            }
+                        }
+                    }
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return Math.abs(value); // Return absolute value without negative sign
+                                }
+                            }
+                        },
+                        y: {
+                            ticks: { padding: 10 }
+                        }
+                    },
+                    barThickness: 9,
+                    categoryPercentage: 1,
+                    barPercentage: 0.9,
+                    layout: {
+                        padding: { top: 5, bottom: 5 }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: {
+                            display: true,
+                            padding: { bottom: 5 }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error("Error fetching yes/no data:", error));
+});
+            
+
+        </script>
+
+        <!-- End 1st row chart -->
+        
+        <!-- 2nd row chart -->
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                fetch('/get_age_distribution')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            console.error("Error fetching data:", data.error);
+                            return;
+                        }
+            
+                        // Extract data for the chart
+                        var labels = Object.keys(data);  // ["6-15", "16-25", "26-35", "36-45"]
+                        var maleData = labels.map(group => data[group]["Male"]);
+                        var femaleData = labels.map(group => data[group]["Female"]);
+            
+                        var ctx = document.getElementById('agegroupchart').getContext('2d');
+            
+                        new Chart(ctx, {
+                            type: "bar",
+                            data: {
+                                labels: labels,
+                                datasets: [
+                                    {
+                                        label: "Male",
+                                        data: maleData,
+                                        backgroundColor: "rgba(54, 162, 235, 0.7)",
+                                        borderColor: "rgba(54, 162, 235, 1)",
+                                        borderWidth: 1
+                                    },
+                                    {
+                                        label: "Female",
+                                        data: femaleData,
+                                        backgroundColor: "rgba(255, 99, 132, 0.7)",
+                                        borderColor: "rgba(255, 99, 132, 1)",
+                                        borderWidth: 1
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                scales: {
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Range of Ages' // Add text below the range of ages
+                                        }
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        min: 0,
+                                        max: 50, // Explicitly setting the max value to 50
+                                        ticks: {
+                                            stepSize: 10, // Ensuring step size of 10
+                                        },
+                                        title: {
+                                            display: true,
+                                            text: "Number of Users"
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => console.error("Error fetching age data:", error));
+            });
+            
+        </script>
+
+        <script>
+            // Get chart element
+            var ctx = document.getElementById('yesNoChart').getContext('2d');
+    
+            // Data for the chart
+            var chartData = {
+                labels: ["Q1", "Q2", "Q3", "Q4", "Q5"], // Questions
+                datasets: [
+                    {
+                        label: "Yes",
+                        data: [15, 20, 18, 22, 10], // Replace with actual Yes responses
+                        backgroundColor: "rgba(54, 162, 235, 0.7)", // Blue color
+                        borderColor: "rgba(54, 162, 235, 1)",
+                        borderWidth: 1
+                    },
+                    {
+                        label: "No",
+                        data: [10, 5, 12, 8, 15], // Replace with actual No responses
+                        backgroundColor: "rgba(255, 99, 132, 0.7)", // Red color
+                        borderColor: "rgba(255, 99, 132, 1)",
+                        borderWidth: 1
+                    }
+                ]
+            };
+    
+            // Create chart
+            var myChart = new Chart(ctx, {
+                type: "bar",
+                data: chartData,
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: "Number of Responses"
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+
+        <!-- End 2nd row chart -->
+
+        <script>
+
+            document.addEventListener("DOMContentLoaded", function () {
+                const notificationDropdown = document.getElementById("notification-dropdown");
+                const notificationList = document.getElementById("notification-list");
+                const bellIcon = document.querySelector(".notification");
+                const unreadCount = document.getElementById("unread-count");
+            
+                async function fetchNotifications() {
+                    console.log("Fetching notifications...");
+            
+                    try {
+                        const response = await fetch("/get_notifications");
+                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            
+                        const data = await response.json();
+                        console.log("Received notifications:", data);
+            
+                        notificationList.innerHTML = ""; // Clear previous notifications
+            
+                        if (data.length === 0) {
+                            unreadCount.style.display = "none";
+                            notificationList.innerHTML = "<p>No new notifications.</p>";
+                            return;
+                        }
+            
+                        unreadCount.textContent = data.length;
+
+                        unreadCount.style.display = "inline-block"; // Show notification count      
+
+                        const sortedData = data.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+                        // Display notifications
+                        sortedData.forEach(notification => {
+
+                            let notificationItem = document.createElement("div");
+                            notificationItem.classList.add("notification-item");
+            
+                            // Ensure notification contains `user_id`
+                            notificationItem.dataset.userId = notification.user_id;
+            
+                            notificationItem.innerHTML = `
+                           
+                            <div class="content">
+                                <span class="sender">${notification.sender}</span>
+                                <span class="message-preview">${notification.content}</span>
+                                <span class="time">${formatTime(notification.time)}</span>
+                            </div>
+                        `;
+            
+                            // Redirect to view-client when clicked
+                            notificationItem.addEventListener("click", function () {
+                                const userId = this.dataset.userId;
+                                if (userId) {
+                                    window.location.href = `/view-client/${userId}`;
+                                }
+                            });
+            
+                            notificationList.appendChild(notificationItem);
+                        });
+            
+                    } catch (error) {
+                        console.error("Error fetching notifications:", error);
+                    }
+                }
+            
+                function toggleNotifications(event) {
+                    event.stopPropagation();
+                    notificationDropdown.classList.toggle("show");
+                }
+            
+                document.addEventListener("click", function (event) {
+                    if (!notificationDropdown.contains(event.target) && !bellIcon.contains(event.target)) {
+                        notificationDropdown.classList.remove("show");
+                    }
+                });
+            
+                bellIcon.addEventListener("click", toggleNotifications);
+            
+                // Helper function to format timestamps (optional)
+                function formatTime(timestamp) {
+                    const time = new Date(timestamp);
+                    return time.toLocaleString(); // Formats in a readable way
+                }
+            
+                fetchNotifications();
+                setInterval(fetchNotifications, 10000);
+            });
+            
+
+        </script>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const userDropdownToggle = document.getElementById("userDropdownToggle");
+                const userDropdown = document.getElementById("userDropdown");
+            
+                userDropdownToggle.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    userDropdown.classList.toggle("show");
+                });
+            
+                // Close dropdown if clicking outside
+                document.addEventListener("click", function (event) {
+                    if (!userDropdown.contains(event.target) && !userDropdownToggle.contains(event.target)) {
+                        userDropdown.classList.remove("show");
+                    }
+                });
+            });
+            
+        </script>
+        <script>
+            document.getElementById("searchInput").addEventListener("input", async function () {
+                let query = this.value.trim();
+                let searchResults = document.getElementById("searchResults");
+            
+                if (query === "") {
+                    searchResults.style.display = "none";
+                    return;
+                }
+            
+                try {
+                    let response = await fetch(`/search_control_num?q=${query}`);
+                    let data = await response.json();
+            
+                    searchResults.innerHTML = "";
+                    if (data.length === 0) {
+                        searchResults.innerHTML = "<div>No results found</div>";
+                    } else {
+                        data.forEach(user => {
+                            let div = document.createElement("div");
+                            div.textContent = user.control_num;
+                            div.onclick = () => window.location.href = `/view-client/${user.id}`;
+                            searchResults.appendChild(div);
+                        });
+                    }
+                    searchResults.style.display = "block";
+                } catch (error) {
+                    console.error("Error fetching search results:", error);
+                }
+            });
+            
+            // Hide results when clicking outside
+            document.addEventListener("click", function (e) {
+                let searchBox = document.getElementById("searchInput");
+                let searchResults = document.getElementById("searchResults");
+            
+                if (!searchBox.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.style.display = "none";
+                }
+            });
+            
+        </script>
+            
+</body>
+
+</html> 

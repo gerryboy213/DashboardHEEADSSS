@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Form</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+
+</head>
+<body>
+    <div class="container">
+        
+        <h2>Personal Information</h2>
+        <form method="POST" action="{{ url_for('personal_info') }}">
+
+            <div class="input-group">
+                <label for="control_num">Control Number</label>
+                <input type="text" id="control_num" name="control_num" placeholder="Enter Control Number" required>
+                <button type="button" onclick="fetchUserData()">Enter Data</button>
+            </div>
+            
+            <div class="input-group">
+                <label for="first_name">First Name</label>
+                <input type="text" id="first_name" name="first_name" placeholder="Enter your first name" required>
+            </div>
+        
+            <div class="input-group">
+                <label for="middle_initial">Middle Initial</label>
+                <input type="text" id="middle_initial" name="middle_initial" placeholder="Enter your middle initial">
+            </div>
+        
+            <div class="input-group">
+                <label for="last_name">Last Name</label>
+                <input type="text" id="last_name" name="last_name" placeholder="Enter your last name" required>
+            </div>
+            
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="contact">Contact Number</label>
+                    <input type="tel" id="contact" name="contact" required pattern="[0-9]{11}" placeholder="Enter your contact number">
+                </div>
+            <div class="input-group">
+                <label for="dob">Date of Birth</label>
+                <input type="date" id="dob" name="dob" required onchange="calculateAge()">
+            </div>
+        
+            <div class="input-group">
+                <label for="age">Age</label>
+                <input type="number" id="age" name="age" placeholder="Calculated automatically" readonly>
+            </div>
+        
+            <div class="input-group">
+                <label for="sex">Sex</label>
+                <select id="sex" name="sex" required>
+                    <option value="" disabled selected>Select</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </div>
+            </div>
+        
+            
+            <div class="address-row">
+                
+
+            <div class="input-group">
+                <label for="date">Date of First Visit</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+        
+            <div class="input-group">
+                <label for="location">Ang checklist ay sinagutan sa:</label>
+                <select id="location" name="location" required>
+                    <option value="" disabled selected>Pumili ng lokasyon</option>
+                    <option value="Health Center">Barangay Health Station</option>
+                    <option value="Health Center">Rural Health Unit</option>
+                    <option value="School">School</option>
+                    <option value="Lying-in">Lying-in</option>
+                    <option value="Hospital">Hospital</option>
+                    <option value="Other">Other community-based facility</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="raeson">Reason for consultation:</label>
+                <input type="text" id="reason" name="reason" placeholder="Enter your reason" required>
+            </div>
+            
+            <p id="message"></p>
+            <button type="submit" id="nextBtn" disabled>Next →</button>
+        </form>
+
+        <script>
+        function calculateAge() {
+            let dob = document.getElementById("dob").value;
+            if (dob) {
+                let birthDate = new Date(dob);
+                let today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                let monthDiff = today.getMonth() - birthDate.getMonth();
+                let dayDiff = today.getDate() - birthDate.getDate();
+                
+                // Adjust age if birthday has not occurred yet this year
+                if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+                    age--;
+                }
+        
+                document.getElementById("age").value = age;
+            }
+        }
+        </script>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+        <script>
+            const regionUrl = "{{ url_for('static', filename='ph-json/region.json') }}";
+            const barangayUrl = "{{ url_for('static', filename='ph-json/barangay.json') }}";
+            const provinceUrl = "{{ url_for('static', filename='ph-json/province.json') }}";
+            const cityUrl = "{{ url_for('static', filename='ph-json/city.json') }}";
+
+        </script>
+
+        <script src="{{ url_for('static', filename='js/ph-address-selector.js') }}"></script>
+
+        <script>
+            async function fetchUserData() {
+                const controlNum = document.getElementById("control_num").value.trim();
+                const nextButton = document.getElementById("nextBtn"); 
+                const messageContainer = document.getElementById("message"); // Message container
+        
+                if (!controlNum) {
+                    messageContainer.innerHTML = "<span style='color: red;'>Please enter a control number.</span>";
+                    nextButton.disabled = true;
+                    return;
+                }
+        
+                try {
+                    const response = await fetch(`/get_user_info?control_num=${controlNum}`);
+                    const data = await response.json();
+        
+                    if (data.error) {
+                        messageContainer.innerHTML = "<span style='color: red; font-size: 12px;'>Invalid control number. Please try again.</span>";
+                        nextButton.disabled = true;
+                    } else {
+                        messageContainer.innerHTML = "<span style='color: green; font-size: 12px;'>Control Number is Valid! You can proceed.</span>";
+                        nextButton.disabled = false;
+            
+                    // Populate form fields dynamically (excluding region, province, city, barangay, street)
+                    const excludedFields = ["region", "province", "city", "barangay", "street"];
+                    Object.entries(data).forEach(([key, value]) => {
+                        if (!excludedFields.includes(key)) {
+                            const inputField = document.getElementById(key);
+                            if (inputField) inputField.value = value;
+                        }
+                    });
+            
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                messageContainer.innerHTML = "<span style='color: red; font-size: 12px;'>Failed to fetch data. Please try again later.</span>";
+                nextButton.disabled = true;
+            }
+        }
+            
+            
+        </script>
+        <script>
+            async function validateControlNum() {
+                const controlNum = document.getElementById("control_num").value.trim();
+                const nextButton = document.getElementById("nextBtn");
+        
+                if (!controlNum) {
+                    
+                    nextButton.disabled = true;
+                    return;
+                }
+        
+                try {
+                    const response = await fetch(`/get_user_info?control_num=${controlNum}`);
+                    const data = await response.json();
+        
+                    if (data.error) {
+                        
+                        nextButton.disabled = true;
+                    } else {
+                        nextButton.disabled = false;  // ✅ Enable the button if valid
+                    }
+                } catch (error) {
+                    console.error("Error fetching data:", error);
+                    
+                    nextButton.disabled = true;
+                }
+            }
+        
+            document.getElementById("control_num").addEventListener("input", validateControlNum);
+        </script>
+        
+        
+     
+</body>
+</html>
+

@@ -1,0 +1,241 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap');
+
+
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Soft Background */
+html, body {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden; /* Prevents scrolling */
+    touch-action: none; /* Prevents touch gestures */
+    background-color: #faa7a7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    position: relative;
+    /* background-image: url('images/kids1.jpg');
+    background-repeat: no-repeat; 
+    background-size: cover; */
+}
+
+/* Background Image */
+body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover; /* Ensures full background visibility */
+    opacity: 1; /* Adjust transparency */
+    z-index: 0;
+}
+
+/* Ensure all content stays within viewport */
+body * {
+    position: relative;
+    z-index: 1;
+    max-width: 100%;
+    font-family: 'Lato', sans-serif;
+}
+
+/* Form Container */
+.container {
+    max-width: 1000px;
+    width: 100vw;
+    background: #ffffffe3;
+    padding: 25px;
+    border-radius: 5px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Headings */
+h2 {
+    text-align: center;
+    color: #00070a;
+    margin-bottom: 50px;
+    font-size: 20px;
+}
+
+p {
+    text-align: center;
+    font-size: 24px;
+    color: #122b38;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+/* Section Titles */
+h3 {
+    background: #151401cc;
+    color: #ffffff;
+    padding: 8px;
+    text-align: center;
+    border-radius: 5px;
+    margin-bottom: 10px; /* Space between questions */
+    display: block;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    
+
+}
+
+/* Question Layout */
+.question {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: flex-start; /* Align text to the left */
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.01);
+    transition: transform 0.2s ease;
+    margin-bottom: 25px;  /* Increased margin for better spacing */
+    /* background: linear-gradient(135deg, #ECEFF1 50%, #FFFFFF 50%); */
+    text-align: center; /* Center the question text */
+    border: 1px solid black;
+}
+
+.question:hover {
+    transform: scale(1.03);
+}
+
+/* Options */
+.options {
+    height: 50%;
+    display: flex;
+    justify-content: center; /* Center the options horizontally */
+    gap: 30px;  /* Increased space between options */
+    width: 100%;
+    margin-top: 50px;
+     /* Added margin for space between question and options */
+}
+/* .options label {
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Green for "Yes" */
+.options label:first-child {
+    color: rgb(0, 109, 0);
+}
+
+/* Red for "No" */
+.options label:last-child {
+    color: rgb(255, 0, 0);
+} */
+/* Radio Button Styling */
+input[type="radio"] {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+
+/* Buttons Layout */
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+    
+}
+
+.buttons button {
+    flex: 1;
+    min-width: 130px;
+    padding: 12px 25px;
+    font-size: 18px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.back-btn {
+    background-color: #ccc;
+    color: black;
+}
+
+.next-btn {
+    
+    background-color: #0ba749;
+    color: rgb(249, 252, 249);
+    margin-top: 20px;
+    
+}
+
+.back-btn:hover {
+    background-color: #bbb;
+}
+
+.next-btn:hover {
+    background-color: #09dd45;
+}
+
+/* Fade-in Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+@media (max-width: 480px) {
+    h2, p {
+        font-size: 20px; /* Adjust font size for better spacing */
+        /* text-align: justify; */
+        max-width: 100%;    
+        line-height: 1; /* Controls spacing between lines */
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        
+        display: -webkit-box;
+         /* Restrict to 3 lines */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin-top: 2%;
+        
+    }
+    
+
+    .container {
+        width: 600%;
+        padding: 10px;
+        margin-top: -20%;
+        margin-left: -5%;
+        margin-right: -5%;
+        
+        
+    }
+    
+
+    .question {
+        padding: 10px;
+        width: 100%;
+        margin-top: 40%;
+        
+    }
+
+    .buttons button {
+        font-size: 14px;
+        margin-top: 60%;
+    }
+    
+}

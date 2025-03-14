@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>INSTRUCTIONS</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='question.css') }}"
+    />
+  </head>
+  <body>
+    <div class="instructions">
+      <h2>PSYCHOSOCIAL HISTORY and ASSESSMENT:</h2>
+      <p>
+        These questions will help us know you better. Choose the best answer
+        that best describe what you feel. Only your health provider and his/her
+        assistant will see your answer.
+      </p>
+
+      <div class="inst-btn">
+        <a href="{{ url_for('assessment') }}" class="btn">Back</a>
+        <a href="{{ url_for('headsss') }}" class="btn">Next</a>
+      </div>
+    </div>
+  </body>
+</html>

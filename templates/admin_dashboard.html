@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='fontawesome/all.min.css') }}">
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&amp;display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='framework.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_dashboard.css') }}">
+
+    
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 215px; /* Adjusted width to be a bit smaller */
+            overflow: hidden;
+            background-color: #fff; /* Ensure background color is set */
+        }
+        .content {
+            margin-left: 214px; /* Adjust this value based on the new width of your sidebar */
+        }
+
+        
+    </style>
+
+</head>
+
+<body>
+    <div class="page d-flex">
+        <div class="sidebar bg-white p-20 p-relative">
+            <h3 class="p-relative text-center mt-0">HEADSSS</h3>
+            <ul>
+
+                <li>
+                    <a href="{{ url_for('admin_dashboard') }}" class="active d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-tachometer-alt fa-fw"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ url_for('admin_messages') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span>Messages</span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="{{ url_for('admin_list') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-people-group"></i>
+                        <span>List of Client</span>
+                    </a>
+                </li>
+               
+                <li>
+                    <a href="{{ url_for('admin_results')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-square-poll-horizontal"></i>
+                        <span>Results</span>
+                    </a>
+                </li>
+              <!--   <li>
+                    <a href="{{ url_for('admin_files')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-file fa-fw"></i>
+                        <span>Files</span>
+                    </a>
+                </li> -->
+                <li>
+                    <a href="{{ url_for('admin_settings') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-cog fa-fw"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+                
+                
+            </ul>
+        </div>
+        <div class="content w-full">
+            <!-- Start Header -->
+            <div class="header bg-white p-15 between-flex">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input id="searchInput" class="search-box" type="search" placeholder="Search Control Number">
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+
+                <div class="user d-flex align-items-center">
+                   
+                    <!-- Notification Bell -->
+                    <span class="notification p-relative">
+                        <i class="fa-regular fa-bell fa-lg p-relative"></i>
+                        <span id="unread-count" class="unread-count" style="display: none;"></span>
+                    </span>
+                    
+                    <!-- Notification Dropdown -->
+                    <div id="notification-dropdown" class="dropdown-menu-notif">
+                        <strong>Notifications</strong>
+                        <div id="notification-list" style=" overflow: hidden; margin-left:-200px; margin-top: 20px;"></div>
+                        <div class="footer">
+                            <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a>
+                        </div>
+                    </div>
+                    
+            
+                    <!-- User Info -->
+                    <div class="user-info d-flex align-items-center">
+                        <div class="user-img" id="userDropdownToggle">
+                            <img src="/static/images/user.png" alt="User">
+                        </div>
+                    </div>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="userDropdown" class="dropdown-menu">
+                        <ul>
+                            <li>
+                                <a href="{{ url_for('admin_profile') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                                    <i class="fas fa-user fa-fw"></i>
+                                    <span>Profile</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('admin_logout') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                                    <i class="fas fa-sign-out-alt fa-fw"></i>
+                                    <span>Logout</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                </div>
+            </div>
+            <!-- End Header -->
+             
+            <h1 class="p-relative">Dashboard</h1>
+            <div class="wrapper d-grid gap-20">
+                <!-- Start Welcome widget -->
+                <div class="welcome bg-white rad-10 text-center-mobile">
+                    <div class="intro d-flex justify-content-between p-20 bg-eee">
+                        <div>
+                            <h2 class="m-0">
+                                Welcome to Admin Panel
+                            </h2>
+                            <p class="font-15 color-grey mt-5">
+                                A simple to use dashboard
+                            </p>
+                        </div>
+                        <img class="d-none-mobile" src="/static/images/welcome.png" alt="Welcome">
+                    </div>
+                    <img src="/static/images/user.png" alt="User">
+                    <div class="body text-center d-flex p-20 mt-20 mb-20 d-block-mobile">
+                        <div>Admin<span class="d-block color-grey font-14 mt-10">Backend Developer</span></div>
+                        <div>10<span class="d-block color-grey font-14 mt-10">Projects</span></div>
+                        <div>$5000<span class="d-block color-grey font-14 mt-10">Earned</span></div>
+                    </div>
+                    <a class="btn profile-btn d-block font-14 color-white bg-blue w-fit p-5"
+                        href="{{ url_for('admin_profile') }}">Profile</a>
+                </div>
+                <!-- End Welcome widget -->
+                            
+                <!-- Start Services Widget -->
+                <div class="services bg-white rad-10 p-20">
+                    <h2 class="m-0 mb-10">Services</h2>
+                    <p class="m-0 mb-20 font-15 color-grey">Services offered to users or adolescents</p>
+                    <div class="services-container d-flex flex-wrap gap-20">
+                        <div class="service color-grey text-center">
+                            <i class="fas fa-stethoscope fa-fw font-18 color-blue mb-5"></i> 
+                            <p class="m-0 mb-5 font-18 font-weight-bold color-black">Medical</p> 
+                            <span class="font-14">Comprehensive medical services</span> 
+                        </div>
+                        <div class="service color-grey text-center">
+                            <i class="fas fa-user-friends fa-fw font-18 color-green mb-5"></i> 
+                            <p class="m-0 mb-5 font-18 font-weight-bold color-black">Counseling</p> 
+                            <span class="font-14">Professional counseling services</span> 
+                        </div>
+                        <div class="service color-grey text-center">
+                            <i class="fas fa-hands-helping fa-fw font-18 color-orange mb-5"></i>
+                            <p class="m-0 mb-5 font-18 font-weight-bold color-black">Referral</p> 
+                            <span class="font-14">Referral to specialized services</span> 
+                        </div>
+                        <div class="service color-grey text-center">
+                            <i class="fas fa-book fa-fw font-18 color-red mb-5"></i> 
+                            <p class="m-0 mb-5 font-18 font-weight-bold color-black">Education</p> 
+                            <span class="font-14">Educational support and resources</span> 
+                        </div>
+                    </div>
+                </div>
+                <!-- End Services Widget -->
+               
+
+                <!-- Charts  -->
+                <div class="latest-uploads bg-white rad-10 p-20">
+                    <h2 style="font-size: 22px; color: #333; font-weight: bold; margin-bottom: 10px; text-align: center;">
+                        Age Group Distribution by Gender
+                    </h2>
+                    <div style="
+                        display: flex; 
+                        justify-content: center; 
+                        align-items: flex-start;
+                        gap: 20px; 
+                        max-width: 1200px; 
+                        margin: auto;
+                        padding: 0 10px;
+                    ">
+                        <!-- Age Group Chart -->
+                        <div style="
+                            display: flex; 
+                            flex-direction: column; 
+                            align-items: center; 
+                            gap: 15px; 
+                            padding: 20px; 
+                            width: 100%;
+                            max-width: 800px;
+                        ">
+                            <div style="width: 100%; height: 350px; padding: 15px;">
+                                <canvas id="agegroupchart" style="width: 100%; height: 100%;"></canvas>                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Start Reminders Widget -->
+                <div class="reminders bg-white rad-10 p-20">
+                    <h2 class="m-0 mb-20">Reminders</h2>
+                    <div class="reminders-container d-flex flex-column gap-20">
+                        <div class="reminder color-grey d-flex align-items-center">
+                            <span class="key bg-blue mr-15 d-block rad-half"></span>
+                            <div class="reminder-info pl-15">
+                                <p class="m-0 mb-5 font-14 font-weight-bold color-black">Meeting with Abdullah</p>
+                                <p class="m-0 font-13 color-grey">Discuss the new project</p>
+                                <p class="m-0 font-13 color-grey">10:00 AM</p>
+                            </div>
+                        </div>
+                        <div class="reminder color-grey d-flex align-items-center">
+                            <span class="key bg-green mr-15 d-block rad-half"></span>
+                            <div class="reminder-info pl-15">
+                                <p class="m-0 mb-5 font-14 font-weight-bold color-black">Meeting with Ahmed</p>
+                                <p class="m-0 font-13 color-grey">Discuss the new design</p>
+                                <p class="m-0 font-13 color-grey">11:00 AM</p>
+                            </div>
+                        </div>
+                        <div class="reminder color-grey d-flex align-items-center">
+                            <span class="key bg-orange mr-15 d-block rad-half"></span>
+                            <div class="reminder-info pl-15">
+                                <p class="m-0 mb-5 font-14 font-weight-bold color-black">Meeting with Ali</p>
+                                <p class="m-0 font-13 color-grey">Discuss the new app</p>
+                                <p class="m-0 font-13 color-grey">12:00 PM</p>
+                            </div>
+                        </div>
+                        <div class="reminder color-grey d-flex align-items-center">
+                            <span class="key bg-red mr-15 d-block rad-half"></span>
+                            <div class="reminder-info pl-15">
+                                <p class="m-0 mb-5 font-14 font-weight-bold color-black">Meeting with Omar</p>
+                                <p class="m-0 font-13 color-grey">Discuss the new website</p>
+                                <p class="m-0 font-13 color-grey">01:00 PM</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Reminders Widget -->
+                  
+            </div>
+
+            <!-- Start Projects Table 
+            <div class="projects-table bg-white rad-10 m-20 p-20">
+                <h2 class="m-0 mb-20">Projects</h2>
+                <div class="responsive-table">
+                    <table class="font-15 w-full">
+                        <thead>
+                            <tr>
+                                <td>Control Number</td>
+                                <td>Clients Name</td>
+                                <td>Contact Number</td>
+                                <td>Date of first visit</td>
+
+                                <td>Status</td>
+                                <td>Action</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>CN-022725-01</td>
+                                <td>Client 1</td>
+                                <td>09286574632</td>
+                                <td>10/10/2025</td>
+                                <td>
+                                    <span class="status font-13 color-white btn bg-green">
+                                        <i class="fa-solid fa-circle-check"></i> Done
+                                    </span>
+                                 </td>
+                                
+                                <td>
+                                    <button onclick="viewRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-eye" style="color:rgb(49, 107, 169);"></i>
+                                    </button>
+                                    <button onclick="editRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-file-pen" style="color: #28a745;"></i>
+                                    </button>
+                                    <button onclick="deleteRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-trash-can" style="color: #dc3545;"></i>
+                                    </button>
+                                </td>
+                                
+                            </tr>
+                            <tr>
+                                <td>Project 2</td>
+                                <td>Client 2</td>
+                                <td>09286574632</td>
+                                <td>15/10/2025</td>
+                                
+                                <td>
+                                    <span class="status font-13 color-white btn bg-orange">
+                                        <i class="fa-solid fa-spinner"></i> In Progress
+                                    </span>
+                                </td>
+                                                                <td>
+                                    <button onclick="viewRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-eye" style="color:rgb(49, 107, 169);"></i>
+                                    </button>
+                                    <button onclick="editRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-file-pen" style="color: #28a745;"></i>
+                                    </button>
+                                    <button onclick="deleteRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-trash-can" style="color: #dc3545;"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Project 3</td>
+                                <td>Client 3</td>
+                                <td>09286574632</td>
+                                <td>20/10/2025</td>
+                                
+                                <td>
+                                    <span class="status font-13 color-white btn bg-green">
+                                        <i class="fa-solid fa-circle-check"></i> Done
+                                    </span>
+                                 </td>
+                                <td>
+                                    <button onclick="viewRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-eye" style="color:rgb(49, 107, 169);"></i>
+                                    </button>
+                                    <button onclick="editRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-file-pen" style="color: #28a745;"></i>
+                                    </button>
+                                    <button onclick="deleteRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-trash-can" style="color: #dc3545;"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Project 4</td>
+                                <td>Client 4</td>
+                                <td>09286574632</td>
+                                <td>25/10/2025</td>
+                                
+                                <td>
+                                    <span class="status font-13 color-white btn bg-orange">
+                                        <i class="fa-solid fa-spinner"></i> In Progress
+                                    </span>
+                                </td>
+                                <td>
+                                    <button onclick="viewRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-eye" style="color:rgb(49, 107, 169);"></i>
+                                    </button>
+                                    <button onclick="editRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-file-pen" style="color: #28a745;"></i>
+                                    </button>
+                                    <button onclick="deleteRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-trash-can" style="color: #dc3545;"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Project 5</td>
+                                <td>Client 5</td>
+                                <td>09286574632</td>
+                                <td>30/10/2025</td>
+                                
+                                <td>
+                                    <span class="status font-13 color-white btn bg-orange">
+                                        <i class="fa-solid fa-spinner"></i> In Progress
+                                    </span>
+                                </td>
+                                <td>
+                                    <button onclick="viewRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-eye" style="color:rgb(49, 107, 169);"></i>
+                                    </button>
+                                    <button onclick="editRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-file-pen" style="color: #28a745;"></i>
+                                    </button>
+                                    <button onclick="deleteRecord(1)" style="background: none; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-trash-can" style="color: #dc3545;"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+             End Projects Table -->
+        </div>
+        <script src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@kurkle/color"></script>
+       <!--  <script src="https://unpkg.com/@kurkle/color@0.1.9/dist/color.min.js"></script> -->
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js/helpers"></script>
+        
+        <script>
+
+            document.addEventListener("DOMContentLoaded", function () {
+                const notificationDropdown = document.getElementById("notification-dropdown");
+                const notificationList = document.getElementById("notification-list");
+                const bellIcon = document.querySelector(".notification");
+                const unreadCount = document.getElementById("unread-count");
+            
+                async function fetchNotifications() {
+                    console.log("Fetching notifications...");
+            
+                    try {
+                        const response = await fetch("/get_notifications");
+                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            
+                        const data = await response.json();
+                        console.log("Received notifications:", data);
+            
+                        notificationList.innerHTML = ""; // Clear previous notifications
+            
+                        if (data.length === 0) {
+                            unreadCount.style.display = "none";
+                            notificationList.innerHTML = "<p>No new notifications.</p>";
+                            return;
+                        }
+            
+                        unreadCount.textContent = data.length;
+
+                        unreadCount.style.display = "inline-block"; // Show notification count      
+
+                        const sortedData = data.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+                        // Display notifications
+                        sortedData.forEach(notification => {
+
+                            let notificationItem = document.createElement("div");
+                            notificationItem.classList.add("notification-item");
+            
+                            // Ensure notification contains `user_id`
+                            notificationItem.dataset.userId = notification.user_id;
+            
+                            notificationItem.innerHTML = `
+                           
+                            <div class="content">
+                                <span class="sender">${notification.sender}</span>
+                                <span class="message-preview">${notification.content}</span>
+                                <span class="time">${formatTime(notification.time)}</span>
+                            </div>
+                        `;
+            
+                            // Redirect to view-client when clicked
+                            notificationItem.addEventListener("click", function () {
+                                const userId = this.dataset.userId;
+                                if (userId) {
+                                    window.location.href = `/view-client/${userId}`;
+                                }
+                            });
+            
+                            notificationList.appendChild(notificationItem);
+                        });
+            
+                    } catch (error) {
+                        console.error("Error fetching notifications:", error);
+                    }
+                }
+            
+                function toggleNotifications(event) {
+                    event.stopPropagation();
+                    notificationDropdown.classList.toggle("show");
+                }
+            
+                document.addEventListener("click", function (event) {
+                    if (!notificationDropdown.contains(event.target) && !bellIcon.contains(event.target)) {
+                        notificationDropdown.classList.remove("show");
+                    }
+                });
+            
+                bellIcon.addEventListener("click", toggleNotifications);
+            
+                // Helper function to format timestamps (optional)
+                function formatTime(timestamp) {
+                    const time = new Date(timestamp);
+                    return time.toLocaleString(); // Formats in a readable way
+                }
+            
+                fetchNotifications();
+                setInterval(fetchNotifications, 10000);
+            });
+            
+
+        </script>
+        
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const userDropdownToggle = document.getElementById("userDropdownToggle");
+                const userDropdown = document.getElementById("userDropdown");
+            
+                userDropdownToggle.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    userDropdown.classList.toggle("show");
+                });
+            
+                // Close dropdown if clicking outside
+                document.addEventListener("click", function (event) {
+                    if (!userDropdown.contains(event.target) && !userDropdownToggle.contains(event.target)) {
+                        userDropdown.classList.remove("show");
+                    }
+                });
+            });
+            
+        </script>
+
+        <script>
+            document.getElementById("searchInput").addEventListener("input", async function () {
+                let query = this.value.trim();
+                let searchResults = document.getElementById("searchResults");
+            
+                if (query === "") {
+                    searchResults.style.display = "none";
+                    return;
+                }
+            
+                try {
+                    let response = await fetch(`/search_control_num?q=${query}`);
+                    let data = await response.json();
+            
+                    searchResults.innerHTML = "";
+                    if (data.length === 0) {
+                        searchResults.innerHTML = "<div>No results found</div>";
+                    } else {
+                        data.forEach(user => {
+                            let div = document.createElement("div");
+                            div.textContent = user.control_num;
+                            div.onclick = () => window.location.href = `/view-client/${user.id}`;
+                            searchResults.appendChild(div);
+                        });
+                    }
+                    searchResults.style.display = "block";
+                } catch (error) {
+                    console.error("Error fetching search results:", error);
+                }
+            });
+            
+            // Hide results when clicking outside
+            document.addEventListener("click", function (e) {
+                let searchBox = document.getElementById("searchInput");
+                let searchResults = document.getElementById("searchResults");
+            
+                if (!searchBox.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.style.display = "none";
+                }
+            });
+            
+        </script>
+        
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                fetch('/get_age_distribution')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            console.error("Error fetching data:", data.error);
+                            return;
+                        }
+            
+                        // Extract data for the chart
+                        var labels = Object.keys(data);  // ["6-15", "16-25", "26-35", "36-45"]
+                        var maleData = labels.map(group => data[group]["Male"]);
+                        var femaleData = labels.map(group => data[group]["Female"]);
+            
+                        var ctx = document.getElementById('agegroupchart').getContext('2d');
+            
+                        new Chart(ctx, {
+                            type: "bar",
+                            data: {
+                                labels: labels,
+                                datasets: [
+                                    {
+                                        label: "Male",
+                                        data: maleData,
+                                        backgroundColor: "rgba(54, 162, 235, 0.7)",
+                                        borderColor: "rgba(54, 162, 235, 1)",
+                                        borderWidth: 1
+                                    },
+                                    {
+                                        label: "Female",
+                                        data: femaleData,
+                                        backgroundColor: "rgba(255, 99, 132, 0.7)",
+                                        borderColor: "rgba(255, 99, 132, 1)",
+                                        borderWidth: 1
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                scales: {
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Range of Ages' // Add text below the range of ages
+                                        }
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        min: 0,
+                                        max: 50, // Explicitly setting the max value to 50
+                                        ticks: {
+                                            stepSize: 10, // Ensuring step size of 10
+                                        },
+                                        title: {
+                                            display: true,
+                                            text: "Number of Users"
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => console.error("Error fetching age data:", error));
+            });
+            
+        </script>
+
+</body>
+
+</html>

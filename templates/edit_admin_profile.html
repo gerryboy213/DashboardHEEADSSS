@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Admin Profile</title>
+</head>
+<body>
+    <h1>Edit Profile</h1>
+    <form method="POST">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" value="{{ admin.username }}" required>
+        <br>
+        <label for="password">New Password:</label>
+        <input type="password" id="password" name="password" required>
+        <br>
+        <button type="submit">Update Profile</button>
+    </form>
+    <a href="{{ url_for('admin_profile') }}">Back to Profile</a>
+</body>
+</html>

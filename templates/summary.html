@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='fontawesome/all.min.css') }}">
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&amp;display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='framework.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='view.css') }}">
+</head>
+
+<body>
+    <div class="page d-flex">
+        <div class="sidebar bg-white p-20 p-relative">
+            <h3 class="p-relative text-center mt-0">HEADSSS</h3>
+            <ul>
+                <li>
+                    <a href="{{ url_for('admin_dashboard') }}" class=" d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-tachometer-alt fa-fw"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin_messages') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span>Messages</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin_list') }}" class="active d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-people-group"></i>
+                        <span>List of Client</span>
+                    </a>
+                </li>
+               
+                <li>
+                    <a href="{{ url_for('admin_results')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-square-poll-horizontal"></i>
+                        <span>Results</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin_files')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-file fa-fw"></i>
+                        <span>Files</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin_settings') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-cog fa-fw"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+                
+                
+            </ul>
+        </div>
+        <div class="content w-full">
+            <!-- Start Header -->
+            <div class="header bg-white p-15 between-flex">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input id="searchInput" class="search-box" type="search" placeholder="Search Control Number">
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+                <div class="user d-flex align-items-center">
+                    <!-- Notification Bell -->
+                    <span class="notification p-relative" onclick="toggleNotifications()">
+                        <i class="fa-regular fa-bell fa-lg p-relative"></i>
+                        <span id="unread-count" class="unread-count" style="display: none;"></span>
+                    </span>
+            
+                    <!-- Message Preview Dropdown -->
+                    <div id="notification-dropdown" class="dropdown-menu">
+                        <strong>Notifications</strong>
+                        <div id="notification-list"></div>
+                        <div class="footer">
+                            <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a>
+                        </div>
+                    </div>
+            
+                    <!-- User Info -->
+                    <div class="user-info d-flex align-items-center">
+                        <div class="user-img" id="userDropdownToggle">
+                            <img src="/static/images/user.png" alt="User">
+                        </div>
+                    </div>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="userDropdown" class="dropdown-menu">
+                        <ul>
+                            <li>
+                                <a href="{{ url_for('admin_profile') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                                    <i class="fas fa-user fa-fw"></i>
+                                    <span>Profile</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('admin_logout') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                                    <i class="fas fa-sign-out-alt fa-fw"></i>
+                                    <span>Logout</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                </div>
+            </div>
+            <!-- End Header -->
+             
+            
+            <div class="wrapper d-grid gap-20">
+                <!-- Start Welcome widget -->
+                <div class="welcome bg-white rad-10 text-center-mobile">
+                    <div class="intro d-flex justify-content-between p-20 bg-eee">
+                        <div>
+                            <h2 class="m-0">
+                                Summary of Rapid HEADSSS Assessment
+                            </h2>
+                            <p class="font-15 color-grey mt-5">
+                                Only you can see this information
+                            </p>
+                        </div>
+                        <img class="d-none-mobile" src="/static/images/welcome.png" alt="Welcome">
+                    </div>
+                  
+
+                    <div class="body text-center d-flex flex-column p-20 mt-20 mb-20">
+
+                        <div class="button-container">
+                            <button onclick="exportToPDF()" class="export-btn">
+                                <i class="fas fa-file-pdf"></i> Export to PDF
+                            </button>
+                            <button onclick="printSummary()" class="print-btn">
+                                <i class="fas fa-print"></i> Print
+                            </button>
+                        </div>
+
+                        <form method="POST">
+                            <table class="summary-table" id="summaryTable" style="margin-top: 40px;">
+                                <thead>
+                                    <tr>
+                                        <th colspan="2" class="summary-title">Summary of Rapid HEADSSS Results</th>
+                                    </tr>
+
+                                    <tr>
+                                        <th colspan="2" style="text-align: left;">
+                                            <div style="display: flex; flex-direction: column; gap: 5px;">
+                                               <div style="display: flex; align-items: center;">
+                                                    <label for="serviceProvider" style="width: 150px; font-size: 15px;">Center Name:</label>
+                                                    <select id="serviceProvider" name="service_provider" class="input-field" required onchange="updateProviderText()">
+                                                        <option value="" disabled selected>Select center name</option>
+                                                        <option value="RHU">RHU</option>
+                                                        <option value="Hospital">Hospital</option>
+                                                        <option value="School">School</option>
+                                                    </select>
+                                                    <span id="serviceProviderText"></span>
+                                                </div>    
+                                            </div>
+                                        </th>
+                                    </tr>
+
+                                    <tr>
+                                        <th colspan="2" style="text-align: left;">
+                                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                                <div style="display: flex; align-items: center; gap: 10px;">
+                                                        <label for="centerName" style="width: 200px; font-size: 15px;">Name of Service Provider: </label>
+                                                        <input type="text" id="centerName" name="center_name" class="input-field" required 
+                                                        style=" font-size: 15px;">                                                 
+                                                        <span id="centerNameText"></span>
+                                                </div>
+                                            </div>
+                                        </th>
+                                    </tr>
+
+                                    <tr>
+                                        <th colspan="2" style="text-align: left;">
+                                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                                <div style="display: flex; align-items: center; gap: 10px;">
+                                                    <strong style="width: 150px; font-size: 15px;">Control Number:</strong>
+                                                    <span style="width: 200px; font-size: 15px;">{{ user.control_num }}</span>
+                                                </div>    
+                                            </div>
+                                        </th>
+                                    </tr>
+
+                                    <tr>
+                                        <th style="font-size: 15px;">Question</th>
+                                        <th style="font-size: 15px;">Answer</th>
+                                    </tr>
+                                    
+                                </thead>
+                                <tbody style="font-size: 15px;">
+                                    {% for id, data in questions_with_answers.items() %}
+                                    <tr>
+                                        <td style="font-size: 15px;">{{ data.question }}</td>
+                                        <td style="font-size: 15px;">
+                                            {% if data.answer == 'Yes' %}
+                                            <i class="fas fa-check-circle" style="color: green;"></i> Yes
+                                            {% elif data.answer == 'No' %}
+                                            <i class="fas fa-times-circle" style="color: red;"></i> No
+                                            {% else %}
+                                            {{ data.answer }}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                        
+                                    <!-- Recommended Action Section Placed After Last Question -->
+                                    <tr class="recommended-action-row">
+                                        <td colspan="2" style="padding-top: 20px; border:none">
+                                            <div style="display: flex; flex-direction: column; align-items: start; gap: 10px; padding: 10px;">
+                                                <label class="print-label" style="font-weight: bold; font-size: 15px;">Recommended Action:</label>
+                                    
+                                                <!-- Checklist for recommended actions -->
+                                                <div id="recommendedActionContainer">
+                                                    <div>
+                                                        <label><input type="checkbox" name="recommended_action" value="Parental Notification" onchange="updateActionText()"> Parental Notification</label>
+                                                        <label><input type="checkbox" name="recommended_action" value="Preventive Counseling" onchange="updateActionText()"> Preventive Counseling</label>
+                                                        <label><input type="checkbox" name="recommended_action" value="Refer to RHU/Hospital" onchange="updateActionText()"> Refer to RHU/Hospital</label>
+                                                        <label><input type="checkbox" name="recommended_action" value="Refer to Barangay/SK" onchange="updateActionText()"> Refer to Barangay/SK</label>
+                                                    </div>
+                                                    <div>
+                                                        <label><input type="checkbox" name="recommended_action" value="Refer to DSWS" onchange="updateActionText()"> Refer to DSWS</label>
+                                                        <label><input type="checkbox" name="recommended_action" value="Health Education Sessions" onchange="updateActionText()"> Health Education Sessions</label>
+                                                        <label><input type="checkbox" name="recommended_action" value="Schedule Follow-up" onchange="updateActionText()"> Schedule Follow-up</label>
+                                                        <div class="other-container">
+                                                            <label><input type="checkbox" id="otherOption" onchange="toggleOtherInput()"> Others:</label>
+                                                            <input type="text" id="otherRecommendation" name="other_recommendation" class="input-field" placeholder="Enter your recommendation"/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                    
+                                                <!-- Selected actions will be displayed here for print -->
+                                                <span id="recommendedActionText" style="font-weight: bold; margin-top: 10px;"></span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                </tbody>
+                            </table>
+                        </form>
+                        
+                           
+                    </div>           
+                </div>
+            </div>           
+        </div>
+        <script src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
+
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const notificationDropdown = document.getElementById("notification-dropdown");
+                const notificationList = document.getElementById("notification-list");
+                const bellIcon = document.querySelector(".notification");
+                const unreadCount = document.getElementById("unread-count");
+            
+                function fetchNotifications() {
+                    fetch('/admin/unread_notifications')
+                        .then(response => response.json())
+                        .then(data => {
+                            renderMessages(data.notifications);
+                            updateUnreadCount(data.unread_count);
+                        })
+                        .catch(error => console.error('Error fetching notifications:', error));
+                }
+            
+                function renderMessages(messages) {
+                    notificationList.innerHTML = "";
+                
+                    messages.slice(0, 3).forEach(msg => { // Limit to 3 messages
+                        const messageItem = document.createElement("div");
+                        messageItem.classList.add("notification-item", msg.unread ? "unread" : "read");
+                
+                        messageItem.innerHTML = `
+                            <div class="icon"><i class="fa fa-envelope"></i></div>
+                            <div class="content">
+                                <div class="sender">${msg.sender}</div>
+                                <div class="message-preview">${msg.content.substring(0, 40)}...</div>
+                                <div class="time">${msg.time}</div>
+                            </div>
+                        `;
+                
+                        messageItem.addEventListener("click", function () {
+                            markNotificationAsRead(msg.id);
+                            window.location.href = `/admin/messages?message_id=${msg.id}`;
+                        });
+                
+                        notificationList.appendChild(messageItem);
+                    });
+                }
+                
+            
+                function updateUnreadCount(count) {
+                    if (count > 0) {
+                        unreadCount.style.display = "inline";
+                        unreadCount.textContent = count;
+                    } else {
+                        unreadCount.style.display = "none";
+                    }
+                }
+            
+                function toggleDropdown() {
+                    notificationDropdown.classList.toggle("show");
+                }
+            
+                function markNotificationAsRead(messageId) {
+                    fetch('/admin/mark_notification_read', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message_id: messageId })
+                    }).then(response => response.json())
+                      .then(() => fetchNotifications()); // Refresh notifications after marking as read
+                }
+                
+                
+            
+                document.addEventListener("click", function (event) {
+                    if (!notificationDropdown.contains(event.target) && !bellIcon.contains(event.target)) {
+                        notificationDropdown.classList.remove("show");
+                    }
+                });
+            
+                bellIcon.addEventListener("click", toggleDropdown);
+                fetchNotifications();
+            
+                setInterval(fetchNotifications, 5000);
+            });
+            
+        </script>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const userDropdownToggle = document.getElementById("userDropdownToggle");
+                const userDropdown = document.getElementById("userDropdown");
+            
+                userDropdownToggle.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    userDropdown.classList.toggle("show");
+                });
+            
+                // Close dropdown if clicking outside
+                document.addEventListener("click", function (event) {
+                    if (!userDropdown.contains(event.target) && !userDropdownToggle.contains(event.target)) {
+                        userDropdown.classList.remove("show");
+                    }
+                });
+            });
+            
+        </script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+    function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setFontSize(14);
+        doc.text("Summary", 105, 10, null, null, "center");
+
+        let y = 20;
+        document.querySelectorAll("#summaryTable tbody tr").forEach(row => {
+            let question = row.cells[0].innerText;
+            let answer = row.cells[1].innerText;
+            doc.text(`${question}: ${answer}`, 10, y);
+            y += 10;
+        });
+
+        doc.save("summary.pdf");
+    }
+
+    function printSummary() {
+        const printContent = document.getElementById("summaryTable").outerHTML;
+        const newWindow = window.open("", "", "width=800,height=600");
+        newWindow.document.write("<html><head><title>Print Summary</title></head><body>");
+        newWindow.document.write(printContent);
+        newWindow.document.write("</body></html>");
+        newWindow.document.close();
+        newWindow.print();
+    }
+
+</script>
+
+<script>
+
+    document.getElementById("searchInput").addEventListener("input", async function () {
+        let query = this.value.trim();
+        let searchResults = document.getElementById("searchResults");
+    
+        if (query === "") {
+            searchResults.style.display = "none";
+            return;
+        }
+    
+        try {
+            let response = await fetch(`/search_control_num?q=${query}`);
+            let data = await response.json();
+    
+            searchResults.innerHTML = "";
+            if (data.length === 0) {
+                searchResults.innerHTML = "<div>No results found</div>";
+            } else {
+                data.forEach(user => {
+                    let div = document.createElement("div");
+                    div.textContent = user.control_num;
+                    div.onclick = () => window.location.href = `/view-client/${user.id}`;
+                    searchResults.appendChild(div);
+                });
+            }
+            searchResults.style.display = "block";
+        } catch (error) {
+            console.error("Error fetching search results:", error);
+        }
+    });
+    
+    // Hide results when clicking outside
+    document.addEventListener("click", function (e) {
+        let searchBox = document.getElementById("searchInput");
+        let searchResults = document.getElementById("searchResults");
+    
+        if (!searchBox.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = "none";
+        }
+    });
+    
+</script>
+
+<script>
+    function printSummary() {
+        window.print();
+    }
+    
+</script>
+
+<script>
+    function updateProviderText() {
+        // Get selected value from the dropdown
+        var selectedProvider = document.getElementById("serviceProvider").value;
+
+        // Set the span text to the selected provider
+        var providerText = document.getElementById("serviceProviderText");
+        providerText.innerText = selectedProvider;
+    }
+</script>
+
+<script>
+    function updateActionText() {
+        let selectedOptions = [];
+        
+        // Loop through checkboxes and add selected values as list items
+        document.querySelectorAll('input[name="recommended_action"]:checked').forEach((checkbox) => {
+            selectedOptions.push(`<li>${checkbox.value}</li>`);
+        });
+    
+        // Include custom text if "Others" is selected and not empty
+        let otherInput = document.getElementById("otherRecommendation");
+        if (document.getElementById("otherOption").checked) {
+            let otherText = otherInput.value.trim();
+            if (otherText !== "") {
+                selectedOptions.push(`<li>${otherText}</li>`);
+            }
+        }
+    
+        // Display selected actions as bullet points
+        document.getElementById("recommendedActionText").innerHTML = selectedOptions.length > 0 
+            ? `<ul>${selectedOptions.join("")}</ul>` 
+            : "";
+    }
+    
+    // Ensure 'Others' input updates the text dynamically
+    function toggleOtherInput() {
+        let otherInput = document.getElementById("otherRecommendation");
+        if (document.getElementById("otherOption").checked) {
+            otherInput.style.display = "inline-block";
+            otherInput.focus();
+        } else {
+            otherInput.style.display = "none";
+            otherInput.value = ""; // Clear input when unchecked
+        }
+        updateActionText();
+    }
+    
+    // Attach event listener for real-time updates in "Others" input field
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("otherRecommendation").addEventListener("input", updateActionText);
+    });
+    
+</script>
+        
+</body>
+</html>

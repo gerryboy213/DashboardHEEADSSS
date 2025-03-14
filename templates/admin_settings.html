@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='fontawesome/all.min.css') }}">
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&amp;display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='framework.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_dashboard.css') }}">
+
+    
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 215px; /* Adjusted width to be a bit smaller */
+            overflow: hidden;
+            background-color: #fff; /* Ensure background color is set */
+        }
+        .content {
+            margin-left: 214px; /* Adjust this value based on the new width of your sidebar */
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="page d-flex">
+        <div class="sidebar bg-white p-20 p-relative">
+            <h3 class="p-relative text-center mt-0">HEADSSS</h3>
+            <ul>
+                <li>
+                    <a href="{{ url_for('admin_dashboard') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-tachometer-alt fa-fw"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin_messages') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span>Messages</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ url_for('admin_list') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-people-group"></i>
+                        <span>List of Client</span>
+                    </a>
+                </li>
+               
+                <li>
+                    <a href="{{ url_for('admin_results')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-square-poll-horizontal"></i>
+                        <span>Results</span>
+                    </a>
+                </li>
+               
+                
+              <!--  <li>
+                    <a href="{{ url_for('admin_files')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-file fa-fw"></i>
+                        <span>Files</span>
+                    </a>
+                </li> -->
+    
+                <li>
+                    <a href="{{ url_for('admin_settings') }}" class="active d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-cog fa-fw"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+
+                
+                
+            </ul>
+        </div>
+        <div class="content w-full">
+               <!-- Start Header -->
+               <div class="header bg-white p-15 between-flex">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input id="searchInput" class="search-box" type="search" placeholder="Search Control Number">
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+                <div class="user d-flex align-items-center">
+
+                     <!-- Notification Bell -->
+                    <span class="notification p-relative" onclick="toggleNotifications()">
+                        <i class="fa-regular fa-bell fa-lg p-relative"></i>
+                        <span id="unread-count" class="unread-count" style="display: none;"></span>
+                    </span>
+                    
+                    <!-- Notification Dropdown -->
+                    <div id="notification-dropdown" class="dropdown-menu">
+                        <strong>Notifications</strong>
+                        <div id="notification-list" style=" overflow: hidden; margin-left:-200px; margin-top: 20px;"></div>
+                        <div class="footer">
+                            <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a>
+                        </div>
+                    </div>
+            
+                    <!-- User Info -->
+                    <div class="user-info d-flex align-items-center">
+                        <div class="user-img" id="userDropdownToggle">
+                            <img src="/static/images/user.png" alt="User">
+                        </div>
+                    </div>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="userDropdown" class="dropdown-menu">
+                        <ul>
+                            <li>
+                                <a href="{{ url_for('admin_profile') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                                    <i class="fas fa-user fa-fw"></i>
+                                    <span>Profile</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('admin_logout') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                                    <i class="fas fa-sign-out-alt fa-fw"></i>
+                                    <span>Logout</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+            <!-- End Header -->
+
+            <h1 class="p-relative">Settings</h1>
+            <div class="wrapper d-grid gap-20">
+                <!-- Start Site Control -->
+                <div class="site-control bg-white rad-10 p-20">
+                    <h2 class="mt-0 mb-10">Site Control</h2>
+                    <span class="mt-0 mb-20 font-15 color-grey d-block">Control your site settings</span>
+                    <div class="mb-15 between-flex">
+                        <div>
+                            <span>Website Control</span>
+                            <p class="mt-5 mb-15 font-12 color-grey">Open/Close Website And Type The Reason</p>
+                        </div>
+                        <label>
+                            <input class="toggle-box" type="checkbox" checked>
+                            <div class="toggle-switch"></div>
+                        </label>
+                    </div>
+                    <textarea class="close-message p-10 rad-6 d-block w-full" placeholder="Type the reason"></textarea>
+                </div>
+                <!-- End Site Control -->
+                <!-- Start General Information -->
+                <div class="general-info bg-white rad-10 p-20">
+                    <h2 class="mt-0 mb-10">General Info</h2>
+                    <span class="mt-0 mb-20 font-15 color-grey d-block">General Information About Your Account</span>
+                    <div class="mb-15"><label class="font-14 color-grey mb-10 d-block">First Name</label>
+                        <input type="text" class="border-none border p-10 rad-6 d-block w-full"
+                            placeholder="First Name">
+                    </div>
+                    <div class="mb-15"><label class="font-14 color-grey mb-10 d-block">Last Name</label>
+                        <input type="text" class="border-none border p-10 rad-6 d-block w-full" placeholder="Last Name">
+                    </div>
+                    <div> <label class="font-14 color-grey mb-10 d-block">Email</label>
+                        <input type="email" class="email border-none border mr-10 p-10 rad-6 d-block w-full"
+                            placeholder="John_Doe@examble.com" disabled>
+                        <a href="#" class="color-blue">Change</a>
+                    </div>
+                </div>
+                <!-- End General Information -->
+                <!-- Start Security Info -->
+                <div class="security-info bg-white rad-10 p-20">
+                    <h2 class="mt-0 mb-10">Security Info</h2>
+                    <span class="mt-0 mb-20 font-15 color-grey d-block">Security Information About Your Account</span>
+                    <div class="between-flex mb-15 pb-20">
+                        <div>
+                            <P class="mb-5 mt-0">Password</P>
+                            <span class="font-13 color-grey mr-10">Last Changed: 12/12/2025</span>
+                        </div>
+                        <a href="#" class="btn bg-blue color-white">Change</a>
+                    </div>
+                    <div class="between-flex mb-15 pb-20">
+                        <div>
+                            <P class="mb-5 mt-0">Two Factor Authentication</P>
+                            <span class="font-13 color-grey mr-10">Enable/Disable The Feature</span>
+                        </div>
+                        <label>
+                            <input class="toggle-box" type="checkbox" checked>
+                            <div class="toggle-switch"></div>
+                        </label>
+                    </div>
+                    <div class="between-flex">
+                        <div>
+                            <p class="mb-5 mt-0">Devices</p>
+                            <span class="font-13 color-grey mr-10">Manage Your Devices</span>
+                        </div>
+                        <a href="#" class="btn bg-eee color-black">Devices</a>
+                    </div>
+                </div>
+                <!-- End Security Info -->
+
+                <!-- Start Security Info -->
+                <div class="social-info bg-white rad-10 p-20">
+                    <h2 class="mt-0 mb-10">Social Info</h2>
+                    <span class="mt-0 mb-20 font-15 color-grey d-block">Social Information About Your Account</span>
+                    <div class="d-flex mb-15">
+                        <i class="fa-brands fa-twitter center-flex color-grey"></i>
+                        <input class="w-full" type="text" placeholder="Twitter Username">
+                    </div>
+                    <div class="d-flex mb-15">
+                        <i class="fa-brands fa-facebook center-flex color-grey"></i>
+                        <input class="w-full" type="text" placeholder="Facebook Username">
+                    </div>
+                    <div class="d-flex mb-15">
+                        <i class="fa-brands fa-instagram center-flex color-grey"></i>
+                        <input class="w-full" type="text" placeholder="Instagram Username">
+                    </div>
+                    <div class="d-flex">
+                        <i class="fa-brands fa-linkedin center-flex color-grey"></i>
+                        <input class="w-full" type="text" placeholder="Linkedin Username">
+                    </div>
+                </div>
+                <!-- End Security Info -->
+
+                <!-- Start Widgets Control -->
+                <div class="widgets-control bg-white rad-10 p-20">
+                    <h2 class="mt-0 mb-10">Widgets Control</h2>
+                    <span class="mt-0 mb-20 font-15 color-grey d-block">Control Your Widgets</span>
+                    <div class="control d-flex align-center mb-15">
+                        <input type="checkbox" id="one" checked>
+                        <label for="one">Quick Draft</label>
+                    </div>
+                    <div class="control d-flex align-center mb-15">
+                        <input type="checkbox" id="two" checked>
+                        <label for="two">Activity</label>
+                    </div>
+                    <div class="control d-flex align-center mb-15">
+                        <input type="checkbox" id="three">
+                        <label for="three">At a Glance</label>
+                    </div>
+                    <div class="control d-flex align-center mb-15">
+                        <input type="checkbox" id="four">
+                        <label for="four">WordPress Events and News</label>
+                    </div>
+                    <div class="control d-flex align-center mb-15">
+                        <input type="checkbox" id="five">
+                        <label for="five">Welcome</label>
+                    </div>
+                    <div class="control d-flex align-center">
+                        <input type="checkbox" id="six">
+                        <label for="six">Site Health</label>
+                    </div>
+                </div>
+                <!-- End Widgets Control -->
+
+                <!-- Start Backup Manager -->
+                <div class="backup-manager bg-white rad-10 p-20">
+                    <h2 class="mt-0 mb-10">Backup Manager</h2>
+                    <span class="mt-0 mb-20 font-15 color-grey d-block">Control Backup Time And Location</span>
+                    <div class="control d-flex align-center mb-15">
+                        <input type="radio" id="seven" name="backup" checked>
+                        <label for="seven">Daily Backup</label>
+                    </div>
+                    <div class="control d-flex align-center mb-15">
+                        <input type="radio" id="eight" name="backup">
+                        <label for="eight">Weekly Backup</label>
+                    </div>
+                    <div class="control d-flex align-center mb-15">
+                        <input type="radio" id="nine" name="backup">
+                        <label for="nine">Monthly Backup</label>
+                    </div>
+                    <div class="servers d-flex align-center text-center gap-10">
+                        <input type="radio" name="servers" id="server-one">
+                        <div class="server mb-15 rad-10 w-full">
+                            <label class="d-block m-15" for="server-one">
+                                <i class="fa-solid fa-server d-block mb-10"></i>
+                                Alpha
+                            </label>
+                        </div>
+                        <input type="radio" name="servers" id="server-two" checked="">
+                        <div class="server mb-15 rad-10 w-full">
+                            <label class="d-block m-15" for="server-two">
+                                <i class="fa-solid fa-server d-block mb-10"></i>
+                                Beta
+                            </label>
+                        </div>
+                        <input type="radio" name="servers" id="server-three">
+                        <div class="server mb-15 rad-10 w-full">
+                            <label class="d-block m-15" for="server-three">
+                                <i class="fa-solid fa-server d-block mb-10"></i>
+                                Gamma
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Backup Manager -->
+            </div>
+
+            <script>
+
+                document.addEventListener("DOMContentLoaded", function () {
+                    const notificationDropdown = document.getElementById("notification-dropdown");
+                    const notificationList = document.getElementById("notification-list");
+                    const bellIcon = document.querySelector(".notification");
+                    const unreadCount = document.getElementById("unread-count");
+                
+                    async function fetchNotifications() {
+                        console.log("Fetching notifications...");
+                
+                        try {
+                            const response = await fetch("/get_notifications");
+                            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                
+                            const data = await response.json();
+                            console.log("Received notifications:", data);
+                
+                            notificationList.innerHTML = ""; // Clear previous notifications
+                
+                            if (data.length === 0) {
+                                unreadCount.style.display = "none";
+                                notificationList.innerHTML = "<p>No new notifications.</p>";
+                                return;
+                            }
+                
+                            unreadCount.textContent = data.length;
+    
+                            unreadCount.style.display = "inline-block"; // Show notification count      
+    
+                            const sortedData = data.sort((a, b) => new Date(b.time) - new Date(a.time));
+    
+                            // Display notifications
+                            sortedData.forEach(notification => {
+    
+                                let notificationItem = document.createElement("div");
+                                notificationItem.classList.add("notification-item");
+                
+                                // Ensure notification contains `user_id`
+                                notificationItem.dataset.userId = notification.user_id;
+                
+                                notificationItem.innerHTML = `
+                               
+                                <div class="content">
+                                    <span class="sender">${notification.sender}</span>
+                                    <span class="message-preview">${notification.content}</span>
+                                    <span class="time">${formatTime(notification.time)}</span>
+                                </div>
+                            `;
+                
+                                // Redirect to view-client when clicked
+                                notificationItem.addEventListener("click", function () {
+                                    const userId = this.dataset.userId;
+                                    if (userId) {
+                                        window.location.href = `/view-client/${userId}`;
+                                    }
+                                });
+                
+                                notificationList.appendChild(notificationItem);
+                            });
+                
+                        } catch (error) {
+                            console.error("Error fetching notifications:", error);
+                        }
+                    }
+                
+                    function toggleNotifications(event) {
+                        event.stopPropagation();
+                        notificationDropdown.classList.toggle("show");
+                    }
+                
+                    document.addEventListener("click", function (event) {
+                        if (!notificationDropdown.contains(event.target) && !bellIcon.contains(event.target)) {
+                            notificationDropdown.classList.remove("show");
+                        }
+                    });
+                
+                    bellIcon.addEventListener("click", toggleNotifications);
+                
+                    // Helper function to format timestamps (optional)
+                    function formatTime(timestamp) {
+                        const time = new Date(timestamp);
+                        return time.toLocaleString(); // Formats in a readable way
+                    }
+                
+                    fetchNotifications();
+                    setInterval(fetchNotifications, 10000);
+                });
+                
+    
+            </script>
+            
+            
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    const userDropdownToggle = document.getElementById("userDropdownToggle");
+                    const userDropdown = document.getElementById("userDropdown");
+                
+                    userDropdownToggle.addEventListener("click", function (event) {
+                        event.stopPropagation();
+                        userDropdown.classList.toggle("show");
+                    });
+                
+                    // Close dropdown if clicking outside
+                    document.addEventListener("click", function (event) {
+                        if (!userDropdown.contains(event.target) && !userDropdownToggle.contains(event.target)) {
+                            userDropdown.classList.remove("show");
+                        }
+                    });
+                });
+                
+            </script>
+            <script>
+                document.getElementById("searchInput").addEventListener("input", async function () {
+                    let query = this.value.trim();
+                    let searchResults = document.getElementById("searchResults");
+                
+                    if (query === "") {
+                        searchResults.style.display = "none";
+                        return;
+                    }
+                
+                    try {
+                        let response = await fetch(`/search_control_num?q=${query}`);
+                        let data = await response.json();
+                
+                        searchResults.innerHTML = "";
+                        if (data.length === 0) {
+                            searchResults.innerHTML = "<div>No results found</div>";
+                        } else {
+                            data.forEach(user => {
+                                let div = document.createElement("div");
+                                div.textContent = user.control_num;
+                                div.onclick = () => window.location.href = `/view-client/${user.id}`;
+                                searchResults.appendChild(div);
+                            });
+                        }
+                        searchResults.style.display = "block";
+                    } catch (error) {
+                        console.error("Error fetching search results:", error);
+                    }
+                });
+                
+                // Hide results when clicking outside
+                document.addEventListener("click", function (e) {
+                    let searchBox = document.getElementById("searchInput");
+                    let searchResults = document.getElementById("searchResults");
+                
+                    if (!searchBox.contains(e.target) && !searchResults.contains(e.target)) {
+                        searchResults.style.display = "none";
+                    }
+                });
+                
+            </script>
+</body>
+
+</html>

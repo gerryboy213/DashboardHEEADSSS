@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap');
+
+
+/* General Styles */
+body {
+    font-family: 'Lato', sans-serif;
+    background-color: #fbe0e0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column; /* Ensures elements stack vertically */
+    height: 100vh;
+    margin: 0;
+    text-align: center;
+    padding: 10px;
+}
+
+html, body {
+    overflow: hidden; /* Prevent scrolling */
+    height: 100vh; /* Ensure full viewport height */
+    margin: 0;
+    padding: 0;
+}
+.header {
+    display: flex;
+    justify-content: center; /* Centers the logo horizontally */
+    align-items: center;
+    width: 100%;
+    padding: 10px 0;
+    flex-wrap: wrap;
+}
+.logo {
+    width: 10vh; /* Adjust size as needed */
+    max-width: 80px;
+    height: auto;
+}
+
+.logo.large{
+    width: 60px; /* Make Logo 1 slightly larger */
+}
+
+.logo.larger {
+    width: 60px; /* Make Logo 1 slightly larger */
+}
+
+.logo-container {
+    display: flex;
+    gap: 15px; /* Adds spacing between logos */
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.logolarger {
+    width: 380px; /* Special size for the last image */
+    height:55px;
+
+}
+
+/* Container */
+.container {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    width: 40vw;
+    max-width: 400px; /* Prevents excessive stretching */
+    min-width: 280px;
+    transition: transform 0.3s ease-in-out;
+    margin-top: 10px;
+}
+
+.container:hover {
+    transform: translateY(-5px);
+}
+
+.footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
+    padding: 10px 0;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+/* Heading */
+h2 {
+    color: #333;
+    font-weight: 600;
+    font-size: 22px;
+}
+
+/* Paragraph */
+p {
+    color: #555;
+    font-size: 15px;
+    margin-bottom: 20px;
+}
+
+/* Buttons */
+.buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+
+.btn {
+    background: #4CAF50;
+    color: white;
+    text-decoration: none;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 6px;
+    display: block;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    background: #3e8e41;
+    transform: scale(1.05);
+}
+
+.btn-alt {
+    background: #007BFF;
+}
+
+.btn-alt:hover {
+    background: #0056b3;
+}
+
+
+.footer img:first-child {
+    margin-left: 2px; /* Moves the first logo slightly to the left */
+}
+
+.footer img:last-child {
+    margin-right: 10px; /* Moves the last logo slightly to the left */
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .container {
+        width: 80%;
+        padding: 30px;
+    }
+    
+
+  
+    
+    .logolarger{
+        margin-top: 10px;
+        width: 90%;
+        justify-content: center;
+        align-items: center;
+        margin-left: 10px;
+    }
+    
+}
+
+/* Navbar */
+.navbar {
+    padding: 15px 20px;
+}
+
+.navbar .profile-pic img {
+    border-radius: 50%;
+}
+
+.navbar .profile-pic {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+}

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='framework.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_dashboard.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&amp;display=swap" rel="stylesheet">
+
+
+
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 215px; /* Adjusted width to be a bit smaller */
+            overflow: hidden;
+            background-color: #fff; /* Ensure background color is set */
+        }
+        .content {
+            margin-left: 214px; /* Adjust this value based on the new width of your sidebar */
+        }
+    </style>
+    
+</head>
+
+<body>
+    <div class="page d-flex">
+        <div class="sidebar bg-white p-20 p-relative">
+            <h3 class="p-relative text-center mt-0">HEADSSS</h3>
+            <ul>
+                <li>
+                    <a href="{{ url_for('admin_dashboard') }}" class=" d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-tachometer-alt fa-fw"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin_messages') }}" class="active d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span>Messages</span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="{{ url_for('admin_list') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-people-group"></i>
+                        <span>List of Client</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ url_for('admin_results')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-square-poll-horizontal"></i>
+                        <span>Results</span>
+                    </a>
+                </li>
+               
+            <!--    <li>
+                    <a href="{{ url_for('admin_files')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-file fa-fw"></i>
+                        <span>Files</span>
+                    </a>
+                </li> -->
+               
+                <li>
+                    <a href="{{ url_for('admin_settings') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-cog fa-fw"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+
+              
+                
+            </ul>
+        </div>
+        <div class="content w-full">
+            <!-- Start Header -->
+            <div class="header bg-white p-15 between-flex">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input id="searchInput" class="search-box" type="search" placeholder="Search Control Number">
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+                <div class="user d-flex align-items-center">
+                  
+                   <!-- Notification Bell -->
+                   <span class="notification p-relative" onclick="toggleNotifications()">
+                    <i class="fa-regular fa-bell fa-lg p-relative"></i>
+                    <span id="unread-count" class="unread-count" style="display: none;"></span>
+                </span>
+                
+                <!-- Notification Dropdown -->
+                <div id="notification-dropdown" class="dropdown-menu">
+                    <strong>Notifications</strong>
+                    <div id="notification-list"></div>
+                    <div class="footer">
+                        <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a>
+                    </div>
+                </div>
+            
+                    <!-- User Info -->
+                    <div class="user-info d-flex align-items-center">
+                        <div class="user-img" id="userDropdownToggle">
+                            <img src="/static/images/user.png" alt="User">
+                        </div>
+                    </div>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="userDropdown" class="dropdown-menu">
+                        <ul>
+                            <li>
+                                <a href="{{ url_for('admin_profile') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                                    <i class="fas fa-user fa-fw"></i>
+                                    <span>Profile</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('admin_logout') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                                    <i class="fas fa-sign-out-alt fa-fw"></i>
+                                    <span>Logout</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+            <!-- End Header -->
+            <div class="projects-table bg-white rad-10 m-20 p-20">
+                <h2 class="m-0 mb-20">Messages</h2>
+                <div id="email-list" class="email-list d-grid gap-20 m-20">
+                    {% for question in questions.items %}
+                        <div class="email-item bg-light p-10 rad-6">
+                            <strong>From:</strong> {{ question.sender }} <br>
+                                <button onclick="viewMessage('{{ question.id }}')">View</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            
+                <!-- Pagination Controls -->
+                <div class="pagination">
+                    {% if questions.has_prev %}
+                        <a href="{{ url_for('admin_messages', page=questions.prev_num) }}" class="pagination-btn">Previous</a>
+                    {% endif %}
+                    <span>Page {{ questions.page }} of {{ questions.pages }}</span>
+                    {% if questions.has_next %}
+                        <a href="{{ url_for('admin_messages', page=questions.next_num) }}" class="pagination-btn">Next</a>
+                    {% endif %}
+                </div>
+            
+                <!-- Summary View -->
+                <div id="summary-view" class="email-view bg-white p-20 rad-6 p-relative" style="display: none;">
+                    <button class="back-btn" onclick="closeSummary()">← Back</button>
+                    <h2 id="summary-subject"></h2>
+                    <p><strong>From: </strong><span id="summary-sender"></span></p>
+                    <hr>
+                    <div id="summary-content"></div>
+                </div>
+            </div>
+            
+    </div>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            function openSummary(userId, senderName) {
+                fetch(`/summary?user_id=${userId}`)
+                    .then(response => response.text()) // Get the full HTML content
+                    .then(html => {
+                        document.getElementById("summary-view").style.display = "block";
+                        document.getElementById("email-list").style.display = "none"; // Hide message list
+    
+                        document.getElementById("summary-subject").textContent = "Assessment Summary";
+                        document.getElementById("summary-sender").textContent = senderName;
+    
+                        // Inject the summary HTML into the content container
+                        document.getElementById("summary-content").innerHTML = html;
+                    })
+                    .catch(error => console.error("Error fetching summary:", error));
+            }
+    
+            function closeSummary() {
+                document.getElementById("summary-view").style.display = "none";
+                document.getElementById("email-list").style.display = "grid"; // Show messages again
+            }
+    
+            window.openSummary = openSummary;
+            window.closeSummary = closeSummary;
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            function fetchNotifications() {
+                fetch("/get_notifications")
+                    .then(response => response.json())
+                    .then(data => {
+                        const emailList = document.getElementById("email-list");
+                        emailList.innerHTML = ""; // Clear previous notifications
+        
+                        if (data.length > 0) {
+                            data.forEach(msg => {
+                                const emailItem = document.createElement("div");
+                                emailItem.classList.add("email-item", "bg-white", "p-20", "rad-6", "p-relative");
+                                emailItem.onclick = () => openSummary(msg.id, msg.sender);
+        
+                                emailItem.innerHTML = `
+                                    <div class="email-header between-flex">
+                                        <span class="email-sender font-14 color-grey">${msg.sender}</span>
+                                        <span class="email-date font-13 color-grey">${new Date(msg.time).toLocaleDateString()}</span>
+                                    </div>
+                                    <h4 class="email-subject m-0">${msg.subject}</h4>
+                                    <p class="email-preview color-grey mt-10 mb-10 font-14">
+                                        ${msg.content.substring(0, 40)}...
+                                    </p>
+                                `;
+        
+                                emailList.appendChild(emailItem);
+                            });
+                        } else {
+                            emailList.innerHTML = "<p>No new messages.</p>";
+                        }
+                    })
+                    .catch(error => console.error("Error fetching notifications:", error));
+            }
+        
+            function openSummary(messageId, senderName) {
+                fetch(`/summary?message_id=${messageId}`)
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById("summary-view").style.display = "block";
+                        document.getElementById("email-list").style.display = "none"; // Hide message list
+        
+                        document.getElementById("summary-subject").textContent = "Message Summary";
+                        document.getElementById("summary-sender").textContent = senderName;
+        
+                        // Inject the summary HTML into the content container
+                        document.getElementById("summary-content").innerHTML = html;
+                    })
+                    .catch(error => console.error("Error fetching summary:", error));
+            }
+        
+            function closeSummary() {
+                document.getElementById("summary-view").style.display = "none";
+                document.getElementById("email-list").style.display = "grid"; // Show messages again
+            }
+        
+            window.openSummary = openSummary;
+            window.closeSummary = closeSummary;
+        
+            // Fetch notifications initially
+            fetchNotifications();
+        });
+        </script>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const userDropdownToggle = document.getElementById("userDropdownToggle");
+                const userDropdown = document.getElementById("userDropdown");
+            
+                userDropdownToggle.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    userDropdown.classList.toggle("show");
+                });
+            
+                // Close dropdown if clicking outside
+                document.addEventListener("click", function (event) {
+                    if (!userDropdown.contains(event.target) && !userDropdownToggle.contains(event.target)) {
+                        userDropdown.classList.remove("show");
+                    }
+                });
+            });
+            
+        </script>
+        <script>
+            document.getElementById("searchInput").addEventListener("input", async function () {
+                let query = this.value.trim();
+                let searchResults = document.getElementById("searchResults");
+            
+                if (query === "") {
+                    searchResults.style.display = "none";
+                    return;
+                }
+            
+                try {
+                    let response = await fetch(`/search_control_num?q=${query}`);
+                    let data = await response.json();
+            
+                    searchResults.innerHTML = "";
+                    if (data.length === 0) {
+                        searchResults.innerHTML = "<div>No results found</div>";
+                    } else {
+                        data.forEach(user => {
+                            let div = document.createElement("div");
+                            div.textContent = user.control_num;
+                            div.onclick = () => window.location.href = `/view-client/${user.id}`;
+                            searchResults.appendChild(div);
+                        });
+                    }
+                    searchResults.style.display = "block";
+                } catch (error) {
+                    console.error("Error fetching search results:", error);
+                }
+            });
+            
+            // Hide results when clicking outside
+            document.addEventListener("click", function (e) {
+                let searchBox = document.getElementById("searchInput");
+                let searchResults = document.getElementById("searchResults");
+            
+                if (!searchBox.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.style.display = "none";
+                }
+            });
+            
+        </script>
+</body>
+
+</html> 

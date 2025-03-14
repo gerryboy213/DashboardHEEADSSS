@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Files</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='framework.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_dashboard.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&amp;display=swap" rel="stylesheet">
+
+    
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 215px; /* Adjusted width to be a bit smaller */
+            overflow: hidden;
+            background-color: #fff; /* Ensure background color is set */
+        }
+        .content {
+            margin-left: 214px; /* Adjust this value based on the new width of your sidebar */
+        }
+    </style>
+    
+</head>
+
+<body>
+    <div class="page d-flex">
+        
+        <div class="sidebar bg-white p-20 p-relative">
+            <h3 class="p-relative text-center mt-0">Dashify</h3>
+            <ul>
+                <li>
+                    <a href="{{ url_for('admin_dashboard') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-tachometer-alt fa-fw"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin_messages') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span>Messages</span>
+                    </a>
+                </li>
+             
+                <li>
+                    <a href="{{ url_for('admin_list') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-people-group"></i>
+                        <span>List of Client</span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="{{ url_for('admin_results')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fa-solid fa-square-poll-horizontal"></i>
+                        <span>Results</span>
+                    </a>
+                </li>
+               
+                
+                <li>
+                    <a href="{{ url_for('admin_files')}}" class="active d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-file fa-fw"></i>
+                        <span>Files</span>
+                    </a>
+                </li>
+    
+                <li>
+                    <a href="{{ url_for('admin_settings') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-cog fa-fw"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+
+               
+                
+            </ul>
+        </div>
+        <div class="content w-full">
+            <!-- Start Header -->
+            <div class="header bg-white p-15 between-flex">
+                <div class="search p-relative">
+                    <input class="p-10 rad-10" type="search" placeholder="Search">
+                </div>
+                <div class="user d-flex align-items-center">
+                    <!-- Notification Bell -->
+                    <span class="notification p-relative" onclick="toggleNotifications()">
+                        <i class="fa-regular fa-bell fa-lg p-relative"></i>
+                        <span id="unread-count" class="unread-count" style="display: none;"></span>
+                    </span>
+            
+                    <!-- Message Preview Dropdown -->
+                    <div id="notification-dropdown" class="dropdown-menu">
+                        <strong>Notifications</strong>
+                        <div id="notification-list"></div>
+                        <div class="footer">
+                            <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a>
+                        </div>
+                    </div>
+            
+                    <!-- User Info -->
+                    <div class="user-info d-flex align-items-center">
+                        <div class="user-img" id="userDropdownToggle">
+                            <img src="/static/images/user.png" alt="User">
+                        </div>
+                    </div>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="userDropdown" class="dropdown-menu">
+                        <ul>
+                            <li>
+                                <a href="{{ url_for('admin_profile') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                                    <i class="fas fa-user fa-fw"></i>
+                                    <span>Profile</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('admin_logout') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                                    <i class="fas fa-sign-out-alt fa-fw"></i>
+                                    <span>Logout</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+            <!-- End Header -->
+             
+            <h1 class="p-relative">Files</h1>
+            <div class="files-page d-flex gap-20 m-20">
+                <div class="files-stats bg-white rad-10 p-20 border-eee">
+                    <h2 class="mt-0 mb-15 text-center font-normal fs-22">Files Statistics</h2>
+                    <div class="d-flex align-items-center border-eee rad-6 p-10 mb-15">
+                        <i class="fa-regular fa-file-pdf fa-fw bg-red-light color-red icon center-flex"></i>
+                        <div class="info">
+                            <span class="font-14">PDF Files</span>
+                            <span class="color-grey d-block mt-5 font-13">130 Files</span>
+                        </div>
+                        <div class="size color-grey font-13 d-flex align-items-center">6.5GB</div>
+                    </div>
+                    <div class="d-flex align-items-center border-eee rad-6 p-10 mb-15">
+                        <i class="fa-regular fa-images fa-fw bg-green-light color-green icon center-flex"></i>
+                        <div class="info">
+                            <span class="font-14">Images</span>
+                            <span class="color-grey d-block mt-5 font-13">115 Files</span>
+                        </div>
+                        <div class="size color-grey font-13 d-flex align-items-center">3.5GB</div>
+                    </div>
+                    <div class="d-flex align-items-center border-eee rad-6 p-10 mb-15">
+                        <i class="fa-regular fa-file-word fa-fw bg-blue-light color-blue icon center-flex"></i>
+                        <div class="info">
+                            <span class="font-14">Word Files</span>
+                            <span class="color-grey d-block mt-5 font-13">110 Files</span>
+                        </div>
+                        <div class="size color-grey font-13 d-flex align-items-center">3.2GB</div>
+                    </div>
+                    <div class="d-flex align-items-center border-eee rad-6 p-10 mb-15">
+                        <i class="fa-solid fa-file-csv fa-fw bg-orange-light color-orange icon center-flex"></i>
+                        <div class="info">
+                            <span class="font-14">CSV Files</span>
+                            <span class="color-grey d-block mt-5 font-13">99 Files</span>
+                        </div>
+                        <div class="size color-grey font-13 d-flex align-items-center">2.9GB</div>
+                    </div>
+                    <a class="upload bg-blue color-white rad-6 d-block w-fit font-13" href="#">
+                        <i class="fa-solid fa-angles-up mr-10"></i>
+                        Upload
+                    </a>
+                </div>
+                <div class="files-content d-grid gap-20">
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/pdf.png" alt="PDF">
+                        </div>
+                        <div class="text-center mb-10 font-14">my-file.pdf</div>
+                        <p class="color-grey font-13 m-0">Abdullah</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">20/06/2020</span>
+                            <span class="color-grey font-13">5.5MB</span>
+                        </div>
+                    </div>
+                    
+                   
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/zip.png" alt="ZIP">
+                        </div>
+                        <div class="text-center mb-10 font-14">my-zip.zip</div>
+                        <p class="color-grey font-13 m-0">User</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">16/5/2021</span>
+                            <span class="color-grey font-13">2.5MB</span>
+                        </div>
+                    </div>
+                   
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/eps.png" alt="EPS">
+                        </div>
+                        <div class="text-center mb-10 font-14">my-eps.eps</div>
+                        <p class="color-grey font-13 m-0">Designer</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">16/5/2021</span>
+                            <span class="color-grey font-13">8.9MB</span>
+                        </div>
+                    </div>
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/pdf.png" alt="PDF">
+                        </div>
+                        <div class="text-center mb-10 font-14">project.pdf</div>
+                        <p class="color-grey font-13 m-0">Mohamed</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">16/5/2021</span>
+                            <span class="color-grey font-13">5.5MB</span>
+                        </div>
+                    </div>
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/png.png" alt="PNG">
+                        </div>
+                        <div class="text-center mb-10 font-14">banner.png</div>
+                        <p class="color-grey font-13 m-0">Designer</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">16/5/2021</span>
+                            <span class="color-grey font-13">1.1MB</span>
+                        </div>
+                    </div>
+                   
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/pdf.png" alt="PDF">
+                        </div>
+                        <div class="text-center mb-10 font-14">report.pdf</div>
+                        <p class="color-grey font-13 m-0">Manager</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">16/5/2021</span>
+                            <span class="color-grey font-13">12.5MB</span>
+                        </div>
+                    </div>
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/avi.png" alt="AVI">
+                        </div>
+                        <div class="text-center mb-10 font-14">tutorial.avi</div>
+                        <p class="color-grey font-13 m-0">Teacher</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">16/5/2021</span>
+                            <span class="color-grey font-13">22.5MB</span>
+                        </div>
+                    </div>
+                 
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/png.png" alt="PNG">
+                        </div>
+                        <div class="text-center mb-10 font-14">photo.png</div>
+                        <p class="color-grey font-13 m-0">Designer</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">16/5/2021</span>
+                            <span class="color-grey font-13">1.8MB</span>
+                        </div>
+                    </div>
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/pdf.png" alt="PDF">
+                        </div>
+                        <div class="text-center mb-10 font-14">contract.pdf</div>
+                        <p class="color-grey font-13 m-0">Lawyer</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">16/5/2021</span>
+                            <span class="color-grey font-13">4.5MB</span>
+                        </div>
+                    </div>
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/zip.png" alt="ZIP">
+                        </div>
+                        <div class="text-center mb-10 font-14">archive.zip</div>
+                        <p class="color-grey font-13 m-0">Admin</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">16/5/2021</span>
+                            <span class="color-grey font-13">132MB</span>
+                        </div>
+                    </div>
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/eps.png" alt="EPS">
+                        </div>
+                        <div class="text-center mb-10 font-14">vector.eps</div>
+                        <p class="color-grey font-13 m-0">Artist</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">16/5/2021</span>
+                            <span class="color-grey font-13">5.2MB</span>
+                        </div>
+                    </div>
+                  
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/avi.png" alt="AVI">
+                        </div>
+                        <div class="text-center mb-10 font-14">promo.avi</div>
+                        <p class="color-grey font-13 m-0">Marketing</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">16/5/2021</span>
+                            <span class="color-grey font-13">31.5MB</span>
+                        </div>
+                    </div>
+                  
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/png.png" alt="PNG">
+                        </div>
+                        <div class="text-center mb-10 font-14">avatar.png</div>
+                        <p class="color-grey font-13 m-0">User</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">16/5/2021</span>
+                            <span class="color-grey font-13">0.8MB</span>
+                        </div>
+                    </div>
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/zip.png" alt="ZIP">
+                        </div>
+                        <div class="text-center mb-10 font-14">backup.zip</div>
+                        <p class="color-grey font-13 m-0">Admin</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">16/5/2021</span>
+                            <span class="color-grey font-13">64.8MB</span>
+                        </div>
+                    </div>
+                  
+                    <div class="file bg-white p-10 rad-10">
+                        <i class="fa-solid fa-download color-grey p-absolute"></i>
+                        <div class="icon text-center">
+                            <img class="mt-15 mb-15" src="/static/images/pdf.png" alt="PDF">
+                        </div>
+                        <div class="text-center mb-10 font-14">manual.pdf</div>
+                        <p class="color-grey font-13 m-0">Writer</p>
+                        <div class="info between-flex mt-10 pt-10 border-top-eee">
+                            <span class="color-grey font-13">16/5/2021</span>
+                            <span class="color-grey font-13">5.5MB</span>
+                        </div>
+                    </div>
+                   
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const notificationDropdown = document.getElementById("notification-dropdown");
+            const notificationList = document.getElementById("notification-list");
+            const bellIcon = document.querySelector(".notification");
+            const unreadCount = document.getElementById("unread-count");
+        
+            function fetchNotifications() {
+                fetch('/admin/unread_notifications')
+                    .then(response => response.json())
+                    .then(data => {
+                        renderMessages(data.notifications);
+                        updateUnreadCount(data.unread_count);
+                    })
+                    .catch(error => console.error('Error fetching notifications:', error));
+            }
+        
+            function renderMessages(messages) {
+                notificationList.innerHTML = "";
+            
+                messages.slice(0, 3).forEach(msg => { // Limit to 3 messages
+                    const messageItem = document.createElement("div");
+                    messageItem.classList.add("notification-item", msg.unread ? "unread" : "read");
+            
+                    messageItem.innerHTML = `
+                        <div class="icon"><i class="fa fa-envelope"></i></div>
+                        <div class="content">
+                            <div class="sender">${msg.sender}</div>
+                            <div class="message-preview">${msg.content.substring(0, 40)}...</div>
+                            <div class="time">${msg.time}</div>
+                        </div>
+                    `;
+            
+                    messageItem.addEventListener("click", function () {
+                        markNotificationAsRead(msg.id);
+                        window.location.href = `/admin/messages?message_id=${msg.id}`;
+                    });
+            
+                    notificationList.appendChild(messageItem);
+                });
+            }
+        
+            function updateUnreadCount(count) {
+                if (count > 0) {
+                    unreadCount.style.display = "inline";
+                    unreadCount.textContent = count;
+                } else {
+                    unreadCount.style.display = "none";
+                }
+            }
+        
+            function toggleDropdown() {
+                notificationDropdown.classList.toggle("show");
+            }
+        
+            function markSingleNotificationAsRead(messageId) {
+                fetch('/admin/mark_single_notification_read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message_id: messageId })
+                }).then(response => response.json())
+                  .then(() => fetchNotifications()); // Refresh notifications after marking as read
+            }
+        
+            document.addEventListener("click", function (event) {
+                if (!notificationDropdown.contains(event.target) && !bellIcon.contains(event.target)) {
+                    notificationDropdown.classList.remove("show");
+                }
+            });
+        
+            bellIcon.addEventListener("click", toggleDropdown);
+            fetchNotifications();
+        
+            setInterval(fetchNotifications, 5000);
+        });
+        
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const userDropdownToggle = document.getElementById("userDropdownToggle");
+            const userDropdown = document.getElementById("userDropdown");
+        
+            userDropdownToggle.addEventListener("click", function (event) {
+                event.stopPropagation();
+                userDropdown.classList.toggle("show");
+            });
+        
+            // Close dropdown if clicking outside
+            document.addEventListener("click", function (event) {
+                if (!userDropdown.contains(event.target) && !userDropdownToggle.contains(event.target)) {
+                    userDropdown.classList.remove("show");
+                }
+            });
+        });
+        
+    </script>
+
+</body>
+
+</html> 

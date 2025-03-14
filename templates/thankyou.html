@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summary</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='summary.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+</head>
+<body>
+
+    <div class="container">
+        <form method="POST">
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th colspan="2" class="summary-title">Summary</th>
+                    </tr>
+                    <tr>
+                        <th>Question</th>
+                        <th>Answer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in assessment %}
+                        {% if data.is_category %}
+                            <tr class="category-row">
+                                <td colspan="2"><strong>{{ data.category }}</strong></td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td>{{ data.assessment }}</td>
+                                <td>
+                                    {% if data.answer == 'Yes' %}
+                                        <i class="fas fa-check-circle" style="color: green;"></i> Yes
+                                    {% elif data.answer == 'No' %}
+                                        <i class="fas fa-times-circle" style="color: red;"></i> No
+                                    {% else %}
+                                        {{ data.answer }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <!-- Pagination Controls -->
+            <div class="pagination">
+                {% if page > 1 %}
+                    <a href="{{ url_for('thank_you', page=page-1) }}" class="button">Previous</a>
+                {% endif %}
+                
+                {% if page < total_pages %}
+                    <a href="{{ url_for('thank_you', page=page+1) }}" class="button">Next</a>
+                {% else %}
+                
+                    <!-- Show "Confirm & Submit" when on the last page -->
+                    <form action="{{ url_for('thank_you') }}" method="POST">
+                        <button type="submit" name="confirm_submit" class="button confirm">Confirm & Submit</button>
+                    </form>
+                {% endif %}
+            </div>
+            
+        </form>
+    </div>
+    
+</body>
+</html>

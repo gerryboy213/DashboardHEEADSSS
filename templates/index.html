@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Comprehensive HEADSSS Assessment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/JAVIER.png') }}" alt="Logo 1" class="logo ">
+            <img src="{{ url_for('static', filename='images/DOH.png') }}" alt="Logo 2" class="logo">
+            <img src="{{ url_for('static', filename='images/DOH1.png') }}" alt="Logo 3" class="logo">
+        </div>
+    </header>
+    <div class="container">
+        <h2>HEADSSS Assessment</h2>
+        <p>Select an option to proceed</p>
+        
+        <div class="buttons">
+            <a href="{{ url_for('personal_info') }}" class="btn">Take Assessment</a>
+            <a href="{{ url_for('admin_login') }}" class="btn">Admin Panel</a>
+          
+            
+        </div>
+    </div>
+    <footer class="footer">
+        <!-- <img src="{{ url_for('static', filename='images/EU.png') }}" alt="Logo 1" class="logo large">
+        <img src="{{ url_for('static', filename='images/STC.png') }}" alt="Logo 2" class="logo large">
+        <img src="{{ url_for('static', filename='images/SAMAR2.png') }}" alt="Logo 3" class="logo larger"> -->
+        <img src="{{ url_for('static', filename='images/CONTACT1.png') }}" alt="Logo 3" class="logolarger">
+    </footer>
+</body>
+</html>

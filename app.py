@@ -79,6 +79,10 @@ class Admin(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(100), nullable=True)
+    phone = db.Column(db.String(20), nullable=True)
+    address = db.Column(db.String(255), nullable=True)
+    job = db.Column(db.String(100), nullable=True)
     
 @app.route('/get_yes_no_distribution', methods=['GET'])
 def get_yes_no_distribution():
@@ -281,6 +285,12 @@ def view_client(user_id):
     province_name = get_location_name(user.province, province_map)
     city_name = get_location_name(user.city, city_map)
     brgy_name = get_location_name(user.barangay, brgy_map)
+    
+    admin_username = None
+    if 'admin' in session:
+        admin = Admin.query.filter_by(username=session['admin']).first()
+        admin_username = admin.username if admin else None
+
 
     return render_template(
         'view_client.html', 
@@ -288,7 +298,8 @@ def view_client(user_id):
         region_name=region_name, 
         province_name=province_name,
         city_name=city_name,
-        brgy_name=brgy_name
+        brgy_name=brgy_name,
+        admin_username=admin_username
     )
 
     
@@ -464,15 +475,22 @@ def edit_admin_profile():
     admin = Admin.query.filter_by(username=session['admin']).first()
 
     if request.method == 'POST':
-        new_username = request.form['username']
-        new_password = request.form['password']
-        hashed_password = generate_password_hash(new_password, method='pbkdf2:sha256')
+        # Update admin details
+        admin.username = request.form.get('username', admin.username)  # Default to current username if not provided
+        admin.email = request.form.get('email', admin.email)          # Default to current email if not provided
+        admin.job = request.form.get('job', admin.job)                # Default to current job if not provided
+        admin.phone = request.form.get('phone', admin.phone)          # Default to current phone if not provided
+        admin.address = request.form.get('address', admin.address)    # Default to current address if not provided
 
-        admin.username = new_username
-        admin.password = hashed_password
+        # Update password if provided
+        if request.form.get('password'):
+            admin.password = generate_password_hash(request.form['password'], method='pbkdf2:sha256')
+
         db.session.commit()
 
-        flash('Profile updated successfully!', 'success')
+        # Update the session with the new username
+        session['admin'] = admin.username
+
         return redirect(url_for('admin_profile'))
 
     return render_template('edit_admin_profile.html', admin=admin)
@@ -766,6 +784,58 @@ def get_age_distribution():
 
     return jsonify(age_groups)
 
+@app.route('/get_user_details', methods=['GET'])
+def get_user_details():
+    control_num = request.args.get('control_num')
+    print(f"Received Control Number: {control_num}")  # Debugging log
+
+    if not control_num:
+        return jsonify({"valid": False, "message": "No control number provided"})
+
+    user = User.query.filter_by(control_num=control_num).first()
+
+    if user:
+        print("User found in database.")  # Debugging log
+        return jsonify({
+            "valid": True,
+            "first_name": user.first_name,
+            "middle_initial": user.middle_initial,
+            "last_name": user.last_name,
+            "contact": user.contact,
+            "dob": user.dob,
+            "age": user.age,
+            "sex": user.sex,
+            "region": user.region,
+            "province": user.province,
+            "city": user.city,
+            "barangay": user.barangay,
+            "street": user.street,
+            "date": user.date,
+            "location": user.location
+        })
+    else:
+        print("User NOT found in database.")  # Debugging log
+        return jsonify({"valid": False, "message": "Invalid control number"})
+
+    
+
+@app.route('/update_reason', methods=['POST'])
+def update_reason():
+    data = request.json
+    control_num = data.get("control_num")
+    reason = data.get("reason")
+
+    if not control_num or not reason:
+        return jsonify({"success": False, "message": "Missing control number or reason"}), 400
+
+    user = User.query.filter_by(control_num=control_num).first()
+   
+    if user:
+        user.reason = reason
+        db.session.commit()
+        return jsonify({"success": True, "message": "Reason updated successfully"})
+    else:
+        return jsonify({"success": False, "message": "Invalid control number"}), 404
 
 
 # @app.route('/questions', methods=['GET', 'POST'])

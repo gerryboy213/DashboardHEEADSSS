@@ -836,11 +836,11 @@ ul {
 }
 
 .summary-table th:first-child {
-    text-align: left; /* Left-align "Question" */
+    text-align: left; 
 }
 
 .summary-table th:last-child {
-    text-align: center; /* Center-align "Your Answer" */
+    text-align: center; 
 }
 
 .summary-table td {
@@ -879,8 +879,8 @@ ul {
 /* Recommended Action Section */
 #recommendedActionContainer {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Two equal columns */
-    gap: 50px; /* Space between items */
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 50px; 
     margin-left: 50px;
 }
 
@@ -890,11 +890,11 @@ label {
     gap: 5px;
 }
 
-/* Align the "Others" text box properly */
+
 .other-container {
     display: flex;
-    flex-direction: column; /* Stack elements vertically */
-    align-items: flex-start; /* Align items to the start */
+    flex-direction: column; 
+    align-items: flex-start; 
     gap: 5px;
 }
 
@@ -904,10 +904,10 @@ label {
 
 /* Ensure input box appears properly */
 #otherRecommendation {
-    width: 120%; /* Make the input box take the full width */
+    width: 120%; 
     border: 1px solid black;
-    padding: 20px; /* Increase padding for a larger input box */
-    visibility: hidden; /* Hide the input box by default */
+    padding: 20px; 
+    visibility: hidden; 
 }
 
 .input-field {
@@ -930,13 +930,12 @@ th[style*="background-color: lightcoral"] {
 
 
 @media print {
-        /* Hide everything by default */
+
         body * {
             visibility: hidden;
         }
     
-        /* Make only the summary table and relevant text visible */
-        .summary-table, .summary-table *,  .question-table, .question-table *,  #recommendedActionText, #serviceProviderText, #centerName{
+        .summary-table, .summary-table *,  .question-table, .question-table *,   #serviceProviderText, #centerName{
             visibility: visible;
         }
         
@@ -955,11 +954,22 @@ th[style*="background-color: lightcoral"] {
            
         }
     
-
-        /* Adjust table size and styling */
         .summary-table {
             position: absolute;
-            top: 50px; /* Adjust as needed */
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            border-collapse: collapse;
+            font-size: 12px;
+            box-shadow: none !important;
+            background: none !important;
+            border-radius: 0%;
+            margin-top: 180px;
+        }
+
+         .question-table {
+            position: relative;
             left: 50%;
             transform: translateX(-50%);
             width: 80%;
@@ -969,9 +979,10 @@ th[style*="background-color: lightcoral"] {
             background: none !important;
             border-radius: 0%;
         }
-        td {
-            border-right: 1px solid #000 !important; /* Darker border when printing */
-        }
+
+        /* td {
+            border-right: 1px solid #000 !important; 
+        } */
     
         
         .summary-table th, .summary-table td {
@@ -994,53 +1005,39 @@ th[style*="background-color: lightcoral"] {
             padding: 8px;
         }
 
-        #recommendedActionContainer {
-            position: absolute;
-            top: calc(100% + 50px); 
-            text-align: left;
-           align-items: left;
-            transform: translateX(-50%);
-            font-size: 14px;
-       
-            
-        }
 
-
-        /* Hide header and footer (including Dashboard and URL) */
         @page {
             margin: 0;
         }
-    
-        /* Hide unnecessary elements */
-        header, footer, .button-container, .dashboard-header, #serviceProvider, #recommendedAction, #centerName {
+ 
+       .dashboard-header, #serviceProvider, #centerName {
             display: none;
         }
-    
-        /* Ensure the selected provider name and recommended action are visible */
-        #serviceProviderText, #recommendedActionText, #centerName{
+
+        #serviceProviderText, #centerName{
             display: inline !important;
             visibility: visible !important;
         }
 
         th[style*="font-size: 15px;"] {
-            padding-left: 10px !important; /* Adjust as needed */
+            padding-left: 10px !important; 
         }
 
     th[colspan="2"] {
-        padding-left: 10px !important; /* Adjust value as needed */
+        padding-left: 10px !important;
     }
 
       th[colspan="2"] div {
-        gap: 2px !important; /* Reduce spacing */
+        gap: 2px !important;
     }
 
     th[colspan="2"] strong {
-        width: auto !important; /* Allow natural width */
-        margin-right: 5px !important; /* Reduce space between label and value */
+        width: auto !important; 
+        margin-right: 5px !important; 
     }
 
     th[colspan="2"] span {
-        width: auto !important; /* Allow natural width */
+        width: auto !important; 
         display: inline-block !important;
     }
 
@@ -1062,57 +1059,115 @@ th[style*="background-color: lightcoral"] {
 
 
     }
-    
-#serviceProviderText, #recommendedActionText    {
+   
+      
+#serviceProviderText , #recommendedActionText    {
     display: none;
 }
 
 @media print {
-    /* Ensure selected actions are displayed properly */
-    #recommendedActionText {
+   
+    .print-label, 
+    #recommendedActionContainer, 
+    .recommendation-table, 
+    .recommended-action-row {
         display: block !important;
-        /* font-weight: bold; */
-        text-align: left !important;
-        margin-left: 20px !important;
-        font-size: 15px;
+        visibility: visible !important;
     }
 
-    /* Hide checkboxes and input fields when printing */
+    .recommendation-table {
+        width: 100% !important;
+        display: table !important;
+        position: absolute;
+        top: 620px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80%;
+        border-collapse: collapse;
+        font-size: 12px;
+        box-shadow: none !important;
+        background: none !important;
+        border-radius: 0%;
+        border: none !important;
+        
+    }
+
+    
+    #recommendedActionText {
+        display: block;
+        visibility: visible !important;
+        position: relative !important;
+        text-align: left !important;
+        margin-left: 80px !important;
+        font-size: 15px;
+        word-wrap: break-word;
+        margin: 20px !important;
+        max-width: 100% !important;
+    }
+
+
     input[type="checkbox"], #otherRecommendation {
         display: none !important;
     }
 
-    /* Ensure list styling is preserved when printing */
+    
     #recommendedActionText ul {
-        list-style-type: disc; /* Ensures bullet points */
-        padding-left: 30px;
+        list-style-type: disc; 
+        padding-left: 70px;
         margin: 0;
+        display: block !important;
     }
 
     #recommendedActionText li {
-        margin-bottom: 5px;
-        margin-left: 15px;
+        display: list-item !important;
+        margin-bottom: 5px !important;
+        visibility: visible !important;
+        margin-left: 30px;
+       
     }
 
-    tr.recommended-action-row {
+    /* tr.recommended-action-row {
         border: 1px solid black !important;
-    }
+    } */
 
-    /* Ensure the container displays correctly */
+
     #recommendedActionContainer {
         display: block !important;
-        font-size: 15px;
-        /* font-weight: bold; */
-        width: 100%;
+        visibility: visible !important;
+        position: relative !important;
+        width: 80% !important;
         text-align: left !important;
-        border: 1px solid black !important;
+        /* border: 1px solid black !important; */
         padding: 10px !important;
-        margin-top: 10px !important;
+        margin-top: -200px !important; 
+        white-space: normal;
+        left: 60px;
+        border: none !important; 
+        display: grid;
+        grid-template-rows: auto 1fr auto;
     }
+    
 
     .print-label {
-        margin-left: -10px !important; /* Adjust this value as needed */
+        /* margin-left: 90px !important;  */
         display: block !important;
+        align-self: start;
+        z-index: 1000 !important;
+        position: relative !important;
+        margin-right: 90px;
+        left: 80px;
+    }
+
+    /* tr.recommended-action-row, #recommendedActionContainer {
+        page-break-inside: avoid !important;
+    } */
+    
+    #recommendedActionContainer {
+        page-break-before: avoid !important;
+    }
+    
+    #otherRecommendation {
+        visibility: visible !important;
     }
 }
 
@@ -1121,6 +1176,4 @@ th[style*="background-color: lightcoral"] {
     color: black;
     background: white;
 }
-
-
 

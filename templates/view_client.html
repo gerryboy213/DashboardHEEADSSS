@@ -17,6 +17,25 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='framework.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='view.css') }}">
+
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 215px; /* Adjusted width to be a bit smaller */
+            overflow: hidden;
+            background-color: #fff; /* Ensure background color is set */
+        }
+        .content {
+            margin-left: 214px; /* Adjust this value based on the new width of your sidebar */
+        }
+
+        
+        
+    </style>
+
 </head>
 
 <body>
@@ -49,12 +68,12 @@
                         <span>Results</span>
                     </a>
                 </li>
-                <li>
+             <!-- <li>
                     <a href="{{ url_for('admin_files')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
                         <i class="fas fa-file fa-fw"></i>
                         <span>Files</span>
                     </a>
-                </li>
+                </li> -->
                 <li>
                     <a href="{{ url_for('admin_settings') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
                         <i class="fas fa-cog fa-fw"></i>
@@ -229,8 +248,8 @@
                                                     <div style="display: flex; flex-direction: column; gap: 10px;">
                                                         <div style="display: flex; align-items: center; gap: 10px;">
                                                                 <label for="centerName" style="width: 180px; font-size: 15px;">Name of Service Provider: </label>
-                                                                <input type="text" id="centerName" name="center_name" class="input-field" required 
-                                                                style=" font-size: 15px;">                                                 
+                                                                <input type="text" id="centerName" name="center_name" class="input-field" 
+                                                                style="font-size: 15px;" value="{{ admin_username or '' }}" readonly>                                                                                          
                                                                 <span id="centerNameText"></span>
                                                         </div>
                                                     </div>
@@ -249,6 +268,7 @@
                                             </tr>
                                             
                                         </thead>
+                                    </table>
 
                                         <table class ="summary-table" border="1" width="100%">
                                             {% set no_answers = [] %}
@@ -336,11 +356,11 @@
                                             </tbody>
   
                                         </table>
-                                        
-
+                                    
                                             <!-- Recommended Action Section Placed After Last Question -->
-                                    <tr class="recommended-action-row">
-                                        <td colspan="2" style="padding-top: 20px; border:none">
+                                        <table class="recommendation-table" id="summaryTable" style="margin-top: 20px;">
+                                                <tr class="recommended-action-row">
+                                         <td colspan="2" style="padding-top: 20px; border:none">
                                             <div style="display: flex; flex-direction: column; align-items: start; gap: 10px; padding: 10px;">
                                                 <label class="print-label" style="font-weight: bold; font-size: 15px; margin-top: 20px">Recommended Action:</label>
                                     
@@ -368,9 +388,9 @@
                                             </div>
                                         </td>
                                     </tr>
+                                    </table>
 
-                                        </tbody>
-                                    </table>    
+                                        
                                 </form>
                             </div>
                         </div>
@@ -378,177 +398,202 @@
                 </div>
                 
                      <!-- Comprehensive HEADSSS Form -->
-                <div id="comprehensive-summary" style="display: none; margin-top: 20px;">
-                    <div class="wrapper d-grid gap-20">
-                        <div class="welcome bg-white rad-10 text-center-mobile">
-                           
-                            
-                            <div class="body text-center d-flex flex-column p-20 mt-20 mb-20">
-                                <!-- Buttons -->
-                                <div class="button-container">
-                                <!--     <button onclick="exportToPDF()" class="export-btn">
-                                        <i class="fas fa-file-pdf"></i> Export to PDF
-                                    </button>  -->
-
-                                    <button onclick="printSummary()" class="print-btn">
-                                        <i class="fas fa-print"></i> Print or Save as PDF <i class="fa-solid fa-file-pdf"></i>
-                                    </button>
-                                    
-                                </div>
-                
-                                <!-- Summary Table -->
-                                <form method="POST">
-                                    <table class="summary-table" id="summaryTable">
-                                        <thead>
-                                            <tr>
-                                                <th colspan="2" class="summary-title">Comprehensive HEADSSS Results</th>
-                                            </tr>
-                                            <tr>
-                                                <th colspan="2" style="text-align: left;">
-                                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                                        <label for="serviceProvider" style="width: 120px;">Center Name:</label>
-                                                        <select id="serviceProvider" name="service_provider" class="input-field" required onchange="updateProviderText()">
-                                                            <option value="" disabled selected>Select center name</option>
-                                                            <option value="RHU">RHU</option>
-                                                            <option value="Hospital">Hospital</option>
-                                                            <option value="School">School</option>
-                                                        </select>
-                                                    </div>
-                                                </th>
-                                            </tr>
-                                            <tr>
-                                                <th colspan="2" style="text-align: left;">
-                                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                                        <label for="centerName" style="width: 180px;">Name of Service Provider: </label>
-                                                        <input type="text" id="centerName" name="center_name" class="input-field" required>
-                                                    </div>
-                                                </th>
-                                            </tr>
-                                            <tr>
-                                                <th colspan="2" style="text-align: left;">
-                                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                                        <strong style="width: 150px;">Control Number:</strong>
-                                                        <span>{{ user.control_num }}</span>
-                                                    </div>
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                    </table>
+                     <div id="comprehensive-summary" style="display: none; margin-top: 20px;">
+                        <div class="wrapper d-grid gap-20">
+                            <div class="welcome bg-white rad-10 text-center-mobile">
+                               
                                 
-                                    <table class ="summary-table" border="1" width="100%">
-                                        {% set no_answers = [] %}
-                                        {% set yes_answers = [] %}
-
-                                        {% for id, data in questions_with_answers.items() %}
-                                            {% if data.answer == 'No' %}
-                                                {% set _ = no_answers.append(data) %}
-                                            {% elif data.answer == 'Yes' %}
-                                                {% set _ = yes_answers.append(data) %}
-                                            {% endif %}
-                                        {% endfor %}
-
-                                        <tbody style="font-size: 15px;">
-                                            {% if no_answers | length > 0 and yes_answers | length > 0 %}
-                                                <!-- Display both Yes and No tables -->
+                                <div class="body text-center d-flex flex-column p-20 mt-20 mb-20">
+                                    <!-- Buttons -->
+                                    <div class="button-container">
+                                    <!--     <button onclick="exportToPDF()" class="export-btn">
+                                            <i class="fas fa-file-pdf"></i> Export to PDF
+                                        </button>  -->
+    
+                                        <button onclick="printSummary()" class="print-btn">
+                                            <i class="fas fa-print"></i> Print or Save as PDF <i class="fa-solid fa-file-pdf"></i>
+                                        </button>
+    
+                                    </div>
+                    
+                                    <!-- Summary Table -->
+                                    <form method="POST">
+                                        <table class="summary-table" id="summaryTable" style="margin-top: 40px;">
+                                            <thead>
                                                 <tr>
-                                                    <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Question</th>
-                                                    <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Answer</th>  
-                                                    <th style="font-size: 15px; text-align: center; background-color: lightcoral; padding: 10px 10px;">Question</th>
-                                                    <th style="font-size: 15px; text-align: center; background-color: lightcoral; padding: 10px 10px;">Answer</th>  
+                                                    <th colspan="2" class="summary-title">  Comprehensive HEADSSS Results</th>
                                                 </tr>
-                                                {% for i in range([no_answers|length, yes_answers|length]|max) %}
+    
                                                 <tr>
-                                                    <!-- Left: Yes Answers -->
-                                                    <td style="padding: 8px; text-align: justify;">
-                                                        {% if i < yes_answers|length %}
-                                                            {{ yes_answers[i].question }}
-                                                        {% endif %}
-                                                    </td>
-                                                    <td style="padding: 8px; text-align: center;">
-                                                        {% if i < yes_answers|length %}
-                                                            <i class="fas fa-check-circle" style="color: green;"></i> Yes
-                                                        {% endif %}
-                                                    </td>
-
-                                                    <!-- Right: No Answers -->
-                                                    <td style="padding: 8px; text-align: justify;">
-                                                        {% if i < no_answers|length %}
-                                                            {{ no_answers[i].question }}
-                                                        {% endif %}
-                                                    </td>
-                                                    <td style="padding: 8px; text-align: center;">
-                                                        {% if i < no_answers|length %}
-                                                            <i class="fas fa-times-circle" style="color: red;"></i> No
-                                                        {% endif %}
-                                                    </td>
+                                                    <th colspan="2" style="text-align: left;">
+                                                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                                                           <div style="display: flex; align-items: center; gap: 10px;">
+                                                                <label for="serviceProvider" style="width: 100px; font-size: 15px;">Center Name:</label>
+                                                                <select id="serviceProvider" name="service_provider" class="input-field" required onchange="updateProviderText()">
+                                                                    <option value="" disabled selected>Select center name</option>
+                                                                    <option value="RHU">RHU</option>
+                                                                    <option value="Hospital">Hospital</option>
+                                                                    <option value="School">School</option>
+                                                                </select>
+                                                                <span id="serviceProviderText"></span>
+                                                            </div>    
+                                                        </div>
+                                                    </th>
                                                 </tr>
+    
+                                                <tr>
+                                                    <th colspan="2" style="text-align: left;">
+                                                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                                    <label for="centerName" style="width: 180px; font-size: 15px;">Name of Service Provider: </label>
+                                                                    <input type="text" id="centerName" name="center_name" class="input-field" 
+                                                                    style="font-size: 15px;" value="{{ admin_username or '' }}" readonly>                                                                                          
+                                                                    <span id="centerNameText"></span>
+                                                            </div>
+                                                        </div>
+                                                    </th>
+                                                </tr>
+            
+                                                <tr>
+                                                    <th colspan="2" style="text-align: left;">
+                                                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                                <strong style="width: 115px; font-size: 15px;">Control Number:</strong>
+                                                                <span style="width: 200px; font-size: 15px;">{{ user.control_num }}</span>
+                                                            </div>    
+                                                        </div>
+                                                    </th>
+                                                </tr>
+                                                
+                                            </thead>
+                                        </table>
+    
+                                            <table class ="summary-table" border="1" width="100%">
+                                                {% set no_answers = [] %}
+                                                {% set yes_answers = [] %}
+    
+                                                {% for id, data in questions_with_answers.items() %}
+                                                    {% if data.answer == 'No' %}
+                                                        {% set _ = no_answers.append(data) %}
+                                                    {% elif data.answer == 'Yes' %}
+                                                        {% set _ = yes_answers.append(data) %}
+                                                    {% endif %}
                                                 {% endfor %}
-                                            
-                                            {% elif no_answers | length > 0 %}
-                                                <!-- Display only No answers -->
-                                                <tr>
-                                                    <th style="font-size: 15px; text-align: center; background-color: lightcoral; padding: 10px 10px;">Question</th>
-                                                    <th style="font-size: 15px; text-align: center; background-color: lightcoral; padding: 10px 10px;">Answer</th>  
-                                                </tr>
-                                                {% for data in no_answers %}
-                                                <tr>
-                                                    <td style="padding: 8px; text-align: justify;">
-                                                        {{ data.question }}
-                                                    </td>
-                                                    <td style="padding: 8px; text-align: center;">
-                                                        <i class="fas fa-times-circle" style="color: red;"></i> No
-                                                    </td>
-                                                </tr>
-                                                {% endfor %}
-                                            
-                                            {% elif yes_answers | length > 0 %}
-                                                <!-- Display only Yes answers -->
-                                                <tr>
-                                                    <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Question</th>
-                                                    <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Answer</th>  
-                                                </tr>
-                                                {% for data in yes_answers %}
-                                                <tr>
-                                                    <td style="padding: 8px; text-align: justify;">
-                                                        {{ data.assessment }}
-                                                    </td>
-                                                    <td style="padding: 8px; text-align: center;">
-                                                        <i class="fas fa-check-circle" style="color: green;"></i> Yes
-                                                    </td>
-                                                </tr>
-                                                {% endfor %}
-                                            {% endif %}
-                                        </tbody>
-
-                                    </table>
-                                
-                                    <table class="summary-table">
-                                        <tr class="recommended-action-row">
-                                            <td colspan="4">
-                                                <label class="print-label" style="font-weight: bold;">Recommended Action:</label>
-                                                <div id="recommendedActionContainer">
-                                                    <label><input type="checkbox" name="recommended_action" value="Parental Notification" onchange="updateActionText()"> Parental Notification</label>
-                                                    <label><input type="checkbox" name="recommended_action" value="Preventive Counseling" onchange="updateActionText()"> Preventive Counseling</label>
-                                                    <label><input type="checkbox" name="recommended_action" value="Refer to RHU/Hospital" onchange="updateActionText()"> Refer to RHU/Hospital</label>
-                                                    <label><input type="checkbox" name="recommended_action" value="Refer to Barangay/SK" onchange="updateActionText()"> Refer to Barangay/SK</label>
-                                                    <label><input type="checkbox" name="recommended_action" value="Refer to DSWD" onchange="updateActionText()"> Refer to DSWD</label>
-                                                    <label><input type="checkbox" name="recommended_action" value="Health Education Sessions" onchange="updateActionText()"> Health Education Sessions</label>
-                                                    <label><input type="checkbox" name="recommended_action" value="Schedule Follow-up" onchange="updateActionText()"> Schedule Follow-up</label>
-                                                    <div class="other-container">
-                                                        <label><input type="checkbox" id="otherOption" onchange="toggleOtherInput()"> Other recommendations:</label>
-                                                        <input type="text" id="otherRecommendation" name="other_recommendation" class="input-field" placeholder="Enter your recommendation" style="visibility: hidden;"/>
+    
+                                                <tbody style="font-size: 15px;">
+                                                    {% if no_answers | length > 0 and yes_answers | length > 0 %}
+                                                        <!-- Display both Yes and No tables -->
+                                                        <tr>
+                                                            <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Question</th>
+                                                            <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Answer</th>  
+                                                            <th style="font-size: 15px; text-align: center; background-color: lightcoral; padding: 10px 10px;">Question</th>
+                                                            <th style="font-size: 15px; text-align: center; background-color: lightcoral; padding: 10px 10px;">Answer</th>  
+                                                        </tr>
+                                                        {% for i in range([no_answers|length, yes_answers|length]|max) %}
+                                                        <tr>
+                                                            <!-- Left: Yes Answers -->
+                                                            <td style="padding: 8px; text-align: justify;">
+                                                                {% if i < yes_answers|length %}
+                                                                    {{ yes_answers[i].question }}
+                                                                {% endif %}
+                                                            </td>
+                                                            <td style="padding: 8px; text-align: center;">
+                                                                {% if i < yes_answers|length %}
+                                                                    <i class="fas fa-check-circle" style="color: green;"></i> Yes
+                                                                {% endif %}
+                                                            </td>
+    
+                                                            <!-- Right: No Answers -->
+                                                            <td style="padding: 8px; text-align: justify;">
+                                                                {% if i < no_answers|length %}
+                                                                    {{ no_answers[i].question }}
+                                                                {% endif %}
+                                                            </td>
+                                                            <td style="padding: 8px; text-align: center;">
+                                                                {% if i < no_answers|length %}
+                                                                    <i class="fas fa-times-circle" style="color: red;"></i> No
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    
+                                                    {% elif no_answers | length > 0 %}
+                                                        <!-- Display only No answers -->
+                                                        <tr>
+                                                            <th style="font-size: 15px; text-align: center; background-color: lightcoral; padding: 10px 10px;">Question</th>
+                                                            <th style="font-size: 15px; text-align: center; background-color: lightcoral; padding: 10px 10px;">Answer</th>  
+                                                        </tr>
+                                                        {% for data in no_answers %}
+                                                        <tr>
+                                                            <td style="padding: 8px; text-align: justify;">
+                                                                {{ data.question }}
+                                                            </td>
+                                                            <td style="padding: 8px; text-align: center;">
+                                                                <i class="fas fa-times-circle" style="color: red;"></i> No
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    
+                                                    {% elif yes_answers | length > 0 %}
+                                                        <!-- Display only Yes answers -->
+                                                        <tr>
+                                                            <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Question</th>
+                                                            <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Answer</th>  
+                                                        </tr>
+                                                        {% for data in yes_answers %}
+                                                        <tr>
+                                                            <td style="padding: 8px; text-align: justify;">
+                                                                {{ data.question }}
+                                                            </td>
+                                                            <td style="padding: 8px; text-align: center;">
+                                                                <i class="fas fa-check-circle" style="color: green;"></i> Yes
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </tbody>
+      
+                                            </table>
+                                        
+                                                <!-- Recommended Action Section Placed After Last Question -->
+                                            <table class="recommendation-table" id="summaryTable" style="margin-top: 20px;">
+                                                    <tr class="recommended-action-row">
+                                             <td colspan="2" style="padding-top: 20px; border:none">
+                                                <div style="display: flex; flex-direction: column; align-items: start; gap: 10px; padding: 10px;">
+                                                    <label class="print-label" style="font-weight: bold; font-size: 15px; margin-top: 20px">Recommended Action:</label>
+                                        
+                                                    <!-- Checklist for recommended actions -->
+                                                    <div id="recommendedActionContainer">
+                                                        <div>
+                                                            <label style="margin-bottom:5px;"><input type="checkbox" name="recommended_action" value="Parental Notification" onchange="updateActionText()"> Parental Notification</label>
+                                                            <label style="margin-bottom:5px;"><input type="checkbox" name="recommended_action" value="Preventive Counseling" onchange="updateActionText()"> Preventive Counseling</label>
+                                                            <label style="margin-bottom:5px;"><input type="checkbox" name="recommended_action" value="Refer to RHU/Hospital" onchange="updateActionText()"> Refer to RHU/Hospital</label>
+                                                            <label style="margin-bottom:5px;"><input type="checkbox" name="recommended_action" value="Refer to Barangay/SK" onchange="updateActionText()"> Refer to Barangay/SK</label>
+                                                        </div>
+                                                        <div>
+                                                            <label style="margin-bottom:5px;"><input type="checkbox" name="recommended_action" value="Refer to DSWD" onchange="updateActionText()"> Refer to DSWD</label>
+                                                            <label style="margin-bottom:5px;"><input type="checkbox" name="recommended_action" value="Health Education Sessions" onchange="updateActionText()"> Health Education Sessions</label>
+                                                            <label style="margin-bottom:5px;"><input type="checkbox" name="recommended_action" value="Schedule Follow-up" onchange="updateActionText()"> Schedule Follow-up</label>
+                                                            <div class="other-container">
+                                                                <label style="margin-bottom:5px; white-space: nowrap"><input type="checkbox" id="otherOption" onchange="toggleOtherInput()"> Other recommendations:</label>
+                                                                <input type="text" id="otherRecommendation" name="other_recommendation" class="input-field" placeholder="Enter your recommendation" style="display: block; visibility: hidden;"/>
+                                                            </div>
+                                                        </div>
                                                     </div>
+                                        
+                                                    <!-- Selected actions will be displayed here for print -->
+                                                    <span id="recommendedActionText" style="font-weight: bold; margin-top: 10px;"></span>
                                                 </div>
-                                                <span id="recommendedActionText" style="font-weight: bold;"></span>
                                             </td>
                                         </tr>
-                                    </table>
-                                </form>
-                                
+                                        </table>
+    
+                                            
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                  
                 </div>
    
@@ -813,7 +858,6 @@
             });
             
         </script>
-        
 </body>
 
 </html>

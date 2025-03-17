@@ -148,65 +148,52 @@
                 <div class="d-flex">
                     <div class="profile-info text-center p-20">
                         <img class="rad-half mb-10" src="/static/images/user.png" alt="User">
-                        <h3 class="m-0">Admin</h3>
-                        <P class="mt-10 color-grey">Guidance Councelor</P>
+                        <p><strong>{{ admin.username }} </strong> </p>
+                        <P class="mt-10 color-grey">{{ admin.job }}</P>
                         <div class="level rad-6 bg-eee p-relative">
-                            <span style="width: 70%"></span>
+                        
                         </div>
                         <div class="rating mt-10 mb-10">
-                            <i class="fa-solid fa-star color-orange font-13"></i>
-                            <i class="fa-solid fa-star color-orange font-13"></i>
-                            <i class="fa-solid fa-star color-orange font-13"></i>
-                            <i class="fa-solid fa-star color-orange font-13"></i>
-                            <i class="fa-solid fa-star color-orange font-13"></i>
+                           
                         </div>
-                        <p class="color-grey m-0 font-13">550 Rating</p>
-                        <a href="{{ url_for('edit_admin_profile') }}" class="btn btn-primary mt-10">Edit Profile</a>
-
+                       
+                        <a href="javascript:void(0)" onclick="openEditProfilePanel()" class="btn btn-primary mt-10">Edit Profile</a>
                     </div>
                     <div class="info-box mt-20 flex-1">
                         <div class="box p-20 d-flex align-items-center flex-wrap">
                             <h4 class="color-grey font-15 m-0 w-full">General Information</h4>
                             <div class="font-14">
                                 <span class="color-grey">Full Name:</span>
-                                <span class="color-black">Admin</span>
+                                <span class="color-black">{{ admin.username }}</span>
                             </div>
-                            <div class="font-14">
-                                <span class="color-grey">Country:</span>
-                                <span class="color-black">Egypt</span>
-                            </div>
-                            <div class="font-14">
+                           
+                           <!--  <div class="font-14">
                                 <span class="color-grey">
                                     Date of Birth:
                                 </span>
                                 <span class="color-black">01/01/1990</span>
-                            </div>
-                            <div class="font-14">
-                                <label>
-                                    <input class="toggle-box" type="checkbox" checked>
-                                    <div class="toggle-switch"></div>
-                                </label>
-                            </div>
+                            </div> -->
+                            
                         </div>
                         <div class="box p-20 d-flex align-items-center flex-wrap">
                             <h4 class="color-grey font-15 m-0 w-full">Contact Information</h4>
                             <div class="font-14">
                                 <span class="color-grey">Email:</span>
                                 <span class="color-black">
-                                    admin@example.com
+                                    {{ admin.email }}
                                 </span>
                             </div>
                             <div class="font-14">
                                 <span class="color-grey">Phone:</span>
-                                <span class="color-black">+201234567890</span>
+                                <span class="color-black">{{ admin.phone }}</span>
                             </div>
-                            <div class="font-14">
+                           <!-- <div class="font-14">
                                 <span class="color-grey">Website:</span>
                                 <span class="color-black">www.admin.com</span>
-                            </div>
+                            </div> -->
                             <div class="font-14">
                                 <span class="color-grey">Address:</span>
-                                <span class="color-black">Cairo, Egypt</span>
+                                <span class="color-black">{{ admin.address }}</span>
                             </div>
                         </div>
                         <div class="box p-20 d-flex align-items-center flex-wrap">
@@ -231,6 +218,41 @@
                     </div>
                 </div>
             </div>
+
+            <div class="edit-profile-panel" id="editProfilePanel">
+                <div class="panel-header">
+                    <h2>Edit Profile</h2>
+                    <button class="close-btn" onclick="closeEditProfilePanel()">×</button>
+                </div>
+                <form method="POST" action="{{ url_for('edit_admin_profile') }}">
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" value="{{ admin.username }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" value="{{ admin.email }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="job">Job:</label>
+                        <input type="text" id="job" name="job" value="{{ admin.job }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone:</label>
+                        <input type="text" id="phone" name="phone" value="{{ admin.phone }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Address:</label>
+                        <input type="text" id="address" name="address" value="{{ admin.address }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">New Password:</label>
+                        <input type="password" id="password" name="password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+            </div>
+
             <div class="other-data d-flex flex-wrap gap-20">
                 
                 <div class="activities bg-white ml-20 mr-20 p-20 rad-10">
@@ -427,6 +449,18 @@
                 }
             });
             
+        </script>
+
+        <script>
+
+            function openEditProfilePanel() {
+                document.getElementById("editProfilePanel").style.right = "0";
+            }
+            
+            function closeEditProfilePanel() {
+                document.getElementById("editProfilePanel").style.right = "-100%";
+            }
+
         </script>
 </body>
 

@@ -24,12 +24,57 @@
             top: 0;
             left: 0;
             height: 100%;
-            width: 215px; /* Adjusted width to be a bit smaller */
+            width: 215px; /* Default width */
             overflow: hidden;
-            background-color: #fff; /* Ensure background color is set */
+            background-color: #fff;
+            transition: all 0.3s ease; /* Smooth transition for responsiveness */
         }
+    
         .content {
-            margin-left: 214px; /* Adjust this value based on the new width of your sidebar */
+            margin-left: 215px; /* Default margin */
+            transition: all 0.3s ease;
+        }
+    
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px; /* Collapse sidebar width */
+            }
+    
+            .content {
+                margin-left: 60px; /* Adjust content margin */
+            }
+    
+            .sidebar ul li a span {
+                display: none; /* Hide text in collapsed sidebar */
+            }
+    
+            .sidebar h3 {
+                display: none; /* Hide the title in collapsed sidebar */
+            }
+    
+            .sidebar ul li a {
+                justify-content: center; /* Center icons */
+            }
+        }
+    
+        @media (max-width: 480px) {
+            .sidebar {
+                position: absolute;
+                width: 100%; /* Full width for smaller screens */
+                height: auto;
+                z-index: 1000;
+            }
+    
+            .content {
+                margin-left: 0; /* Remove margin for smaller screens */
+            }
+    
+            .sidebar ul {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
         }
     </style>
     
@@ -38,7 +83,7 @@
 <body>
     <div class="page d-flex">
         <div class="sidebar bg-white p-20 p-relative">
-            <h3 class="p-relative text-center mt-0">HEADSSS</h3>
+            <h3 class="p-relative text-center mt-0">HEEADSSS</h3>
             <ul>
                 <li>
                     <a href="{{ url_for('admin_dashboard') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
@@ -48,12 +93,12 @@
                 </li>
                
 
-                <li>
+           <!--     <li>
                     <a href="{{ url_for('admin_messages') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
                         <i class="fa-solid fa-envelope"></i>
                         <span>Messages</span>
                     </a>
-                </li>
+                </li> -->
 
                 <li>
                     <a href="{{ url_for('admin_list') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">

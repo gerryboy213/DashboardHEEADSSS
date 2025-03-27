@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, request, current_app
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text 
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import os
@@ -26,6 +27,21 @@ db = SQLAlchemy(app)
 
 def get_questions():
     return Questions.query.filter_by(category='HOME').all()
+
+def get_questions_and_answers(user_id):
+    """Fetches the user's responses along with the corresponding questions."""
+    responses = (
+        db.session.query(Questions.id, Questions.question_text, UserResponse.response)
+        .join(UserResponse, Questions.id == UserResponse.question_number)
+        .filter(UserResponse.user_id == user_id)
+        .all()
+    )
+
+    return {
+        question_id: {"question": question_text, "answer": response}
+        for question_id, question_text, response in responses
+    }
+
 
 with open("static/ph-json/province.json", "r", encoding="utf-8") as file:
     province_data = json.load(file)
@@ -224,85 +240,161 @@ def datetimeformat(value, format='%Y-%m-%d'):
     
 @app.route('/view-client/<int:user_id>')
 def view_client(user_id):
-    user = User.query.get_or_404(user_id)
-    
-    # Fetch responses of the specific user from UserResponse
-    responses = UserResponse.query.filter_by(user_id=user_id).all()
-    
-    
-    # Get all question numbers that the user answered
-    question_ids = [resp.question_number for resp in responses]
-    
-    # Fetch all corresponding questions
-    questions = Questions.query.filter(Questions.id.in_(question_ids)).all()
+    user = User.query.get_or_404(user_id)  # Fetch user once
 
-    # Match questions with the user's responses
-    questions_with_answers = {
-        q.id: {
-            "question": q.question_text, 
-            "answer": next((r.response for r in responses if r.question_number == q.id), None)
-        }
-        for q in questions
+    # Fetch user responses
+    questions_with_answers = get_questions_and_answers(user_id)  # Get questions and answers
+    
+    # Define key questions
+    question_messages = {
+        
+    1: 'The client has disclosed experiencing domestic violence or threats at home, requiring immediate attention',
+
+    2: 'The client has expressed thoughts of running away or leaving home, which may indicate distress, family conflicts, or insecurity',
+
+    3: 'The client reported experiencing physical or cyberbullying at school or work, which can severely impact mental and emotional well-being',
+
+    4: 'The client has expressed serious thoughts of self-harm or suicide, indicating an urgent need for psychological support and crisis intervention.',
+
+    10: 'The client reported experiencing forced sexual activity, a serious concern requiring urgent intervention. '
+        'Take appropriate action, including notifying legal authorities, arranging medical care, and providing trauma-informed psychological support',
+
+    12: 'The client has requested counseling or consultation, presenting an opportunity to provide professional support tailored to their needs',
+
+    "relationships_sexual_health": 'The client has shared concerns regarding romantic relationships, sexual activity, or pregnancy. '
+                                   'Encourage discussions on safe practices, consent, and emotional well-being, while offering referrals to counseling or medical professionals for further support'
+}
+
+       
+    # Check if user answered 'Yes' to any special question
+    yes_answers = {int(q_id) for q_id, data in questions_with_answers.items() if data["answer"].strip().lower() == "yes"}
+    
+    displayed_messages = {}
+    
+    for q in [1, 4, 10]:
+        if q in yes_answers:
+            displayed_messages[q] = question_messages[q]
+
+    # Display messages for questions 2, 3, 5, 6, 7, 8, 9, 11, 12 if answered "Yes"
+    for q in [2, 3]:
+        if q in yes_answers:
+            displayed_messages[q] = question_messages[q]
+
+    # Check if the user answered "Yes" to any of the substance use questions (5, 6, 7)
+    substance_message = format_substance_use_message(questions_with_answers)
+    if substance_message:
+        displayed_messages[5] = substance_message
+
+        
+    if any(q in yes_answers for q in [8, 9, 11]):
+        displayed_messages[8] = question_messages["relationships_sexual_health"]
+        
+    if 12 in yes_answers:
+        displayed_messages[12] = question_messages[12]
+        
+    formatted_messages = format_messages(displayed_messages)
+        
+    # Load JSON files in one try-except block for efficiency
+    json_files = {
+        "region": "region.json",
+        "province": "province.json",
+        "city": "city.json",
+        "barangay": "barangay.json"
     }
-
-    # Ensure file paths are correctly set inside the request context
-    region_json_path = os.path.join(current_app.root_path, 'static', 'ph-json', 'region.json')
-    province_json_path = os.path.join(current_app.root_path, 'static', 'ph-json', 'province.json')
-    city_json_path = os.path.join(current_app.root_path, 'static', 'ph-json', 'city.json')
-    brgy_json_path = os.path.join(current_app.root_path, 'static', 'ph-json', 'barangay.json')
-
-    # Load JSON data safely
-    try:
-        with open(region_json_path, 'r', encoding='utf-8') as f:
-            regions_data = json.load(f)
-
-        with open(province_json_path, 'r', encoding='utf-8') as f:
-            provinces_data = json.load(f)
-            
-        with open(city_json_path, 'r', encoding='utf-8') as f:
-            cities_data = json.load(f)
-            
-        with open(brgy_json_path, 'r', encoding='utf-8') as f:
-            brgys_data = json.load(f)
-            
-    except FileNotFoundError:
-        return "Error: JSON file not found", 500
-    except json.JSONDecodeError:
-        return "Error: Invalid JSON format", 500
-
-    # Convert lists to dictionaries for easy lookup
-    region_map = {reg["region_code"]: reg["region_name"] for reg in regions_data} if isinstance(regions_data, list) else {}
-    province_map = {prov["province_code"]: prov["province_name"] for prov in provinces_data} if isinstance(provinces_data, list) else {}
-    city_map = {city["city_code"]: city["city_name"] for city in cities_data} if isinstance(cities_data, list) else {}
-    brgy_map = {brgy["brgy_code"]: brgy["brgy_name"] for brgy in brgys_data} if isinstance(brgys_data, list) else {}
-
-    # Function to check if input is a code or a name
-    def get_location_name(input_value, mapping):
-        return mapping.get(input_value, input_value)  # If not in mapping, assume it's already a name
-
-    # Convert codes to names or keep them if they are already names
-    region_name = get_location_name(user.region, region_map)
-    province_name = get_location_name(user.province, province_map)
-    city_name = get_location_name(user.city, city_map)
-    brgy_name = get_location_name(user.barangay, brgy_map)
     
-    admin_username = None
-    if 'admin' in session:
-        admin = Admin.query.filter_by(username=session['admin']).first()
+    json_data = {}
+    try:
+        for key, filename in json_files.items():
+            path = os.path.join(current_app.root_path, 'static', 'ph-json', filename)
+            with open(path, 'r', encoding='utf-8') as f:
+                json_data[key] = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return "Error: JSON file missing or invalid format", 500
+
+    # Convert lists to dictionaries for quick lookups
+    mappings = {
+    "region": {item["region_code"]: item["region_name"] for item in json_data["region"]} if isinstance(json_data["region"], list) else {},
+    "province": {item["province_code"]: item["province_name"] for item in json_data["province"]} if isinstance(json_data["province"], list) else {},
+    "city": {item["city_code"]: item["city_name"] for item in json_data["city"]} if isinstance(json_data["city"], list) else {},
+    "barangay": {item.get("brgy_code", item.get("brgy_code")): item["brgy_name"] for item in json_data["barangay"] if "brgy_name" in item} if isinstance(json_data["barangay"], list) else {}
+}
+
+    # Function to safely get location name from code
+    def get_location_name(value, mapping):
+        return mapping.get(value, value)  # Return name if found, else return input
+
+    # Convert user location codes to names
+    region_name = get_location_name(user.region, mappings["region"])
+    province_name = get_location_name(user.province, mappings["province"])
+    city_name = get_location_name(user.city, mappings["city"])
+    brgy_name = get_location_name(user.barangay, mappings["barangay"])
+
+    # Fetch admin username if logged in
+    admin_username = session.get('admin')
+    if admin_username:
+        admin = Admin.query.filter_by(username=admin_username).first()
         admin_username = admin.username if admin else None
 
-
+    show_message = True
+    
     return render_template(
         'view_client.html', 
-        user=user, questions_with_answers=questions_with_answers,
+        user=user, 
+        questions_with_answers=questions_with_answers,
+        displayed_messages=displayed_messages,
         region_name=region_name, 
         province_name=province_name,
         city_name=city_name,
         brgy_name=brgy_name,
-        admin_username=admin_username
+        admin_username=admin_username,
+        show_message=show_message,
+        formatted_messages=formatted_messages
     )
-
     
+def format_messages(messages):
+    formatted_paragraphs = []
+    current_paragraph = []
+
+    for message in messages.values():
+        sentences = message.split('. ')
+        for sentence in sentences:
+            formatted_sentence = sentence + "."  
+            if not current_paragraph:  
+                formatted_sentence = " " + formatted_sentence  # Adds an indent (em space)
+            current_paragraph.append(formatted_sentence)
+
+            if len(current_paragraph) == 5:  # Limit each paragraph to 5 sentences
+                formatted_paragraphs.append(" ".join(current_paragraph))
+                current_paragraph = []
+
+    if current_paragraph:  # Add any remaining sentences
+        formatted_paragraphs.append(" ".join(current_paragraph))
+
+    return formatted_paragraphs
+
+def format_substance_use_message(answers):
+    substances = []
+
+    if answers.get(5, {}).get("answer", "").strip().lower() == "yes":
+        substances.append("smoking")
+    if answers.get(6, {}).get("answer", "").strip().lower() == "yes":
+        substances.append("alcohol consumption")
+    if answers.get(7, {}).get("answer", "").strip().lower() == "yes":
+        substances.append("exposure to illegal drugs")
+
+    if substances:
+        if len(substances) == 2:
+            substance_list = " and ".join(substances)
+        else:
+            substance_list = ", ".join(substances[:-1]) + ", and " + substances[-1] if len(substances) > 2 else substances[0]
+
+        return (f"The client disclosed {substance_list}. This may indicate potential dependence or exposure to harmful environments. "
+                "Assess usage patterns and provide guidance, counseling, or intervention, with referrals to health professionals "
+                "specializing in substance abuse prevention and rehabilitation if needed")
+    
+    return None  # No message if no "Yes" answers
+
+   
 @app.route('/edit-user/<int:user_id>', methods=['GET', 'POST'])
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
@@ -503,14 +595,61 @@ def admin_messages():
 
     admin = Admin.query.filter_by(username=session['admin']).first()
 
-    page = request.args.get('page', 1, type=int)
-    per_page = 10  # Show 10 messages per page
-    questions = Questions.query.paginate(page=page, per_page=per_page, error_out=False)
-    
+    # Fetch questions and user responses
+    questions = (
+        db.session.query(Questions, UserResponse.response, UserResponse.submitted_at, User.control_num)
+        .join(UserResponse, Questions.id == UserResponse.question_number)
+        .join(User, User.id == UserResponse.user_id)
+        .order_by(User.control_num.desc())
+    )
+
+    # Filter "Yes" answers for critical questions (1, 4, 10)
+    critical_yes_answers = (
+        db.session.query(User.control_num, Questions.id)
+        .join(UserResponse, Questions.id == UserResponse.question_number)
+        .filter(UserResponse.response == 'Yes', Questions.id.in_([1, 4, 10]))
+        .all()
+    )
+
+    # Group critical "Yes" answers by control number
+    critical_responses = {}
+    for control_num, question_id in critical_yes_answers:
+        if control_num not in critical_responses:
+            critical_responses[control_num] = []
+        critical_responses[control_num].append(question_id)
+
     users = User.query.all()
 
-    return render_template('admin_messages.html', admin=admin, questions=questions, users=users)
+    return render_template(
+        'admin_messages.html',
+        admin=admin,
+        questions=questions,
+        users=users,
+        critical_responses=critical_responses
+    )
 
+@app.route('/get_summary/<control_num>')
+def get_summary(control_num):
+    # Fetch the user and their critical responses
+    user = User.query.filter_by(control_num=control_num).first_or_404()
+    critical_responses = (
+        db.session.query(Questions.id, Questions.question_text)
+        .join(UserResponse, Questions.id == UserResponse.question_number)
+        .filter(UserResponse.user_id == user.id, UserResponse.response == 'Yes', Questions.id.in_([1, 4, 10]))
+        .all()
+    )
+
+    if not critical_responses:
+        return "No critical responses found for this user.", 404
+
+    # Generate the summary content
+    summary = f"<h3>Critical Questions Summary for User {control_num}</h3><ul>"
+    for question_id, question_text in critical_responses:
+        summary += f"<li>Question {question_id}: {question_text}</li>"
+    summary += "</ul>"
+
+    return summary
+  
 @app.route('/admin/files')
 def admin_files():
     if 'admin' not in session:
@@ -578,9 +717,7 @@ def personal_info():
 
                     print("✅ Redirecting to headsss...")  # Debugging output
                     return redirect(url_for('headsss'))  # ✅ Proceed to next page
-            
-         
-            
+  
         except Exception as e:
             print(f"❌ Error processing form: {e}")  # Debugging output
             flash("An error occurred. Please try again.", "danger")
@@ -756,12 +893,11 @@ def get_age_distribution():
 
     # Define new age groups
     age_groups = {
-        "1-10": {"Male": 0, "Female": 0},
-        "11-20": {"Male": 0, "Female": 0},
-        "21-30": {"Male": 0, "Female": 0},
-        "31-40": {"Male": 0, "Female": 0},
-        "41-50": {"Male": 0, "Female": 0},
-        "51-60": {"Male": 0, "Female": 0}
+        "10-11": {"Male": 0, "Female": 0},
+        "12-13": {"Male": 0, "Female": 0},
+        "14-15": {"Male": 0, "Female": 0},
+        "16-17": {"Male": 0, "Female": 0},
+        "18-19": {"Male": 0, "Female": 0}
     }
 
     # Categorize users into the correct age groups
@@ -769,18 +905,16 @@ def get_age_distribution():
         if age is None or sex is None:
             continue
 
-        if 1 <= age <= 10:
-            age_groups["1-10"][sex] += 1
-        elif 11 <= age <= 20:
-            age_groups["11-20"][sex] += 1
-        elif 21 <= age <= 30:
-            age_groups["21-30"][sex] += 1
-        elif 31 <= age <= 40:
-            age_groups["31-40"][sex] += 1
-        elif 41 <= age <= 50:
-            age_groups["41-50"][sex] += 1
-        elif 51 <= age <= 60:
-            age_groups["51-60"][sex] += 1
+        if 10 <= age <= 11:
+            age_groups["10-11"][sex] += 1
+        elif 12 <= age <= 13:
+            age_groups["12-13"][sex] += 1
+        elif 14 <= age <= 15:
+            age_groups["14-15"][sex] += 1
+        elif 16 <= age <= 17:
+            age_groups["16-17"][sex] += 1
+        elif 18 <= age <= 19:
+            age_groups["18-19"][sex] += 1
 
     return jsonify(age_groups)
 
@@ -836,70 +970,64 @@ def update_reason():
         return jsonify({"success": True, "message": "Reason updated successfully"})
     else:
         return jsonify({"success": False, "message": "Invalid control number"}), 404
-
-
-# @app.route('/questions', methods=['GET', 'POST'])
-# def questions():
-#     # Get the user_id from the session
-#     user_id = session.get('user_id')
-
-#     # If no user_id is found in the session, redirect to the assessment page to create a new user
-#     if not user_id:
-#         return redirect(url_for('assessment'))
-
-#     # Get the current question number from the session, default to 1
-#     current_question_number = session.get('current_question_number', 1)
-#     print(f"Current question number: {current_question_number}")  # Debugging line
     
-#     if current_question_number > 12:
-#         session['current_question_number'] = 1
-#         current_question_number = 1
 
-#     # Retrieve the current question from the database based on the question number
-#     question = db.session.query(Questions).filter_by(id=current_question_number).first()
-    
-#     if question is None:
-#         print("❌ No question found for this ID.")  # Debugging line
-#     else:
-#         print(f"Retrieved question: {question.question_text}")
-        
+@app.route('/get_questions', methods=['GET'])
+def get_questions():
+    try:
+        result = db.session.execute(text("SELECT id, assessment_text, translation_text FROM assessment"))
+        assessment = [{"id": row[0], "assessment_text": row[1], "translation_text": row[2]} for row in result.fetchall()]
+        return jsonify(assessment)
+    except Exception as e:
+        return jsonify([{"id": q[0], "assessment_text": q[1], "translation_text": q[2]} for q in assessment])
 
-#     # Get the total number of questions in the database
-#     total_questions = db.session.query(Questions).count()
-#     print(f"Total questions: {total_questions}")
 
-#     # Check if the current question is the last one
-#     is_last_question = current_question_number == total_questions
+@app.route('/save_answer', methods=['POST'])
+def save_answer():
+    try:
+        data = request.json  # Get JSON data from request
 
-#     if request.method == 'POST':
-#         if 'back' in request.form:
-#             current_question_number -= 1  # Decrement the question number when the "Back" button is clicked
-#             session['current_question_number'] = current_question_number
-#             return redirect(url_for('questions'))
+        # Extract expected fields
+        user_id = data.get('user_id')
+        assessment_number = data.get('assessment_number')
+        response = data.get('response')
 
-#         # Get the response for the current question
-#         response = request.form.get(f'q{current_question_number}')
-        
-#         if response:
-#             # Save the response to the database
-#             new_response = UserResponse(user_id=user_id, question_number=current_question_number, response=response)
-#             db.session.add(new_response)
-#             db.session.commit()
+        # Validate input
+        if not all([user_id, assessment_number, response]):
+            return jsonify({"success": False, "error": "Missing required fields"}), 400
 
-#         # Move to the next question by updating session, unless it's the last question
-#         if not is_last_question:
-#             session['current_question_number'] = current_question_number + 1
-#             return redirect(url_for('questions'))
-#         else:
-#             # Handle submission when the last question is reached
-#             return redirect(url_for('thank_you'))  # Redirect to a submission page (could be a 'Thank You' page or similar)
+        # Connect to MySQL
+        connection = mysql.connector.connect(
+            host=app.config['MYSQL_HOST'],
+            user=app.config['MYSQL_USER'],
+            password=app.config['MYSQL_PASSWORD'],
+            database=app.config['MYSQL_DB']
+        )
+        cursor = connection.cursor()
 
-#     # Render the current question in the template, passing whether it's the last question or not
-#     return render_template('questionnaire.html', question=question, is_last_question=is_last_question)
+        # Insert the answer into the database
+        sql = """
+        INSERT INTO assessment_response (user_id, assessment_number, response)
+        VALUES (%s, %s, %s)
+        """
+        values = (user_id, assessment_number, response)
+        cursor.execute(sql, values)
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({"success": True, "message": "Answer saved successfully"}), 201
+
+    except Exception as e:
+        print(f"❌ Error saving answer: {e}")  # Debugging in terminal
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 
 # Run App
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()  # Create tables if they don't exist
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5005, debug=True)
 

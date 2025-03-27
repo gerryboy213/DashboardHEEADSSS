@@ -12,20 +12,63 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&amp;display=swap" rel="stylesheet">
 
-
-
-    <style>
+  <style>
         .sidebar {
             position: fixed;
             top: 0;
             left: 0;
             height: 100%;
-            width: 215px; /* Adjusted width to be a bit smaller */
+            width: 215px; /* Default width */
             overflow: hidden;
-            background-color: #fff; /* Ensure background color is set */
+            background-color: #fff;
+            transition: all 0.3s ease; /* Smooth transition for responsiveness */
         }
+    
         .content {
-            margin-left: 214px; /* Adjust this value based on the new width of your sidebar */
+            margin-left: 215px; /* Default margin */
+            transition: all 0.3s ease;
+        }
+    
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px; /* Collapse sidebar width */
+            }
+    
+            .content {
+                margin-left: 60px; /* Adjust content margin */
+            }
+    
+            .sidebar ul li a span {
+                display: none; /* Hide text in collapsed sidebar */
+            }
+    
+            .sidebar h3 {
+                display: none; /* Hide the title in collapsed sidebar */
+            }
+    
+            .sidebar ul li a {
+                justify-content: center; /* Center icons */
+            }
+        }
+    
+        @media (max-width: 480px) {
+            .sidebar {
+                position: absolute;
+                width: 100%; /* Full width for smaller screens */
+                height: auto;
+                z-index: 1000;
+            }
+    
+            .content {
+                margin-left: 0; /* Remove margin for smaller screens */
+            }
+    
+            .sidebar ul {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
         }
     </style>
     
@@ -34,7 +77,7 @@
 <body>
     <div class="page d-flex">
         <div class="sidebar bg-white p-20 p-relative">
-            <h3 class="p-relative text-center mt-0">HEADSSS</h3>
+            <h3 class="p-relative text-center mt-0">HEEADSSS</h3>
             <ul>
                 <li>
                     <a href="{{ url_for('admin_dashboard') }}" class=" d-flex align-items-center font-14 p-10 rad-6 color-black">
@@ -92,15 +135,15 @@
                 <div class="user d-flex align-items-center">
                   
                    <!-- Notification Bell -->
-                   <span class="notification p-relative" onclick="toggleNotifications()">
+                   <span class="notification p-relative">
                     <i class="fa-regular fa-bell fa-lg p-relative"></i>
                     <span id="unread-count" class="unread-count" style="display: none;"></span>
                 </span>
                 
                 <!-- Notification Dropdown -->
-                <div id="notification-dropdown" class="dropdown-menu">
+                <div id="notification-dropdown" class="dropdown-menu-notif">
                     <strong>Notifications</strong>
-                    <div id="notification-list"></div>
+                    <div id="notification-list" style=" overflow: hidden; margin-left:-200px; margin-top: 20px;"></div>
                     <div class="footer">
                         <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a>
                     </div>
@@ -137,33 +180,50 @@
             <div class="projects-table bg-white rad-10 m-20 p-20">
                 <h2 class="m-0 mb-20">Messages</h2>
                 <div id="email-list" class="email-list d-grid gap-20 m-20">
-                    {% for question in questions.items %}
+                    {% for question, submitted_at, control_num in questions.items %}
                         <div class="email-item bg-light p-10 rad-6">
-                            <strong>From:</strong> {{ question.sender }} <br>
-                                <button onclick="viewMessage('{{ question.id }}')">View</button>
-                        </div>
+                            <strong>From:</strong> {{ question.question_text }} <br>
+                            <span class="time">{{ submitted_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                            <span class="control-num">Control Number: {{ control_num }}</span>
+                            <button onclick="viewMessage('{{ control_num }}')">View</button>                        </div>
                     {% endfor %}
                 </div>
-            
-                <!-- Pagination Controls -->
+                
+                <!-- Pagination Controls 
                 <div class="pagination">
                     {% if questions.has_prev %}
-                        <a href="{{ url_for('admin_messages', page=questions.prev_num) }}" class="pagination-btn">Previous</a>
+                        <a href="{{ url_for('admin_messages', page=questions.prev_num) }}">Previous</a>
                     {% endif %}
                     <span>Page {{ questions.page }} of {{ questions.pages }}</span>
                     {% if questions.has_next %}
-                        <a href="{{ url_for('admin_messages', page=questions.next_num) }}" class="pagination-btn">Next</a>
+                        <a href="{{ url_for('admin_messages', page=questions.next_num) }}">Next</a>
                     {% endif %}
-                </div>
+                </div>-->
             
                 <!-- Summary View -->
                 <div id="summary-view" class="email-view bg-white p-20 rad-6 p-relative" style="display: none;">
                     <button class="back-btn" onclick="closeSummary()">← Back</button>
-                    <h2 id="summary-subject"></h2>
+                    <h2 id="summary-subject">Critical Questions Summary</h2>
                     <p><strong>From: </strong><span id="summary-sender"></span></p>
-                    <hr>
-                    <div id="summary-content"></div>
+                
+                    <div id="summary-content">
+                        {% if critical_responses %}
+                            <ul>
+                                {% for control_num, question_ids in critical_responses.items() %}
+                                    <li>
+                                        <strong>Control Number:</strong> {{ control_num }}<br>
+                                        The client has answered "Yes" to the following critical questions: 
+                                        {{ question_ids | join(', ') }}.<br>
+                                        Immediate attention is required. Please review the client's responses and take appropriate action, such as notifying the appropriate authorities, providing counseling, or referring the client to the necessary support services.
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p>No critical "Yes" answers found.</p>
+                        {% endif %}
+                    </div>
                 </div>
+
             </div>
             
     </div>
@@ -171,31 +231,33 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            function openSummary(userId, senderName) {
-                fetch(`/summary?user_id=${userId}`)
-                    .then(response => response.text()) // Get the full HTML content
-                    .then(html => {
-                        document.getElementById("summary-view").style.display = "block";
-                        document.getElementById("email-list").style.display = "none"; // Hide message list
-    
-                        document.getElementById("summary-subject").textContent = "Assessment Summary";
-                        document.getElementById("summary-sender").textContent = senderName;
-    
-                        // Inject the summary HTML into the content container
-                        document.getElementById("summary-content").innerHTML = html;
-                    })
-                    .catch(error => console.error("Error fetching summary:", error));
-            }
-    
-            function closeSummary() {
-                document.getElementById("summary-view").style.display = "none";
-                document.getElementById("email-list").style.display = "grid"; // Show messages again
-            }
-    
-            window.openSummary = openSummary;
-            window.closeSummary = closeSummary;
-        });
+        function viewMessage(controlNum) {
+            // Fetch the summary content using the control number
+            fetch(`/get_summary/${controlNum}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Summary not found');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    // Display the summary content in the summary view
+                    document.getElementById("summary-view").style.display = "block";
+                    document.getElementById("email-list").style.display = "none"; // Hide the email list
+                    document.getElementById("summary-content").innerHTML = data;
+                    document.getElementById("summary-sender").textContent = `User ${controlNum}`;
+                })
+                .catch(error => {
+                    console.error('Error fetching summary:', error);
+                    alert('Unable to fetch the summary. Please try again later.');
+                });
+        }
+        
+        function closeSummary() {
+            // Close the summary view and show the email list
+            document.getElementById("summary-view").style.display = "none";
+            document.getElementById("email-list").style.display = "grid";
+        }
     </script>
 
     <script>
@@ -211,7 +273,6 @@
                             data.forEach(msg => {
                                 const emailItem = document.createElement("div");
                                 emailItem.classList.add("email-item", "bg-white", "p-20", "rad-6", "p-relative");
-                                emailItem.onclick = () => openSummary(msg.id, msg.sender);
         
                                 emailItem.innerHTML = `
                                     <div class="email-header between-flex">
@@ -233,30 +294,7 @@
                     .catch(error => console.error("Error fetching notifications:", error));
             }
         
-            function openSummary(messageId, senderName) {
-                fetch(`/summary?message_id=${messageId}`)
-                    .then(response => response.text())
-                    .then(html => {
-                        document.getElementById("summary-view").style.display = "block";
-                        document.getElementById("email-list").style.display = "none"; // Hide message list
-        
-                        document.getElementById("summary-subject").textContent = "Message Summary";
-                        document.getElementById("summary-sender").textContent = senderName;
-        
-                        // Inject the summary HTML into the content container
-                        document.getElementById("summary-content").innerHTML = html;
-                    })
-                    .catch(error => console.error("Error fetching summary:", error));
-            }
-        
-            function closeSummary() {
-                document.getElementById("summary-view").style.display = "none";
-                document.getElementById("email-list").style.display = "grid"; // Show messages again
-            }
-        
-            window.openSummary = openSummary;
-            window.closeSummary = closeSummary;
-        
+           
             // Fetch notifications initially
             fetchNotifications();
         });
@@ -323,6 +361,100 @@
             });
             
         </script>
+
+
+        <script>
+
+            document.addEventListener("DOMContentLoaded", function () {
+                const notificationDropdown = document.getElementById("notification-dropdown");
+                const notificationList = document.getElementById("notification-list");
+                const bellIcon = document.querySelector(".notification");
+                const unreadCount = document.getElementById("unread-count");
+            
+                async function fetchNotifications() {
+                    console.log("Fetching notifications...");
+            
+                    try {
+                        const response = await fetch("/get_notifications");
+                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            
+                        const data = await response.json();
+                        console.log("Received notifications:", data);
+            
+                        notificationList.innerHTML = ""; // Clear previous notifications
+            
+                        if (data.length === 0) {
+                            unreadCount.style.display = "none";
+                            notificationList.innerHTML = "<p>No new notifications.</p>";
+                            return;
+                        }
+            
+                        unreadCount.textContent = data.length;
+
+                        unreadCount.style.display = "inline-block"; // Show notification count      
+
+                        const sortedData = data.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+                        // Display notifications
+                        sortedData.forEach(notification => {
+
+                            let notificationItem = document.createElement("div");
+                            notificationItem.classList.add("notification-item");
+            
+                            // Ensure notification contains `user_id`
+                            notificationItem.dataset.userId = notification.user_id;
+            
+                            notificationItem.innerHTML = `
+                           
+                            <div class="content">
+                                <span class="sender">${notification.sender}</span>
+                                <span class="message-preview">${notification.content}</span>
+                                <span class="time">${formatTime(notification.time)}</span>
+                            </div>
+                        `;
+            
+                            // Redirect to view-client when clicked
+                            notificationItem.addEventListener("click", function () {
+                                const userId = this.dataset.userId;
+                                if (userId) {
+                                    window.location.href = `/view-client/${userId}`;
+                                }
+                            });
+            
+                            notificationList.appendChild(notificationItem);
+                        });
+            
+                    } catch (error) {
+                        console.error("Error fetching notifications:", error);
+                    }
+                }
+            
+                function toggleNotifications(event) {
+                    event.stopPropagation();
+                    notificationDropdown.classList.toggle("show");
+                }
+            
+                document.addEventListener("click", function (event) {
+                    if (!notificationDropdown.contains(event.target) && !bellIcon.contains(event.target)) {
+                        notificationDropdown.classList.remove("show");
+                    }
+                });
+            
+                bellIcon.addEventListener("click", toggleNotifications);
+            
+                // Helper function to format timestamps (optional)
+                function formatTime(timestamp) {
+                    const time = new Date(timestamp);
+                    return time.toLocaleString(); // Formats in a readable way
+                }
+            
+                fetchNotifications();
+                setInterval(fetchNotifications, 10000);
+            });
+            
+
+        </script>
 </body>
+
 
 </html> 

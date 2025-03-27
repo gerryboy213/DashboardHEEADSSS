@@ -15,7 +15,7 @@ html, body {
     height: 100vh;
     overflow: hidden; /* Prevents scrolling */
     touch-action: none; /* Prevents touch gestures */
-    background-color: #faa7a7;
+    background-color: #fbe0e0;
     display: flex;
     justify-content: center;
     align-items: center;

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='question.css') }}">
 </head>
 <body>
+
     <div class="container">
         <h2>Sagutin ng tapat ang mga sumusunod na katanungan. Ang sagot ay CONFIDENTIAL.</h2>
     
@@ -19,14 +20,18 @@
                 <label>{{ assessment.translation_text }}</label>
 
                 <div class="options">
-                    <label><input type="radio" name="q{{ assessment.id }}" value="Yes" required> Yes</label>
-                    <label><input type="radio" name="q{{ assessment.id }}" value="No"> No</label>
+                    {% if assessment.id == 20 %}
+                        <label>If yes, how many partners have you had in the previous year?</label>
+                        <input type="number" name="q{{ assessment.id }}" min="0" required>
+                    {% else %}
+                        <label><input type="radio" name="q{{ assessment.id }}" value="Yes" required> Yes</label>
+                        <label><input type="radio" name="q{{ assessment.id }}" value="No"> No</label>
+                    {% endif %}
                 </div>
             </div>
         
             <div class="buttons">
-                
-
+            
                 {% if is_last_question %}
             <!-- Submit Button when it's the last question -->
                     <button type="submit" class="next-btn">Submit</button>
@@ -35,6 +40,7 @@
                     <button type="submit" name="next" value="1" class="next-btn">Next</button>
                 {% endif %}
             </div>
+            
         </form>
         
     </div>

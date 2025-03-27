@@ -2,11 +2,11 @@
 
 
 :root {
-    --blue-color: #0075ff;
-    --blue-alt-color: #0d69d5;
-    --orange-color: #f59e0b;
-    --green-color: #22c55e;
-    --red-color: #f44336;
+    --blue-color: #009ca6;
+    --blue-alt-color: #009ca6;
+    --orange-color: #f2a900;
+    --green-color: #45B383;
+    --red-color: #da291c;
     --grey-color: #888;
 }
 
@@ -419,7 +419,7 @@ ul {
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    border: 3px solid #fff;
+    border: 3px solid #070707;
     box-shadow: 0 0 5px #ddd;
     margin-top: -32px;
     margin-left: 20px;
@@ -1585,7 +1585,7 @@ ul {
     display: block;
     width: 100%;
     padding: 10px;
-    background-color: #007bff;
+    background-color: #009ca6;
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -1595,3 +1595,4 @@ ul {
 .edit-profile-panel .btn:hover {
     background-color: #0056b3;
 }
+

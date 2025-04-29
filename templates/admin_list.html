@@ -148,14 +148,14 @@
                         <strong>Notifications</strong>
                         <div id="notification-list" style=" overflow: hidden; margin-left:-200px; margin-top: 20px;"></div>
                         <div class="footer">
-                            <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a>
+                           <!-- <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a> -->
                         </div>
                     </div>
             
                     <!-- User Info -->
                     <div class="user-info d-flex align-items-center">
                         <div class="user-img" id="userDropdownToggle">
-                            <img src="/static/images/user.png" alt="User">
+                            <img src="{{ admin.profile_image or '/static/images/user.png' }}" alt="User">
                         </div>
                     </div>
                     
@@ -188,12 +188,36 @@
 
             <!-- Start Projects Table -->
             <div class="projects-table bg-white rad-10 m-20 p-30" style="padding-bottom: 20px;">
+
                 <h2 style="padding-top: 15px; padding-left:10px" class="m-10 mb-20 mt-50">List of Client</h2>
+
+                <div style="padding-left: 10px; margin-bottom: 10px; font-size: 12px; color: #6b7280;">
+                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 16px;">
+                        <strong style="font-weight: 600; color: #374151; margin-left:12px">Legend:</strong>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-exclamation-circle" style="color: #dc2626; font-size: 14px;"></i>
+                            <span>Immediate Assessment</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-exclamation-circle" style="color: #eab308; font-size: 14px;"></i>
+                            <span>Within the Month</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-exclamation-circle" style="color: #10b981; font-size: 14px;"></i>
+                            <span>Within the School Year</span>
+                        </div>
+                    </div>
+                </div>
+                
+
+                
+                
                 <div class="responsive-table" style="overflow-x: auto; white-space: nowrap;">
                     <table class="font-15 w-full">
 
                         <thead>
                             <tr>
+                                <td>Urgency</td>
                                 <td>Control Number</td>
                                 <td>Name</td>
                               <!--  <td>Contact Number</td> -->
@@ -205,18 +229,36 @@
 
                         <tbody>
                             {% for user in users %}
-                            <tr>
+
+                            <td class="
+                            {% if user.id in highlighted_users %}
+                                high-urgency
+                            {% elif user.id in highlighted_users_yellow %}
+                                medium-urgency
+                            {% else %}
+                                low-urgency
+                            {% endif %}
+                        ">
+                            <i class="fas fa-exclamation-circle"></i>
+                            {% if user.id in highlighted_users %}
+                               <!-- Immediate -->
+                            {% elif user.id in highlighted_users_yellow %}
+                        <!-- Within the next month --> 
+                            {% else %}
+                               <!-- Within the school year  -->
+                            {% endif %}
+                        </td>
+                        
+
                                 <td>{{ user.control_num }}</td>
 
                                 <td>{{ user.first_name }} {{ user.middle_initial if user.middle_initial and '.' in user.middle_initial else (user.middle_initial + '.' if user.middle_initial else '') }} {{ user.last_name }}</td>
-
-                              <!--  <td>{{ user.contact }}</td>
-
                                 
                                 {% set user_date = user.date if user.date else None %}
                                 {% if user_date and user_date is string %}
                                     {% set user_date = user_date | datetimeformat('%Y-%m-%d') %}
-                                {% endif %} -->
+                                {% endif %} 
+                                
                                 <td>{{ user_date.strftime('%m/%d/%Y') if user_date else 'N/A' }}</td>
                                 
                                 <td>
@@ -241,7 +283,7 @@
                                         <i class="fa-solid fa-file-pen" style="color: #28a745;"></i>
                                     </button> --> 
                                     <button onclick="deleteRecord('{{ user.id }}')" style="background: none; border: none; cursor: pointer;">
-                                        <i class="fa-solid fa-trash-can" style="color: #dc3545;"></i>
+                                        <i class="fa-solid fa-trash-can" style="color:rgb(161, 12, 12);"></i>
                                     </button>
                                 </td>
                             </tr>

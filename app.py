@@ -1,7 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, request, current_app
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text 
+from sqlalchemy import text
+from sqlalchemy import distinct
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_mysqldb import MySQL
+from sqlalchemy import or_, func
 import json
 import os
 import uuid
@@ -42,7 +45,6 @@ def get_questions_and_answers(user_id):
         for question_id, question_text, response in responses
     }
 
-
 with open("static/ph-json/province.json", "r", encoding="utf-8") as file:
     province_data = json.load(file)
     
@@ -66,6 +68,7 @@ class User(db.Model):
     location = db.Column(db.Text, nullable=False)
     date = db.Column(db.Date, nullable=False)
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
     
 class Questions(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -95,10 +98,24 @@ class Admin(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    region = db.Column(db.String(100), nullable=False)
+    province = db.Column(db.String(100), nullable=False)
+    city = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
     address = db.Column(db.String(255), nullable=True)
     job = db.Column(db.String(100), nullable=True)
+    profile_image = db.Column(db.String(255), nullable=True)  # New field for profile image
+    
+class Services(db.Model):
+    __tablename__ = 'services'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    service_name = db.Column(db.String(255), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user_id = db.Column(db.Integer, nullable=False)  # Link to the user
+
     
 @app.route('/get_yes_no_distribution', methods=['GET'])
 def get_yes_no_distribution():
@@ -142,20 +159,35 @@ def admin_signup_page():
     return render_template('admin_signup.html')
 
 
-@app.route('/admin/signup', methods=['POST'])
+@app.route('/admin/signup', methods=['GET', 'POST'])
 def admin_signup():
     if request.method == 'POST':
-        username = request.form['new_username']
-        password = request.form['new_password']
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        username = request.form.get('new_username')
+        password = request.form.get('new_password')
+        region = request.form.get('region')
+        province = request.form.get('province')
+        city = request.form.get('city')
 
-        new_admin = Admin(username=username, password=hashed_password)
+        # Ensure password is not empty
+        if not password:
+            return "Password is required", 400
+
+        # Hash the password
+        hashed_password = generate_password_hash(password)
+
+        new_admin = Admin(
+            username=username,
+            password=hashed_password,
+            region=region,
+            province=province,
+            city=city
+        )
+
         db.session.add(new_admin)
         db.session.commit()
-
-        
-        flash('Admin account created successfully!', 'success')
         return redirect(url_for('admin_login'))
+
+    return render_template('admin_signup.html')
 
 # Admin Login
 @app.route('/admin/login', methods=['POST'])
@@ -181,20 +213,172 @@ def admin_dashboard():
         return redirect(url_for('admin'))
 
     admin = Admin.query.filter_by(username=session['admin']).first()
+    services = Services.query.all()
     questions = Questions.query.all()
     users = User.query.all()
+
+    selected_year = request.args.get('year', str(datetime.now().year))
+    selected_month = request.args.get('month', 'all')
     
+    if selected_month != 'all':
+        start_date = f"{selected_year}-{selected_month}-01"
+        # get last day of the month
+        next_month = int(selected_month) % 12 + 1
+        next_year = int(selected_year) + 1 if next_month == 1 else int(selected_year)
+        end_date = f"{next_year}-{str(next_month).zfill(2)}-01"
+    else:
+        start_date = f"{selected_year}-01-01"
+        end_date = f"{selected_year}-12-31"
+    
+    current_year = datetime.now().year
+    available_years = list(range(2025, current_year + 6))  # 2025 to 5 years ahead
+
     # Get unread user responses
     unread_responses = UserResponse.query.filter_by(is_read=False).count()
+    
+    attempted_suicide_count = db.session.query(UserResponse.user_id).join(
+        User, User.id == UserResponse.user_id  # Explicit join condition between User and UserResponse
+    ).filter(
+        UserResponse.question_number == 4,
+        UserResponse.response == 'yes',  # Assuming "yes" is stored as the answer for question 4
+        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
+        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
+        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
+    ).count()
+    
+    sexual_violence_count = db.session.query(UserResponse.user_id).join(
+        User, User.id == UserResponse.user_id
+    ).filter(
+        UserResponse.question_number == 10,
+        UserResponse.response == 'yes',
+        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
+        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
+        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
+    ).count()
+    
+    # Binge Drinkers Count (Question 6)
+    binge_drinkers_count = db.session.query(UserResponse.user_id).join(
+        User, User.id == UserResponse.user_id
+    ).filter(
+        UserResponse.question_number == 6,
+        UserResponse.response == 'yes',
+        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
+        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
+        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
+    ).distinct().count()
+
+    # Tobacco Users Count (Question 5)
+    tobacco_users_count = db.session.query(UserResponse.user_id).join(
+        User, User.id == UserResponse.user_id
+    ).filter(
+        UserResponse.question_number == 5,
+        UserResponse.response == 'yes',
+        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
+        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
+        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
+    ).count()
+    
+    drug_users_count = db.session.query(UserResponse.user_id).join(
+        User, User.id == UserResponse.user_id
+    ).filter(
+        UserResponse.question_number == 7,
+        UserResponse.response == 'yes',
+        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
+        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
+        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
+    ).distinct().count()
+    
+    bullying_count = db.session.query(
+        func.count(distinct(UserResponse.user_id))
+    ).join(
+        User, User.id == UserResponse.user_id
+    ).filter(
+        UserResponse.question_number == 3,
+        func.lower(func.trim(UserResponse.response)) == 'yes',
+        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
+        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
+        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
+    ).scalar()
+
+
+
+    # Load region, province, and city data from JSON files
+    json_files = {
+        "region": "region.json",
+        "province": "province.json",
+        "city": "city.json",
+        "barangay": "barangay.json"
+    }
+
+    json_data = {}
+    try:
+        for key, filename in json_files.items():
+            path = os.path.join(current_app.root_path, 'static', 'ph-json', filename)
+            with open(path, 'r', encoding='utf-8') as f:
+                json_data[key] = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        return f"Error: {str(e)}", 500  # Provide the actual error message for debugging
+
+    # Initialize the region_map, province_map, and city_map from JSON data
+    region_map = {item["region_code"]: item["region_name"] for item in json_data.get("region", [])}
+    province_map = {item["province_code"]: item["province_name"] for item in json_data.get("province", [])}
+    city_map = {item["city_code"]: item["city_name"] for item in json_data.get("city", [])}
+
+    # Get the region, province, and city of the admin
+    admin_region = admin.region
+    admin_province = admin.province
+    admin_city = admin.city
+
+    # Count male and female adolescents assessed using HEEADSSS, filtered by admin's region, province, and city
+    heeadsss_counts = db.session.query(
+        User.sex, db.func.count(User.id).label('count')
+    ).join(Services, Services.user_id == User.id) \
+     .filter(Services.service_name == 'Assessed using HEEADSSS') \
+     .filter(Services.timestamp.between(start_date, end_date)) \
+     .filter(
+         or_(
+             func.lower(func.trim(User.region)) == func.lower(func.trim(admin_region)),
+             func.lower(func.trim(User.region)) == func.lower(region_map.get(admin_region, ''))
+         ),
+         or_(
+             func.lower(func.trim(User.province)) == func.lower(func.trim(admin_province)),
+             func.lower(func.trim(User.province)) == func.lower(province_map.get(admin_province, ''))
+         ),
+         or_(
+             func.lower(func.trim(User.city)) == func.lower(func.trim(admin_city)),
+             func.lower(func.trim(User.city)) == func.lower(city_map.get(admin_city, ''))
+         )
+     ) \
+     .group_by(User.sex).all()
+
+    # Separate counts for male and female
+    male_heeadsss_count = next((count for sex, count in heeadsss_counts if sex == 'Male'), 0)
+    female_heeadsss_count = next((count for sex, count in heeadsss_counts if sex == 'Female'), 0)
+
+    heeadsss_count = Services.query.filter_by(service_name='Assessed using HEEADSSS').count()
 
     return render_template(
         'admin_dashboard.html',
         admin=admin,
         questions=questions,
         users=users,
-        unread_responses=unread_responses
+        unread_responses=unread_responses,
+        services=services,
+        heeadsss_count=heeadsss_count,
+        male_heeadsss_count=male_heeadsss_count,
+        female_heeadsss_count=female_heeadsss_count,
+        available_years=available_years,
+        selected_year=int(selected_year),
+        selected_month=selected_month,
+        attempted_suicide_count=attempted_suicide_count,
+        sexual_violence_count=sexual_violence_count,
+        binge_drinkers_count=binge_drinkers_count,
+        tobacco_users_count=tobacco_users_count,
+        drug_users_count=drug_users_count,
+        bullying_count=bullying_count
     )
-    
+
+   
 @app.route('/admin/list')
 def admin_list():
     if 'admin' not in session:
@@ -202,34 +386,87 @@ def admin_list():
         return redirect(url_for('admin'))
 
     admin = Admin.query.filter_by(username=session['admin']).first()
-    
+
+    # ✅ Filter users by the admin's region, province, and city
     page = request.args.get('page', 1, type=int)
     per_page = 10
-    users_pagination = User.query.paginate(page=page, per_page=per_page)
+    
+    json_files = {
+    "region": "region.json",
+    "province": "province.json",
+    "city": "city.json",
+    "barangay": "barangay.json"
+}
+    
+    json_data = {}
+    try:
+        for key, filename in json_files.items():
+            path = os.path.join(current_app.root_path, 'static', 'ph-json', filename)
+            with open(path, 'r', encoding='utf-8') as f:
+                json_data[key] = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        return f"Error: {str(e)}", 500  # Provide the actual error message for debugging
+
+    # Initialize the region_map, province_map, and city_map from JSON data
+    region_map = {item["region_code"]: item["region_name"] for item in json_data.get("region", [])}
+    province_map = {item["province_code"]: item["province_name"] for item in json_data.get("province", [])}
+    city_map = {item["city_code"]: item["city_name"] for item in json_data.get("city", [])}
+
+    
+    users_query = User.query.filter(
+    or_(
+        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
+        func.lower(func.trim(User.region)) == func.lower(region_map.get(admin.region, ''))
+    ),
+    or_(
+        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
+        func.lower(func.trim(User.province)) == func.lower(province_map.get(admin.province, ''))
+    ),
+    or_(
+        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city)),
+        func.lower(func.trim(User.city)) == func.lower(city_map.get(admin.city, ''))
+    )
+)
+    users_pagination = users_query.paginate(page=page, per_page=per_page)
     users = users_pagination.items
 
-    total_questions = db.session.query(Assessment).count()  # ✅ Get total assessment questions
+    total_questions = db.session.query(Assessment).count()
 
     user_progress = {}
+    highlighted_users = {}
+    highlighted_users_yellow = {}
+    
     for user in users:
         answered_questions = (
             db.session.query(AssessmentResponse)
             .filter_by(user_id=user.id)
             .count()
         )
-        # ✅ If answered questions match total, mark as 'Done'
-        user_progress[user.id] = answered_questions >= total_questions  
+        user_progress[user.id] = answered_questions >= total_questions
+        
+        questions_with_answers = get_questions_and_answers(user.id)
+        yes_answers = {int(q_id) for q_id, data in questions_with_answers.items() if data["answer"].strip().lower() == "yes"}
+
+        # If answered 'Yes' to questions 1, 4, or 10, mark user for highlighting
+        if 1 in yes_answers or 4 in yes_answers or 10 in yes_answers:
+            highlighted_users[user.id] = True
+            
+        if any(q not in [1, 4, 10] and q in yes_answers for q in yes_answers):
+            highlighted_users_yellow[user.id] = True
 
     unread_responses = UserResponse.query.filter_by(is_read=False).count()
 
     return render_template(
         'admin_list.html',
         admin=admin,
-        users=users,  
-        user_progress=user_progress,  # ✅ Pass progress data to template
+        users=users,
+        user_progress=user_progress,
+        highlighted_users=highlighted_users,
+        highlighted_users_yellow=highlighted_users_yellow,
         unread_responses=unread_responses,
         pagination=users_pagination
     )
+
 
 @app.template_filter('datetimeformat')
 def datetimeformat(value, format='%Y-%m-%d'):
@@ -240,6 +477,13 @@ def datetimeformat(value, format='%Y-%m-%d'):
     
 @app.route('/view-client/<int:user_id>')
 def view_client(user_id):
+    
+    if 'admin' not in session:
+        flash('Please log in first.', 'danger')
+        return redirect(url_for('admin'))
+
+    admin = Admin.query.filter_by(username=session['admin']).first()
+    
     user = User.query.get_or_404(user_id)  # Fetch user once
 
     # Fetch user responses
@@ -247,14 +491,13 @@ def view_client(user_id):
     
     # Define key questions
     question_messages = {
-        
     1: 'The client has disclosed experiencing domestic violence or threats at home, requiring immediate attention',
 
     2: 'The client has expressed thoughts of running away or leaving home, which may indicate distress, family conflicts, or insecurity',
 
     3: 'The client reported experiencing physical or cyberbullying at school or work, which can severely impact mental and emotional well-being',
 
-    4: 'The client has expressed serious thoughts of self-harm or suicide, indicating an urgent need for psychological support and crisis intervention.',
+    4: 'The client has expressed serious thoughts of self-harm or suicide, indicating an urgent need for psychological support and crisis intervention',
 
     10: 'The client reported experiencing forced sexual activity, a serious concern requiring urgent intervention. '
         'Take appropriate action, including notifying legal authorities, arranging medical care, and providing trauma-informed psychological support',
@@ -265,6 +508,24 @@ def view_client(user_id):
                                    'Encourage discussions on safe practices, consent, and emotional well-being, while offering referrals to counseling or medical professionals for further support'
 }
 
+    import re
+    def highlight_keywords(text, keywords):
+        for kw in keywords:
+            pattern = re.compile(re.escape(kw), re.IGNORECASE)
+            text = pattern.sub(lambda m: f'<span style="color:red;">{m.group(0)}</span>', text)
+        return text
+
+    keywords_to_highlight = [
+        "domestic violence or threats at home",
+        "self-harm or suicide",
+        "forced sexual activity"    
+    ]
+
+    formatted_messages = {}
+    for key, message in question_messages.items():
+        formatted_messages[key] = highlight_keywords(message, keywords_to_highlight)
+
+
        
     # Check if user answered 'Yes' to any special question
     yes_answers = {int(q_id) for q_id, data in questions_with_answers.items() if data["answer"].strip().lower() == "yes"}
@@ -273,7 +534,7 @@ def view_client(user_id):
     
     for q in [1, 4, 10]:
         if q in yes_answers:
-            displayed_messages[q] = question_messages[q]
+            displayed_messages[q] = formatted_messages[q] 
 
     # Display messages for questions 2, 3, 5, 6, 7, 8, 9, 11, 12 if answered "Yes"
     for q in [2, 3]:
@@ -339,6 +600,7 @@ def view_client(user_id):
     
     return render_template(
         'view_client.html', 
+        admin=admin,
         user=user, 
         questions_with_answers=questions_with_answers,
         displayed_messages=displayed_messages,
@@ -351,6 +613,8 @@ def view_client(user_id):
         formatted_messages=formatted_messages
     )
     
+    
+
 def format_messages(messages):
     formatted_paragraphs = []
     current_paragraph = []
@@ -393,6 +657,29 @@ def format_substance_use_message(answers):
                 "specializing in substance abuse prevention and rehabilitation if needed")
     
     return None  # No message if no "Yes" answers
+
+@app.route('/save_services', methods=['POST'])
+def save_services():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')  # Get user_id from the request
+        services = data.get('services', [])
+
+        if not user_id:
+            return 'User ID is required', 400  # Bad request if no user_id is provided
+
+        print("Received services:", services)  # Log the received data for debugging
+
+        for service in services:
+            new_service = Services(service_name=service, user_id=user_id)
+            db.session.add(new_service)
+
+        db.session.commit()
+        return '', 200  # Success status
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return str(e), 500  # Return the error message for debugging
+
 
    
 @app.route('/edit-user/<int:user_id>', methods=['GET', 'POST'])
@@ -573,6 +860,16 @@ def edit_admin_profile():
         admin.job = request.form.get('job', admin.job)                # Default to current job if not provided
         admin.phone = request.form.get('phone', admin.phone)          # Default to current phone if not provided
         admin.address = request.form.get('address', admin.address)    # Default to current address if not provided
+        
+        if 'profile_image' in request.files:
+            file = request.files['profile_image']
+            if file and file.filename != '':
+                print(f"Uploading file: {file.filename}")  # Debugging
+                filename = f"{uuid.uuid4().hex}_{file.filename}"
+                upload_path = os.path.join('static/uploads', filename)
+                file.save(upload_path)
+                print(f"File saved to: {upload_path}")  # Debugging
+                admin.profile_image = f'/static/uploads/{filename}'
 
         # Update password if provided
         if request.form.get('password'):
@@ -886,37 +1183,77 @@ def get_user_info():
 
 @app.route('/get_age_distribution', methods=['GET'])
 def get_age_distribution():
-    users = User.query.with_entities(User.age, User.sex).all()
+    if 'admin' not in session:
+        return jsonify({"error": "Not authorized"}), 403
 
-    if not users:
-        return jsonify({"error": "No user data available"}), 404
+    admin = Admin.query.filter_by(username=session['admin']).first()
+    if not admin:
+        return jsonify({"error": "Admin not found"}), 404
 
-    # Define new age groups
-    age_groups = {
-        "10-11": {"Male": 0, "Female": 0},
-        "12-13": {"Male": 0, "Female": 0},
-        "14-15": {"Male": 0, "Female": 0},
-        "16-17": {"Male": 0, "Female": 0},
-        "18-19": {"Male": 0, "Female": 0}
+    # Load region, province, city JSON
+    json_files = {
+        "region": "region.json",
+        "province": "province.json",
+        "city": "city.json"
     }
 
-    # Categorize users into the correct age groups
+    json_data = {}
+    try:
+        for key, filename in json_files.items():
+            path = os.path.join(current_app.root_path, 'static', 'ph-json', filename)
+            with open(path, 'r', encoding='utf-8') as f:
+                json_data[key] = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        return jsonify({"error": str(e)}), 500
+
+    region_map = {item["region_code"]: item["region_name"] for item in json_data.get("region", [])}
+    province_map = {item["province_code"]: item["province_name"] for item in json_data.get("province", [])}
+    city_map = {item["city_code"]: item["city_name"] for item in json_data.get("city", [])}
+
+    admin_region = admin.region
+    admin_province = admin.province
+    admin_city = admin.city
+
+    # Query users filtered by region, province, and city
+    users = db.session.query(User.age, User.sex) \
+        .filter(
+            or_(
+                func.lower(func.trim(User.region)) == func.lower(func.trim(admin_region)),
+                func.lower(func.trim(User.region)) == func.lower(region_map.get(admin_region, ''))
+            ),
+            or_(
+                func.lower(func.trim(User.province)) == func.lower(func.trim(admin_province)),
+                func.lower(func.trim(User.province)) == func.lower(province_map.get(admin_province, ''))
+            ),
+            or_(
+                func.lower(func.trim(User.city)) == func.lower(func.trim(admin_city)),
+                func.lower(func.trim(User.city)) == func.lower(city_map.get(admin_city, ''))
+            )
+        ).all()
+
+    if not users:
+        return jsonify({"error": "No user data available for your area"}), 404
+
+    # Define age groups
+    age_groups = {
+        "10-14": {"Male": 0, "Female": 0},
+        "15-19": {"Male": 0, "Female": 0}
+    }
+
     for age, sex in users:
         if age is None or sex is None:
             continue
-
-        if 10 <= age <= 11:
-            age_groups["10-11"][sex] += 1
-        elif 12 <= age <= 13:
-            age_groups["12-13"][sex] += 1
-        elif 14 <= age <= 15:
-            age_groups["14-15"][sex] += 1
-        elif 16 <= age <= 17:
-            age_groups["16-17"][sex] += 1
-        elif 18 <= age <= 19:
-            age_groups["18-19"][sex] += 1
+        sex = sex.capitalize()
+        if sex not in ["Male", "Female"]:
+            continue
+        if 10 <= age <= 14:
+            age_groups["10-14"][sex] += 1
+        elif 15 <= age <= 19:
+            age_groups["15-19"][sex] += 1
 
     return jsonify(age_groups)
+
+
 
 @app.route('/get_user_details', methods=['GET'])
 def get_user_details():
@@ -986,14 +1323,15 @@ def get_questions():
 def save_answer():
     try:
         data = request.json  # Get JSON data from request
+        print(f"📥 Received Data: {data}")  # Debugging
 
-        # Extract expected fields
-        user_id = data.get('user_id')
-        assessment_number = data.get('assessment_number')
+        control_num = data.get('control_num')
+        assessment_number = data.get('question_number')
         response = data.get('response')
 
-        # Validate input
-        if not all([user_id, assessment_number, response]):
+        # Check if any field is missing
+        if not all([control_num, assessment_number, response]):  
+            print("❌ Missing required fields!")  # Debugging
             return jsonify({"success": False, "error": "Missing required fields"}), 400
 
         # Connect to MySQL
@@ -1004,6 +1342,16 @@ def save_answer():
             database=app.config['MYSQL_DB']
         )
         cursor = connection.cursor()
+
+        # Fetch user_id using control_num
+        cursor.execute("SELECT id FROM user WHERE control_num = %s", (control_num,))
+        user = cursor.fetchone()
+       
+        if not user:
+            print("❌ Invalid control number!")  # Debugging
+            return jsonify({"success": False, "error": "Invalid control number"}), 400
+
+        user_id = user[0]  # Get user_id from tuple
 
         # Insert the answer into the database
         sql = """
@@ -1020,10 +1368,48 @@ def save_answer():
         return jsonify({"success": True, "message": "Answer saved successfully"}), 201
 
     except Exception as e:
-        print(f"❌ Error saving answer: {e}")  # Debugging in terminal
+        print(f"❌ Error saving answer: {e}")  # Debugging
         return jsonify({"success": False, "error": str(e)}), 500
+    
+    
+@app.route('/get_summary1', methods=['GET'])
+def get_summary1():
+    try:
+        control_num = request.args.get('control_num')
 
+        # Debugging
+        print(f"Received control_num: {control_num}")
 
+        if not control_num:
+            return jsonify({"success": False, "error": "Missing control number"}), 400
+
+        # Get user_id from control_num
+        result = db.session.execute(text("SELECT id FROM user WHERE control_num = :control_num"), {"control_num": control_num})
+        user = result.fetchone()
+
+        if not user:
+            return jsonify({"success": False, "error": "Invalid control number"}), 400
+
+        user_id = user[0]
+        print(f"Found user_id: {user_id}")  # Debugging
+
+        # Fetch data from assessment and assessment_response tables
+        result = db.session.execute(text("""
+            SELECT a.assessment_text, a.translation_text, ar.response
+            FROM assessment_response ar
+            JOIN assessment a ON ar.assessment_number = a.id
+            WHERE ar.user_id = :user_id
+        """), {"user_id": user_id})
+
+        summary_data = [{"assessment_text": row[0], "translation_text": row[1], "response": row[2]} for row in result.fetchall()]
+
+        print(f"Summary Data: {summary_data}")  # Debugging
+
+        return jsonify(summary_data), 200
+
+    except Exception as e:
+        print(f"❌ Error fetching summary: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 # Run App
 if __name__ == '__main__':

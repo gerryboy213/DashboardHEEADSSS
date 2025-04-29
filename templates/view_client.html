@@ -3,8 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>View Client</title>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="{{ url_for('static', filename='fontawesome/all.min.css') }}">
 
@@ -81,6 +81,7 @@
 </head>
 
 <body>
+    
     <div class="page d-flex">
         <div class="sidebar bg-white p-20 p-relative">
             <h3 class="p-relative text-center mt-0">HEEADSSS</h3>
@@ -137,7 +138,6 @@
                 <div class="user d-flex align-items-center">
 
                     <!-- Notification Bell -->
-                    <!-- Notification Bell -->
                     <span class="notification p-relative">
                         <i class="fa-regular fa-bell fa-lg p-relative"></i>
                         <span id="unread-count" class="unread-count" style="display: none;"></span>
@@ -155,7 +155,7 @@
                     <!-- User Info -->
                     <div class="user-info d-flex align-items-center">
                         <div class="user-img" id="userDropdownToggle">
-                            <img src="/static/images/user.png" alt="User">
+                            <img src="{{ admin.profile_image or '/static/images/user.png' }}" alt="User">
                         </div>
                     </div>
                     
@@ -194,10 +194,11 @@
                                 Only you can see this information
                             </p>
                         </div>
-                        <img class="d-none-mobile" src="/static/images/welcome.png" alt="Welcome">
+                        <img class="d-none d-md-block" src="/static/images/welcome.png" alt="Welcome" style="max-width: 150px;">
                     </div>
                     <img src="/static/images/user.png" alt="User">
                     <div class="body text-center d-flex flex-column p-20 mt-20 mb-20">
+                        <div class="table-scroll-wrapper">
                         <table class="info-table">
                             <tr>
                                 <td><strong>Control Number:</strong></td><td>{{ user.control_num }}</td>
@@ -226,9 +227,10 @@
                             </tr>
                             <tr>
                                 <td><strong>Location:</strong></td><td>{{ user.location }}</td>
-                                <td><strong>Date:</strong></td><td>{{ user.date }}</td>
+                                <td><strong>Date of Consultation:</strong></td><td>{{ user.date }}</td>
                             </tr>
                         </table>
+                    </div>
                     </div>
                     
                     
@@ -237,9 +239,10 @@
                             onclick="toggleSummary('rapid-summary')"> View Rapid Results
                         </button>
                     
-                        <button id="comprehensive-btn" class="btn profile-btn font-14 color-white p-5" 
+                        <!--<button id="comprehensive-btn" class="btn profile-btn font-14 color-white p-5" 
                             onclick="toggleSummary('comprehensive-summary')"> View Comprehensive Results
-                        </button>
+                        </button> -->
+
                     </div>
                     
                     <!-- Rapid HEADSSS Form -->
@@ -264,103 +267,105 @@
                                 </div>
                 
                                 <!-- Summary Table -->
-                                <form method="POST">
-                                    <table class="summary-table" id="summaryTable" style="margin-top: 40px;">
-                                        <thead>
-                                            <tr>
-                                                <th colspan="2" class="summary-title">  Rapid HEEADSSS Results</th>
-                                            </tr>
+                                <form method="POST" action="/save_services">
+                                    <div class="print-container">
+                                        <table class="summary-table" id="summaryTable" style="margin-top: 40px;">
+                                            <thead>
+                                                <tr>
+                                                    <th colspan="2" class="summary-title">  Rapid HEEADSSS Results</th>
+                                                </tr>
 
-                                            <tr>
-                                                <th colspan="2" style="text-align: left;">
-                                                    <div style="display: flex; flex-direction: column; gap: 5px;">
-                                                        <div style="display: flex; align-items: center; gap: 10px; height: 30px;">
-                                                            <label for="serviceProvider" style="width: 100px; font-size: 15px;">Center Name:</label>
-                                                            <select id="serviceProvider" name="service_provider" class="input-field" required onchange="updateProviderText()" 
-                                                                style="height: 35px; padding: 5px;font-size: 14px;">
-                                                                <option value="" disabled selected>Select center name</option>
-                                                                <option value="RHU">RHU</option>
-                                                                <option value="Hospital">Hospital</option>
-                                                                <option value="School">School</option>
-                                                            </select>
-                                                            <span id="serviceProviderText"></span>                                                       
-                                                         </div>
-                                                            
-                                                    </div>
-                                                </th>
-                                            </tr>
-
-                                            <tr>
-                                                <th colspan="2" style="text-align: left;">
-                                                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                                                        <div style="display: flex; align-items: center; gap: 10px; height: 30px;">
-                                                                <label for="centerName" style="width: 180px; font-size: 15px;">Name of Service Provider: </label>
-                                                                <input type="text" id="centerName" name="center_name" class="input-field" 
-                                                                style="font-size: 14px; height: 35px; padding: 5px; border:none;" value="{{ admin_username or '' }}" readonly>                                                                                          
-                                                                <span id="centerNameText"></span>
+                                                <tr>
+                                                    <th colspan="2" style="text-align: left;">
+                                                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                                                            <div style="display: flex; align-items: center; gap: 10px; height: 30px;">
+                                                                <label for="serviceProvider" style="width: 100px; font-size: 15px;">Center Name:</label>
+                                                                <select id="serviceProvider" name="service_provider" class="input-field" required onchange="updateProviderText()" 
+                                                                    style="height: 35px; padding: 5px;font-size: 14px;">
+                                                                    <option value="" disabled selected>Select center name</option>
+                                                                    <option value="RHU">RHU</option>
+                                                                    <option value="Hospital">Hospital</option>
+                                                                    <option value="School">School</option>
+                                                                </select>
+                                                                <span id="serviceProviderText"></span>                                                       
+                                                            </div>
+                                                                
                                                         </div>
-                                                    </div>
-                                                </th>
-                                            </tr>
-        
-                                            <tr>
-                                                <th colspan="2" style="text-align: left;">
-                                                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                                                        <div style="display: flex; align-items: center; gap: 10px;">
-                                                            <strong style="width: 115px; font-size: 15px;">Control Number:</strong>
-                                                            <span style="width: 200px; font-size: 15px;">{{ user.control_num }}</span>
-                                                        </div>    
-                                                    </div>
-                                                </th>
-                                            </tr>
-                                            
-                                        </thead>
-                                    </table>
-                                    
-                                    <!-- Updated table without the "No" column -->
-                                    <table class="summary-table" border="1" width="100%">
-                                        {% set yes_answers = [] %}
-
-                                        {% for id, data in questions_with_answers.items() %}
-                                            {% if data.answer == 'Yes' %}
-                                                {% set _ = yes_answers.append(data) %}
-                                            {% endif %}
-                                        {% endfor %}
-
-                                        <tbody style="font-size: 15px;">
-                                            {% if yes_answers | length > 0 %}
-                                                <!-- Display only Yes answers -->
-                                                <tr>
-                                                    <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Question</th>
-                                                    <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Answer</th>
+                                                    </th>
                                                 </tr>
-                                                {% for data in yes_answers %}
-                                                <tr>
-                                                    <td style="padding: 8px; text-align: justify;">
-                                                        {{ data.question }}
-                                                    </td>
-                                                    <td style="padding: 8px; text-align: center;">
-                                                        <i class="fas fa-check-circle" style="color: green;"></i> Yes
-                                                    </td>
-                                                </tr>
-                                                {% endfor %}
-                                            {% endif %}
-                                        </tbody>
-                                    </table>
 
-                                    <div class="container-message">
-                                        <h3 class="section-title" style="padding-top: 2px">Interpretation</h3>
-                                        {% if formatted_messages %}
-                                            <div class="message-card">
-                                                <ul>
-                                                    {% for paragraph in formatted_messages %}
-                                                        <li class="justified-text">{{ paragraph }}</li>
-                                                    {% endfor %}
-                                                </ul>
+                                                <tr>
+                                                    <th colspan="2" style="text-align: left;">
+                                                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                                                            <div style="display: flex; align-items: center; gap: 10px; height: 30px;">
+                                                                    <label for="centerName" style="width: 180px; font-size: 15px;">Name of Service Provider: </label>
+                                                                    <input type="text" id="centerName" name="center_name" class="input-field" 
+                                                                    style="font-size: 14px; height: 35px; padding: 5px; border:none;" value="{{ admin_username or '' }}" readonly>                                                                                          
+                                                                    <span id="centerNameText"></span>
+                                                            </div>
+                                                        </div>
+                                                    </th>
+                                                </tr>
+            
+                                                <tr>
+                                                    <th colspan="2" style="text-align: left;">
+                                                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                                                            <div class="control-number-container"  style="display: flex; align-items: center; gap: 10px;">
+                                                                <strong style="width: 115px; font-size: 15px;">Control Number:</strong>
+                                                                <span style="width: 200px; font-size: 15px;">{{ user.control_num }}</span>
+                                                            </div>    
+                                                        </div>
+                                                    </th>
+                                                </tr>
                                                 
-                                            </div>
-                                        {% endif %}
-                                    </div>
+                                            </thead>
+                                        </table>
+                                        
+                                        <!-- Updated table without the "No" column -->
+                                        <table class="summary-table" border="1" width="100%">
+                                            {% set yes_answers = [] %}
+
+                                            {% for id, data in questions_with_answers.items() %}
+                                                {% if data.answer == 'Yes' %}
+                                                    {% set _ = yes_answers.append(data) %}
+                                                {% endif %}
+                                            {% endfor %}
+
+                                            <tbody style="font-size: 15px;">
+                                                {% if yes_answers | length > 0 %}
+                                                    <!-- Display only Yes answers -->
+                                                    <tr>
+                                                        <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Question</th>
+                                                        <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Answer</th>
+                                                    </tr>
+                                                    {% for data in yes_answers %}
+                                                    <tr>
+                                                        <td style="padding: 8px; text-align: justify;">
+                                                            {{ data.question }}
+                                                        </td>
+                                                        <td style="padding: 8px; text-align: center;">
+                                                            <i class="fas fa-check-circle" style="color: green;"></i> Yes
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+
+                                        <div class="container-message">
+                                            <h3 class="section-title" style="padding-top: 2px">Interpretation</h3>
+                                            {% if formatted_messages %}
+                                                <div class="message-card">
+                                                    <ul>
+                                                        {% for paragraph in formatted_messages %}
+                                                            <li class="justified-text">{{ paragraph | safe }}</li>  <!-- important: use |safe -->
+                                                        {% endfor %}
+                                                    </ul>
+                                                    
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                </div>
                                     
    
                                     <div class="recommendation-container">
@@ -368,13 +373,13 @@
                                         <div class="recommendation-section">
                                             <label class="print-label" style="font-weight: bold; font-size: 16px;">Services Provided:</label>
                                             <div class="checkbox-group">
-                                                <div><input type="checkbox" name="services_provided" value="Parental Notification"><label>Parental Notification</label></div>
-                                                <div><input type="checkbox" name="services_provided" value="Preventive Counseling"><label>Preventive Counseling</label></div>
-                                                <div><input type="checkbox" name="services_provided" value="Refer to RHU/Hospital"><label>Refer to RHU/Hospital</label></div>
-                                                <div><input type="checkbox" name="services_provided" value="Refer to Barangay/SK"><label>Refer to Barangay/SK</label></div>
-                                                <div><input type="checkbox" name="services_provided" value="Refer to DSWD"><label>Refer to DSWD</label></div>
-                                                <div><input type="checkbox" name="services_provided" value="Health Education Sessions"><label>Health Education Sessions</label></div>
-                                                <div><input type="checkbox" name="services_provided" value="Schedule Follow-up"><label>Schedule Follow-up</label></div>
+                                                <div><input type="checkbox" name="services_provided[]" value="Parental Notification"><label>Parental Notification</label></div>
+                                                <div><input type="checkbox" name="services_provided[]" value="Assessed using HEEADSSS"><label>Assessed using HEEADSSS</label></div>
+                                                <div><input type="checkbox" name="services_provided[]" value="Preventive Counseling"><label>Preventive Counseling</label></div>
+                                                <div><input type="checkbox" name="services_provided[]" value="Refer to RHU/Hospital"><label>Refer to RHU/Hospital</label></div>
+                                                <div><input type="checkbox" name="services_provided[]" value="Refer to DSWD"><label>Refer to DSWD</label></div>
+                                                <div><input type="checkbox" name="services_provided[]" value="Health Education Sessions"><label>Health Education Sessions</label></div>
+                                                <div><input type="checkbox" name="services_provided[]" value="Schedule Follow-up"><label>Schedule Follow-up</label></div>
                                             </div>
                                             <div class="other-container">
                                                 <input type="checkbox" id="otherOption" onchange="toggleOtherServiceInput()">
@@ -382,10 +387,13 @@
                                             </div>
                                             <div id="otherServiceContainer" style="display: none; margin-top: 10px;">
                                                 <input type="text" id="otherService" name="other_service" class="input-field" placeholder="Enter your service" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; display: block;">
-                                            </div>
-                                            
+                                            </div>    
+                                            <button id="saveButton" data-user-id="{{ user.id }}">Save Services</button>
+ 
                                         </div>
-                                    
+                                        
+                                        <div id="servicesPrintText"></div>
+
                                         <!-- Separator Line -->
                                         <div class="separator"></div>
                                     
@@ -403,12 +411,15 @@
                                             </div>
                                             <div class="other-container">
                                                 <input type="checkbox" id="otherOption2" onchange="toggleOtherRecommendationInput()">
-                                                <label for="otherOption2">Other recommendations:</label>
+                                                <label for="otherOption2">Other recommended actions:</label>
                                             </div>
                                             <div id="otherRecommendationContainer" style="display: none; margin-top: 10px;">
                                                 <input type="text" id="otherRecommendation" name="other_recommendation" class="input-field" placeholder="Enter your recommendation" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; display: block;">
                                             </div>                                         
                                         </div>
+
+                                        <div id="recommendedPrintText"></div>
+                                        
                                     </div>
                                 </form>
                             </div>
@@ -725,47 +736,7 @@
             }
         </script>
         
-        <script>
-
-            function updateActionText() {
-                let selectedOptions = [];
-                
-                // Loop through checkboxes and add selected values as list items
-                document.querySelectorAll('input[name="recommended_action"]:checked').forEach((checkbox) => {
-                    selectedOptions.push(`<li>${checkbox.value}</li>`);
-                });
-            
-                // Include custom text if "Others" is selected and not empty
-                let otherInput = document.getElementById("otherRecommendation");
-                if (document.getElementById("otherOption").checked) {
-                    let otherText = otherInput.value.trim();
-                    if (otherText !== "") {
-                        selectedOptions.push(`<li>${otherText}</li>`);
-                    }
-                }
-            
-                // Display selected actions as bullet points
-                document.getElementById("recommendedActionText").innerHTML = selectedOptions.length > 0 
-                    ? `<ul>${selectedOptions.join("")}</ul>` 
-                    : "";
-            }
-            
-            // Ensure 'Others' input updates the text dynamically
-            function toggleOtherRecommendationInput() {
-                const container = document.getElementById("otherRecommendationContainer");
-                const checkbox = document.getElementById("otherOption2");
-            
-                container.style.display = checkbox.checked ? "block" : "none";
-            }
-            
-            
-            // Attach event listener for real-time updates in "Others" input field
-            document.addEventListener("DOMContentLoaded", function() {
-                document.getElementById("otherRecommendation").addEventListener("input", updateActionText);
-            });
-            
-        </script>
-
+      
         <script>
             document.addEventListener("DOMContentLoaded", function() {
                 // Attach event listeners for checkboxes and inputs
@@ -792,12 +763,12 @@
             function updateServiceText() {
                 let selectedServices = [];
             
-                // Get selected services
-                document.querySelectorAll('input[name="services_provided"]:checked').forEach(checkbox => {
-                    selectedServices.push(checkbox.value);
+                document.querySelectorAll('input[name="services_provided"]').forEach(checkbox => {
+                    if (checkbox.checked) {
+                        selectedServices.push(checkbox.value);
+                    }
                 });
             
-                // Handle "Others" option
                 if (document.getElementById("otherOption").checked) {
                     let otherText = document.getElementById("otherService").value.trim();
                     if (otherText !== "") {
@@ -805,51 +776,121 @@
                     }
                 }
             
-                // Update print display
-                document.getElementById("servicesPrintText").innerHTML = selectedServices.length > 0
-                    ? `<strong>Services Provided:</strong><br>${selectedServices.join(", ")}`
-                    : "";
+                let servicesPrintText = document.getElementById("servicesPrintText");
+                servicesPrintText.innerHTML = "";
+            
+                if (selectedServices.length > 0) {
+                    let ul = document.createElement("ul");
+                    selectedServices.forEach(service => {
+                        let li = document.createElement("li");
+                        li.textContent = service;
+                        ul.appendChild(li);
+                    });
+                    servicesPrintText.appendChild(ul);
+                }
             }
             
             function updateRecommendedText() {
                 let selectedActions = [];
             
-                // Get selected recommended actions
-                document.querySelectorAll('input[name="recommended_action"]:checked').forEach(checkbox => {
-                    selectedActions.push(`<li>${checkbox.value}</li>`);
+                document.querySelectorAll('input[name="recommended_action"]').forEach(checkbox => {
+                    if (checkbox.checked) {
+                        selectedActions.push(checkbox.value);
+                    }
                 });
             
-                // Handle "Others" option
                 if (document.getElementById("otherOption2").checked) {
                     let otherText = document.getElementById("otherRecommendation").value.trim();
                     if (otherText !== "") {
-                        selectedActions.push(`<li>${otherText}</li>`);
+                        selectedActions.push(otherText);
                     }
                 }
             
-                // Update print display
-                document.getElementById("recommendedPrintText").innerHTML = selectedActions.length > 0
-                    ? `<strong>Recommended Action:</strong><br>${selectedActions.join(", ")}`
-                    : "";
+                let recommendedPrintText = document.getElementById("recommendedPrintText");
+                recommendedPrintText.innerHTML = "";
             
-                // Ensure label is always shown
-                document.getElementById("recommendedActionsPrint").innerHTML = `
-                    <label style="font-weight: bold; font-size: 16px;">Recommended Action:</label>
-                    ${selectedActions.length > 0 ? `<ul>${selectedActions.join("")}</ul>` : "<p>No actions selected.</p>"}
-                `;
+                if (selectedActions.length > 0) {
+                    let ul = document.createElement("ul");
+                    selectedActions.forEach(action => {
+                        let li = document.createElement("li");
+                        li.textContent = action;
+                        ul.appendChild(li);
+                    });
+                    recommendedPrintText.appendChild(ul);
+                }
             }
             
             function toggleOtherServiceInput() {
-                document.getElementById("otherServiceContainer").style.display = document.getElementById("otherOption").checked ? "block" : "none";
+                let otherServiceContainer = document.getElementById("otherServiceContainer");
+                if (document.getElementById("otherOption").checked) {
+                    otherServiceContainer.style.display = "block";
+                } else {
+                    otherServiceContainer.style.display = "none";
+                    document.getElementById("otherService").value = ""; // Reset value to avoid empty spaces
+                    updatePrintText();
+                }
             }
             
             function toggleOtherRecommendationInput() {
-                document.getElementById("otherRecommendationContainer").style.display = document.getElementById("otherOption2").checked ? "block" : "none";
+                let otherRecommendationContainer = document.getElementById("otherRecommendationContainer");
+                if (document.getElementById("otherOption2").checked) {
+                    otherRecommendationContainer.style.display = "block";
+                } else {
+                    otherRecommendationContainer.style.display = "none";
+                    document.getElementById("otherRecommendation").value = ""; // Reset value to avoid empty spaces
+                    updatePrintText();
+                }
             }
             
             </script>
             
-         
+            <script>
+                document.getElementById('saveButton').addEventListener('click', function(event) {
+                    event.preventDefault(); // Prevent form submission
+                    saveServices(); // Call the saveServices function
+                });
+                
+                function saveServices() {
+                    const checkedBoxes = document.querySelectorAll('input[name="services_provided[]"]:checked');
+                    const otherChecked = document.getElementById('otherOption').checked;
+                    const selectedServices = Array.from(checkedBoxes).map(cb => cb.value);
+                
+                    if (otherChecked) {
+                        const otherService = document.getElementById('otherService').value;
+                        if (otherService.trim()) {
+                            selectedServices.push(otherService);
+                        }
+                    }
+                
+                    const userId = document.getElementById('saveButton').getAttribute('data-user-id'); // Get the user_id
+                
+                    console.log("Selected services to send:", selectedServices);
+                    console.log("User ID:", userId); // Ensure user ID is correct
+                
+                    fetch('/save_services', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ user_id: userId, services: selectedServices })
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Services saved successfully!');
+                        } else {
+                            response.text().then(errorMessage => {
+                                alert('Failed to save services: ' + errorMessage);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error with fetch request:', error);
+                        alert('An error occurred: ' + error);
+                    });
+                }
+                
+                </script>
+                
 </body>
 
 </html>

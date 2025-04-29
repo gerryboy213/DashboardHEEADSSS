@@ -126,6 +126,7 @@ input {
     gap: 15px;
     justify-content: flex-start; /* Align inputs from left to right */
 }
+
 .input-group {
     flex: 1; /* Makes both inputs equal width */
     min-width: 200px; /* Ensures fields don’t get too small */

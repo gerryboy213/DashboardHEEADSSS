@@ -151,14 +151,14 @@
                         <strong>Notifications</strong>
                         <div id="notification-list" style=" overflow: hidden; margin-left:-200px; margin-top: 20px;"></div>
                         <div class="footer">
-                            <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a>
+                         <!--   <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a> -->
                         </div>
                     </div>
             
                     <!-- User Info -->
                     <div class="user-info d-flex align-items-center">
                         <div class="user-img" id="userDropdownToggle">
-                            <img src="/static/images/user.png" alt="User">
+                            <img src="{{ admin.profile_image or '/static/images/user.png' }}" alt="User">
                         </div>
                     </div>
                     
@@ -203,7 +203,7 @@
                     <textarea class="close-message p-10 rad-6 d-block w-full" placeholder="Type the reason"></textarea>
                 </div>
                 <!-- End Site Control -->
-                <!-- Start General Information -->
+                <!-- Start General Information 
                 <div class="general-info bg-white rad-10 p-20">
                     <h2 class="mt-0 mb-10">General Info</h2>
                     <span class="mt-0 mb-20 font-15 color-grey d-block">General Information About Your Account</span>
@@ -219,7 +219,7 @@
                             placeholder="John_Doe@examble.com" disabled>
                         <a href="#" class="color-blue">Change</a>
                     </div>
-                </div>
+                </div> -->
                 <!-- End General Information -->
                 <!-- Start Security Info -->
                 <div class="security-info bg-white rad-10 p-20">
@@ -252,7 +252,7 @@
                 </div>
                 <!-- End Security Info -->
 
-                <!-- Start Security Info -->
+                <!-- Start Security Info 
                 <div class="social-info bg-white rad-10 p-20">
                     <h2 class="mt-0 mb-10">Social Info</h2>
                     <span class="mt-0 mb-20 font-15 color-grey d-block">Social Information About Your Account</span>
@@ -272,81 +272,10 @@
                         <i class="fa-brands fa-linkedin center-flex color-grey"></i>
                         <input class="w-full" type="text" placeholder="Linkedin Username">
                     </div>
-                </div>
+                </div> -->
                 <!-- End Security Info -->
 
-                <!-- Start Widgets Control -->
-                <div class="widgets-control bg-white rad-10 p-20">
-                    <h2 class="mt-0 mb-10">Widgets Control</h2>
-                    <span class="mt-0 mb-20 font-15 color-grey d-block">Control Your Widgets</span>
-                    <div class="control d-flex align-center mb-15">
-                        <input type="checkbox" id="one" checked>
-                        <label for="one">Quick Draft</label>
-                    </div>
-                    <div class="control d-flex align-center mb-15">
-                        <input type="checkbox" id="two" checked>
-                        <label for="two">Activity</label>
-                    </div>
-                    <div class="control d-flex align-center mb-15">
-                        <input type="checkbox" id="three">
-                        <label for="three">At a Glance</label>
-                    </div>
-                    <div class="control d-flex align-center mb-15">
-                        <input type="checkbox" id="four">
-                        <label for="four">WordPress Events and News</label>
-                    </div>
-                    <div class="control d-flex align-center mb-15">
-                        <input type="checkbox" id="five">
-                        <label for="five">Welcome</label>
-                    </div>
-                    <div class="control d-flex align-center">
-                        <input type="checkbox" id="six">
-                        <label for="six">Site Health</label>
-                    </div>
-                </div>
-                <!-- End Widgets Control -->
-
-                <!-- Start Backup Manager -->
-                <div class="backup-manager bg-white rad-10 p-20">
-                    <h2 class="mt-0 mb-10">Backup Manager</h2>
-                    <span class="mt-0 mb-20 font-15 color-grey d-block">Control Backup Time And Location</span>
-                    <div class="control d-flex align-center mb-15">
-                        <input type="radio" id="seven" name="backup" checked>
-                        <label for="seven">Daily Backup</label>
-                    </div>
-                    <div class="control d-flex align-center mb-15">
-                        <input type="radio" id="eight" name="backup">
-                        <label for="eight">Weekly Backup</label>
-                    </div>
-                    <div class="control d-flex align-center mb-15">
-                        <input type="radio" id="nine" name="backup">
-                        <label for="nine">Monthly Backup</label>
-                    </div>
-                    <div class="servers d-flex align-center text-center gap-10">
-                        <input type="radio" name="servers" id="server-one">
-                        <div class="server mb-15 rad-10 w-full">
-                            <label class="d-block m-15" for="server-one">
-                                <i class="fa-solid fa-server d-block mb-10"></i>
-                                Alpha
-                            </label>
-                        </div>
-                        <input type="radio" name="servers" id="server-two" checked="">
-                        <div class="server mb-15 rad-10 w-full">
-                            <label class="d-block m-15" for="server-two">
-                                <i class="fa-solid fa-server d-block mb-10"></i>
-                                Beta
-                            </label>
-                        </div>
-                        <input type="radio" name="servers" id="server-three">
-                        <div class="server mb-15 rad-10 w-full">
-                            <label class="d-block m-15" for="server-three">
-                                <i class="fa-solid fa-server d-block mb-10"></i>
-                                Gamma
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <!-- End Backup Manager -->
+               
             </div>
 
             <script>

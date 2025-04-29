@@ -143,24 +143,24 @@
                 <div class="user d-flex align-items-center">
 
                     <!-- Notification Bell -->
-                    <span class="notification p-relative" onclick="toggleNotifications()">
+                    <span class="notification p-relative">
                         <i class="fa-regular fa-bell fa-lg p-relative"></i>
                         <span id="unread-count" class="unread-count" style="display: none;"></span>
                     </span>
                     
                     <!-- Notification Dropdown -->
-                    <div id="notification-dropdown" class="dropdown-menu">
+                    <div id="notification-dropdown" class="dropdown-menu-notif">
                         <strong>Notifications</strong>
-                        <div id="notification-list"></div>
+                        <div id="notification-list" style=" overflow: hidden; margin-left:-200px; margin-top: 20px;"></div>
                         <div class="footer">
-                            <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a>
+                           <!-- <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a> -->
                         </div>
                     </div>
             
                     <!-- User Info -->
                     <div class="user-info d-flex align-items-center">
                         <div class="user-img" id="userDropdownToggle">
-                            <img src="/static/images/user.png" alt="User">
+                            <img src="{{ admin.profile_image or '/static/images/user.png' }}" alt="User">
                         </div>
                     </div>
                     
@@ -192,16 +192,11 @@
 
                 <div class="d-flex">
                     <div class="profile-info text-center p-20">
-                        <img class="rad-half mb-10" src="/static/images/user.png" alt="User">
+                        <img class="rad-half mb-10" src="{{ admin.profile_image or '/static/images/user.png' }}" alt="User">                        
                         <p><strong>{{ admin.username }} </strong> </p>
                         <P class="mt-10 color-grey">{{ admin.job }}</P>
-                        <div class="level rad-6 bg-eee p-relative">
-                        
-                        </div>
-                        <div class="rating mt-10 mb-10">
-                           
-                        </div>
-                       
+                        <div class="level rad-6 bg-eee p-relative"></div>
+                        <div class="rating mt-10 mb-10"> </div>
                         <a href="javascript:void(0)" onclick="openEditProfilePanel()" class="btn btn-primary mt-10">Edit Profile</a>
                     </div>
                     <div class="info-box mt-20 flex-1">
@@ -269,7 +264,12 @@
                     <h2>Edit Profile</h2>
                     <button class="close-btn" onclick="closeEditProfilePanel()">×</button>
                 </div>
-                <form method="POST" action="{{ url_for('edit_admin_profile') }}">
+                <form method="POST" action="{{ url_for('edit_admin_profile') }}" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="profileImage">Profile Image:</label>
+                        <input type="file" id="profileImage" name="profile_image" accept="image/*">
+                    </div>
+                    
                     <div class="form-group">
                         <label for="username">Username:</label>
                         <input type="text" id="username" name="username" value="{{ admin.username }}" required>
@@ -299,7 +299,7 @@
             </div>
 
             <div class="other-data d-flex flex-wrap gap-20">
-                
+                <!-- 
                 <div class="activities bg-white ml-20 mr-20 p-20 rad-10">
                     <h2 class="mt-0 mb-10">Latest Activities</h2>
                     <p class="mt-0 mb-20 color-grey font-15">Latest Activities Done By The User</p>
@@ -347,90 +347,101 @@
                             <span class="color-grey">Today</span>
                         </div>
                     </div>
-                </div>
-            </div>
+                </div> -->
+            </div> 
         </div>
     </div>
 
     <script>
+
         document.addEventListener("DOMContentLoaded", function () {
             const notificationDropdown = document.getElementById("notification-dropdown");
             const notificationList = document.getElementById("notification-list");
             const bellIcon = document.querySelector(".notification");
             const unreadCount = document.getElementById("unread-count");
-    
-            function fetchNotifications() {
-                fetch("/get_notifications")
-                    .then(response => response.json())
-                    .then(data => {
-                        notificationList.innerHTML = ""; // Clear previous notifications
-    
-                        if (data.length > 0) {
-                            unreadCount.textContent = data.length;
-                            unreadCount.style.display = "inline-block"; // Show notification count
+        
+            async function fetchNotifications() {
+                console.log("Fetching notifications...");
+        
+                try {
+                    const response = await fetch("/get_notifications");
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        
+                    const data = await response.json();
+                    console.log("Received notifications:", data);
+        
+                    notificationList.innerHTML = ""; // Clear previous notifications
+        
+                    if (data.length === 0) {
+                        unreadCount.style.display = "none";
+                        notificationList.innerHTML = "<p>No new notifications.</p>";
+                        return;
+                    }
+        
+                    unreadCount.textContent = data.length;
 
-                            data.sort((a, b) => new Date(b.time) - new Date(a.time));
-    
-                            data.slice(0, 3).forEach(msg => { // Show only 5 notifications
-                                const messageItem = document.createElement("div");
-                                messageItem.classList.add("notification-item", msg.unread ? "unread" : "read");
-    
-                                messageItem.innerHTML = `
-                                    <div class="icon"><i class="fa fa-envelope"></i></div>
-                                    <div class="content">
-                                        <div class="sender">${msg.sender}</div>
-                                        <div class="message-preview">${msg.content.substring(0, 40)}...</div>
-                                        <div class="time">${msg.time}</div>
-                                    </div>
-                                `;
-    
-                                messageItem.addEventListener("click", function () {
-                                    if (msg.unread) {
-                                        markNotificationAsRead(msg.id, messageItem);
-                                    }
-                                    window.location.href = `/admin/messages?message_id=${msg.id}`;
-                                });
-    
-                                notificationList.appendChild(messageItem);
-                            });
-                        } else {
-                            unreadCount.style.display = "none"; // Hide if no notifications
-                            notificationList.innerHTML = "<p>No new notifications.</p>";
-                        }
-                    })
-                    .catch(error => console.error("Error fetching notifications:", error));
+                    unreadCount.style.display = "inline-block"; // Show notification count      
+
+                    const sortedData = data.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+                    // Display notifications
+                    sortedData.forEach(notification => {
+
+                        let notificationItem = document.createElement("div");
+                        notificationItem.classList.add("notification-item");
+        
+                        // Ensure notification contains `user_id`
+                        notificationItem.dataset.userId = notification.user_id;
+        
+                        notificationItem.innerHTML = `
+                       
+                        <div class="content">
+                            <span class="sender">${notification.sender}</span>
+                            <span class="message-preview">${notification.content}</span>
+                            <span class="time">${formatTime(notification.time)}</span>
+                        </div>
+                    `;
+        
+                        // Redirect to view-client when clicked
+                        notificationItem.addEventListener("click", function () {
+                            const userId = this.dataset.userId;
+                            if (userId) {
+                                window.location.href = `/view-client/${userId}`;
+                            }
+                        });
+        
+                        notificationList.appendChild(notificationItem);
+                    });
+        
+                } catch (error) {
+                    console.error("Error fetching notifications:", error);
+                }
             }
-    
-            function markNotificationAsRead(messageId, element) {
-                fetch('/admin/mark_notification_read', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message_id: messageId })
-                }).then(response => response.json())
-                  .then(() => {
-                      element.classList.remove("unread"); // Remove highlight
-                      element.classList.add("read");
-                      fetchNotifications(); // Refresh notifications after marking as read
-                  });
-            }
-    
-            function toggleDropdown() {
+        
+            function toggleNotifications(event) {
+                event.stopPropagation();
                 notificationDropdown.classList.toggle("show");
             }
-    
-            // Close dropdown if clicked outside
+        
             document.addEventListener("click", function (event) {
                 if (!notificationDropdown.contains(event.target) && !bellIcon.contains(event.target)) {
                     notificationDropdown.classList.remove("show");
                 }
             });
-    
-            bellIcon.addEventListener("click", toggleDropdown);
-    
-            // Fetch notifications initially and update every 5 seconds
+        
+            bellIcon.addEventListener("click", toggleNotifications);
+        
+            // Helper function to format timestamps (optional)
+            function formatTime(timestamp) {
+                const time = new Date(timestamp);
+                return time.toLocaleString(); // Formats in a readable way
+            }
+        
             fetchNotifications();
-            setInterval(fetchNotifications, 5000);
+            setInterval(fetchNotifications, 10000);
         });
+        
+
     </script>
     
 
@@ -506,6 +517,19 @@
                 document.getElementById("editProfilePanel").style.right = "-100%";
             }
 
+        </script>
+
+        <script>
+            document.getElementById('profileImageInput').addEventListener('change', function (event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        document.getElementById('profileImage').src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
         </script>
 </body>
 

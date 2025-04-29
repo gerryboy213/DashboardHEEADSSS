@@ -4,7 +4,7 @@
 /* General Styles */
 body {
     font-family: 'Lato', sans-serif;
-    background-color: #fbe0e0;
+    background-color: #ffffff;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -68,6 +68,7 @@ html, body {
     min-width: 280px;
     transition: transform 0.3s ease-in-out;
     margin-top: 10px;
+    border: 3px solid #3e8e41;
 }
 
 .container:hover {

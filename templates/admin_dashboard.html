@@ -152,7 +152,7 @@
                         <strong>Notifications</strong>
                         <div id="notification-list" style=" overflow: hidden; margin-left:-200px; margin-top: 20px;"></div>
                         <div class="footer">
-                            <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a>
+                           <!-- <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a> -->
                         </div>
                     </div>
                     
@@ -160,7 +160,7 @@
                     <!-- User Info -->
                     <div class="user-info d-flex align-items-center">
                         <div class="user-img" id="userDropdownToggle">
-                            <img src="/static/images/user.png" alt="User">
+                            <img src="{{ admin.profile_image or '/static/images/user.png' }}" alt="User">
                         </div>
                     </div>
                     
@@ -187,94 +187,255 @@
             <!-- End Header -->
              
             <h1 class="p-relative">Dashboard</h1>
-            <div class="wrapper d-grid gap-20">
-                <!-- Start Welcome widget -->
+           
+                <!-- Start Welcome widget 
                 <div class="welcome bg-white rad-10 text-center-mobile">
                     <div class="intro d-flex justify-content-between p-20 bg-eee">
                         <div>
-                            <h2 class="m-0">
-                                Welcome to Admin Panel
+                            <h2 class="m-9">
+                                Welcome to Admin Dashboard
                             </h2>
-                            <p class="font-15 color-grey mt-5">
-                                A simple to use dashboard
-                            </p>
+                            
                         </div>
                         <img class="d-none-mobile" src="/static/images/welcome.png" alt="Welcome">
                     </div>
-                    <img src="/static/images/user.png" alt="User">
-                    <div class="body text-center d-flex p-20 mt-20 mb-20 d-block-mobile">
-                        <div>{{ admin.username }}<span class="d-block color-grey font-14 mt-10">{{ admin.job }}</span></div>
-                        <div>10<span class="d-block color-grey font-14 mt-10">Projects</span></div>
-                      <!-- <div>$5000<span class="d-block color-grey font-14 mt-10">Earned</span></div> --> 
+                    <div class="body d-flex align-items-center justify-content-center p-20 mt-20 mb-20">
+                        <img src="{{ admin.profile_image or '/static/images/user.png' }}" alt="User" style="width: 80px; height: 80px; border-radius: 50%; margin-right: 20px;">
+                        <div>
+                            <div class="font-18 font-weight-bold">{{ admin.username }}</div>
+                            <span class="d-block color-grey font-14 mt-10">{{ admin.job }}</span>
+                        </div>
                     </div>
-                    <a class="btn profile-btn d-block font-14 color-white bg-blue w-fit p-5"
+                    <a class="btn profile-btn d-block font-16 color-white bg-blue w-fit p-20"
                         href="{{ url_for('admin_profile') }}">Profile</a>
-                </div>
+                </div> -->
                 <!-- End Welcome widget -->
                             
+
+              
                 <!-- Start Services Widget -->
-                <div class="services bg-white rad-10 p-20">
-                    <h2 class="m-0 mb-10">Services</h2>
-                    <p class="m-0 mb-20 font-15 color-grey">Services offered to users or adolescents</p>
-                    <div class="services-container d-flex flex-wrap gap-20">
-                        <div class="service color-grey text-center">
-                            <i class="fas fa-stethoscope fa-fw font-18 color-blue mb-5"></i> 
-                            <p class="m-0 mb-5 font-18 font-weight-bold color-black">Medical</p> 
-                            <span class="font-14">Comprehensive medical services</span> 
-                        </div>
-                        <div class="service color-grey text-center">
-                            <i class="fas fa-user-friends fa-fw font-18 color-green mb-5"></i> 
-                            <p class="m-0 mb-5 font-18 font-weight-bold color-black">Counseling</p> 
-                            <span class="font-14">Professional counseling services</span> 
-                        </div>
-                        <div class="service color-grey text-center">
-                            <i class="fas fa-hands-helping fa-fw font-18 color-orange mb-5"></i>
-                            <p class="m-0 mb-5 font-18 font-weight-bold color-black">Referral</p> 
-                            <span class="font-14">Referral to specialized services</span> 
-                        </div>
-                        <div class="service color-grey text-center">
-                            <i class="fas fa-book fa-fw font-18 color-red mb-5"></i> 
-                            <p class="m-0 mb-5 font-18 font-weight-bold color-black">Education</p> 
-                            <span class="font-14">Educational support and resources</span> 
-                        </div>
+
+                <style>
+                    .services-row {
+                      display: flex;
+                      flex-wrap: wrap;
+                      justify-content: space-between;
+                      gap: 10px;
+                    }
+                  
+                    .services {
+                      width: 24%;
+                      height: 200px;
+                      padding: 15px;
+                      box-sizing: border-box;
+                    }
+                  
+                    /* Tablet view: 2 columns */
+                    @media (max-width: 991px) {
+                      .services {
+                        width: 48%;
+                      }
+                    }
+                  
+                    /* Mobile view: 1 column */
+                    @media (max-width: 576px) {
+                      .services {
+                        width: 100%;
+                      }
+                    }
+                  </style>
+
+                  <div style="padding: 0 20px;">
+                    <div style="display: flex; justify-content: flex-start; align-items: center; margin: 10px 0 20px; gap: 15px;">
+                      <!-- Year Filter -->
+                      <div>
+                        <label for="yearFilter" style="margin-right: 5px; font-weight: bold;">Year:</label>
+                        <select id="yearFilter" name="year" onchange="filterByYearMonth()" style="padding: 5px 10px; border-radius: 5px;">
+                          {% for year in available_years %}
+                            <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                  
+                      <!-- Month Filter -->
+                      <div>
+                        <label for="monthFilter" style="margin-right: 5px; font-weight: bold;">Month:</label>
+                        <select id="monthFilter" name="month" onchange="filterByYearMonth()" style="padding: 5px 10px; border-radius: 5px;">
+                          <option value="all" {% if selected_month == 'all' %}selected{% endif %}>All</option>
+                          {% for num, name in [
+                            ('01', 'January'), ('02', 'February'), ('03', 'March'), ('04', 'April'),
+                            ('05', 'May'), ('06', 'June'), ('07', 'July'), ('08', 'August'),
+                            ('09', 'September'), ('10', 'October'), ('11', 'November'), ('12', 'December')
+                          ] %}
+                            <option value="{{ num }}" {% if selected_month == num %}selected{% endif %}>{{ name }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
                     </div>
+                  </div>
+                  
+                  
+                  
+                  
+                  <div style="padding: 0 20px 20px;">
+
+                    <div class="services-row">
+                      <!-- First 4 cards -->
+                     
+                      <div class="services bg-white rad-10 p-20 shadow-md transition hover:shadow-lg">
+                        <div class="services-container text-center">
+                          <div class="icon-wrapper mb-10">
+                            <i class="fa-solid fa-clipboard-check fa-2x" style="color: #28a745;"></i>
+                          </div>
+                          <p class="stat-number font-30 font-weight-bold text-dark mb-5">
+                            {{ male_heeadsss_count + female_heeadsss_count }}
+                          </p>
+                          <span class="stat-label font-14 text-muted">
+                            Adolescents Assessed Using HEEADSSS
+                          </span>
+                        </div>
+                      </div>
+                      
+                      
+                  
+                      <div class="services bg-white rad-10 p-20 shadow-md transition hover:shadow-lg">
+                        <div class="services-container text-center">
+                          <div class="icon-wrapper mb-10">
+                            <i class="fas fa-user-friends fa-2x" style="color: #17a2b8;"></i>
+                          </div>
+                          <p class="stat-number font-30 font-weight-bold text-dark mb-5">
+                            0
+                          </p>
+                          <span class="stat-label font-14 text-muted">
+                            Adolescents Reached by HYO
+                          </span>
+                        </div>
+                      </div>
+                      
+                  
+                      <div class="services bg-white rad-10 p-20 shadow-md transition hover:shadow-lg">
+                        <div class="services-container text-center">
+                          <div class="icon-wrapper mb-10">
+                            <i class="fas fa-route fa-2x" style="color: #f5a25e;"></i>
+                          </div>
+                          <p class="stat-number font-30 font-weight-bold text-dark mb-5">
+                            0
+                          </p>
+                          <span class="stat-label font-14 text-muted">
+                            Adolescents referred using HEEADSSS and accessed services
+                          </span>
+                        </div>
+                      </div>
+                      
+                  
+                      <!-- Additional 4 cards -->
+
+                      <div class="services bg-white rad-10 p-20 shadow-md transition hover:shadow-lg">
+                        <div class="services-container text-center">
+                          <div class="icon-wrapper mb-10">
+                            <i class="fas fa-hourglass-half fa-2x" style="color: #5a6268;"></i>
+                          </div>
+                          <p class="stat-number font-30 font-weight-bold text-dark mb-5">
+                            0
+                          </p>
+                          <span class="stat-label font-14 text-muted">
+                            Pending HEEADSSS Review
+                          </span>
+                        </div>
+                      </div>
+                      
+                <!-- Second Row -->
+                <div class="responsive-container">
+                    <!-- Left Column: Charts stacked vertically -->
+                    <div class="left-charts">
+                      <!-- Age Group Chart -->
+                      <div class="card chart-card">
+                        <h2>Age Group Distribution by Gender</h2>
+                        <div class="chart-wrapper age-group-chart">
+                          <canvas id="agegroupchart"></canvas>
+                        </div>
+                      </div>
+                      
+                      <!-- Yes and No Chart -->
+                      <div class="card chart-card">
+                        <h2>Rapid HEEADSSS Results</h2>
+                        <div class="chart-wrapper yes-no-chart">
+                          <canvas id="yesnochart" width="800" height="600"></canvas>
+                        </div>
+                      </div>
+                      
+                      
+                    </div>
+                                    
+                  <!-- Combined Statistics -->
+                  <div class="card">
+                    <div class="card-header">
+                      <h2>Cases:</h2>
+                      <span class="total-count">Total: {{ total_cases_count }}</span>
+                    </div>
+                  
+                    <div class="stat-list">
+                      <div class="stat-item">
+                        <span class="stat-label red-border-left">Attempted Suicide:</span>
+                        <span class="stat-count">{{ attempted_suicide_count }}</span>
+                      </div>
+                      <div class="stat-item">
+                        <span class="stat-label red-border-left">Committed Suicide:</span>
+                        <span class="stat-count">{{ committed_suicide_count }}</span>
+                      </div>
+                      <div class="stat-item">
+                        <span class="stat-label red-border-left">Sexual Violence:</span>
+                        <span class="stat-count">{{ sexual_violence_count }}</span>
+                      </div>
+                      <div class="stat-item">
+                        <span>Road Traffic Accidents:</span>
+                        <span class="stat-count">{{ road_accident_count }}</span>
+                      </div>
+                      <div class="stat-item">
+                        <span>Drowning:</span>
+                        <span class="stat-count">{{ drowning_count }}</span>
+                      </div>
+                      <div class="stat-item">
+                        <span>Bullying:</span>
+                        <span class="stat-count">{{ bullying_count }}</span>
+                      </div>
+                      <div class="stat-item">
+                        <span>Binge Drinkers:</span>
+                        <span class="stat-count">{{ binge_drinkers_count }}</span>
+                      </div>
+                      <div class="stat-item">
+                        <span>Tobacco Users:</span>
+                        <span class="stat-count">{{ tobacco_users_count }}</span>
+                      </div>
+                      <div class="stat-item">
+                        <span>Drug Users:</span>
+                        <span class="stat-count">{{ drug_users_count }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
                 </div>
+
+                 </div>
+                    </div>
+
+                                  
+
+
+                    </div>
+                  </div>
+                  
+                  
+                  
+           
                 <!-- End Services Widget -->
                
 
-                <!-- Charts  -->
-                <div class="latest-uploads bg-white rad-10 p-20">
-                    <h2 style="font-size: 22px; color: #333; font-weight: bold; margin-bottom: 10px; text-align: center;">
-                        Age Group Distribution by Gender
-                    </h2>
-                    <div style="
-                        display: flex; 
-                        justify-content: center; 
-                        align-items: flex-start;
-                        gap: 20px; 
-                        max-width: 1200px; 
-                        margin: auto;
-                        padding: 0 10px;
-                    ">
-                        <!-- Age Group Chart -->
-                        <div style="
-                            display: flex; 
-                            flex-direction: column; 
-                            align-items: center; 
-                            gap: 15px; 
-                            padding: 20px; 
-                            width: 100%;
-                            max-width: 800px;
-                        ">
-                            <div style="width: 100%; height: 350px; padding: 15px;">
-                                <canvas id="agegroupchart" style="width: 100%; height: 100%;"></canvas>                             </div>
-                        </div>
-                    </div>
-                </div>
+               
                 
-                <!-- Start Reminders Widget -->
+                <!-- Start Reminders Widget
                 <div class="reminders bg-white rad-10 p-20">
-                    <h2 class="m-0 mb-20">Reminders</h2>
+                    <h2 class="m-10 mb-20">Reminders</h2>
                     <div class="reminders-container d-flex flex-column gap-20">
                         <div class="reminder color-grey d-flex align-items-center">
                             <span class="key bg-blue mr-15 d-block rad-half"></span>
@@ -309,10 +470,10 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>  -->
                 <!-- End Reminders Widget -->
                   
-            </div>
+         
 
             <!-- Start Projects Table 
             <div class="projects-table bg-white rad-10 m-20 p-20">
@@ -462,6 +623,16 @@
         <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js/helpers"></script>
         
+        <script>
+            function filterByYearMonth() {
+              const year = document.getElementById('yearFilter').value;
+              const month = document.getElementById('monthFilter').value;
+              const query = `?year=${year}&month=${month}`;
+              window.location.href = window.location.pathname + query;
+            }
+          </script>
+          
+          
         <script>
 
             document.addEventListener("DOMContentLoaded", function () {
@@ -621,72 +792,215 @@
 
         <script>
             document.addEventListener("DOMContentLoaded", function () {
-                fetch('/get_age_distribution')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.error) {
-                            console.error("Error fetching data:", data.error);
-                            return;
+              fetch('/get_age_distribution')
+                .then(response => response.json())
+                .then(data => {
+                  if (data.error) {
+                    console.error("Error fetching data:", data.error);
+                    return;
+                  }
+          
+                  // Define the target age groups
+                  const labels = ["10-14", "15-19"];
+          
+                  // Safely get values or fallback to 0 if not provided
+                  const maleData = labels.map(group => data[group]?.Male || 0);
+                  const femaleData = labels.map(group => data[group]?.Female || 0);
+          
+                  const ctx = document.getElementById('agegroupchart').getContext('2d');
+          
+                  new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                      labels: labels,
+                      datasets: [
+                        {
+                          label: "Male",
+                          data: maleData,
+                          backgroundColor: "rgba(54, 162, 235, 0.7)", // Blue for male
+                          borderColor: "rgba(54, 162, 235, 1)",
+                          borderWidth: 1
+                        },
+                        {
+                          label: "Female",
+                          data: femaleData,
+                          backgroundColor: "rgba(255, 99, 132, 0.7)", // Pink for female
+                          borderColor: "rgba(255, 99, 132, 1)",
+                          borderWidth: 1
                         }
-            
-                        // Extract data for the chart
-                        var labels = Object.keys(data);  // ["6-15", "16-25", "26-35", "36-45"]
-                        var maleData = labels.map(group => data[group]["Male"]);
-                        var femaleData = labels.map(group => data[group]["Female"]);
-            
-                        var ctx = document.getElementById('agegroupchart').getContext('2d');
-            
-                        new Chart(ctx, {
-                            type: "bar",
-                            data: {
-                                labels: labels,
-                                datasets: [
-                                    {
-                                        label: "Male",
-                                        data: maleData,
-                                        backgroundColor: "rgba(54, 162, 235, 0.7)",
-                                        borderColor: "rgba(54, 162, 235, 1)",
-                                        borderWidth: 1
-                                    },
-                                    {
-                                        label: "Female",
-                                        data: femaleData,
-                                        backgroundColor: "rgba(255, 99, 132, 0.7)",
-                                        borderColor: "rgba(255, 99, 132, 1)",
-                                        borderWidth: 1
-                                    }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                scales: {
-                                    x: {
-                                        title: {
-                                            display: true,
-                                            text: 'Range of Ages' // Add text below the range of ages
-                                        }
-                                    },
-                                    y: {
-                                        beginAtZero: true,
-                                        min: 0,
-                                        max: 25, // Explicitly setting the max value to 50
-                                        ticks: {
-                                            stepSize: 5, // Ensuring step size of 10
-                                        },
-                                        title: {
-                                            display: true,
-                                            text: "Number of Clients"
-                                        }
-                                    }
-                                }
+                      ]
+                    },
+                    options: {
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      animations: {
+                        tension: {
+                          duration: 1000,
+                          easing: 'easeInOutQuad',
+                          from: 1,
+                          to: 0,
+                          loop: true
+                        }
+                      },
+                      scales: {
+                        x: {
+                          title: {
+                            display: true,
+                            text: 'Age Group',
+                            font: {
+                              size: 14,
+                              weight: 'bold',
+                              family: 'Arial, sans-serif'
                             }
-                        });
-                    })
-                    .catch(error => console.error("Error fetching age data:", error));
+                          },
+                          stacked: false
+                        },
+                        y: {
+                          beginAtZero: true,
+                          min: 0,
+                          max: 50,
+                          title: {
+                            display: true,
+                            text: "Number of Adolescents",
+                            font: {
+                              size: 14,
+                              weight: 'bold',
+                              family: 'Arial, sans-serif'
+                            }
+                          },
+                          ticks: {
+                            stepSize: 10,
+                            font: {
+                              size: 12
+                            }
+                          },
+                          grid: {
+                            color: "rgba(0, 0, 0, 0.1)"
+                          }
+                        }
+                      },
+                      plugins: {
+                        legend: {
+                          position: 'top',
+                          labels: {
+                            font: {
+                              size: 14,
+                              family: 'Arial, sans-serif'
+                            }
+                          }
+                        },
+                        tooltip: {
+                          enabled: true,
+                          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                          bodyFont: {
+                            size: 12
+                          },
+                          callbacks: {
+                            label: function (tooltipItem) {
+                              return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
+                            }
+                          }
+                        }
+                      }
+                    }
+                  });
+                })
+                .catch(error => console.error("Error fetching age data:", error));
             });
-            
-        </script>
+          </script>
+       
+          <script>
 
+            document.addEventListener("DOMContentLoaded", function () {
+     fetch('/get_yes_no_distribution')
+         .then(response => response.json())
+         .then(data => {
+             if (data.error) {
+                 console.error("Error fetching data:", data.error);
+                 return;
+             }
+ 
+             // Remove "Question 0" if present and ensure correct numbering
+             delete data["0"];  
+ 
+             // Extract question numbers (ensuring 1-12)
+             const validQuestions = Object.keys(data)
+                 .filter(q => Number(q) >= 1 && Number(q) <= 12) // Ensure only 1 to 12
+                 .sort((a, b) => a - b); // Sort in numerical order
+ 
+             const labels = validQuestions.map(q => `Question ${q}`);
+             const yesCounts = validQuestions.map(q => -(data[q]?.Yes || 0)); // Negative for left bar
+ 
+             const noCounts = validQuestions.map(q => data[q]?.No || 0); // No changes
+ 
+             const ctx = document.getElementById('yesnochart').getContext('2d');
+ 
+             new Chart(ctx, {
+                 type: 'bar',
+                 data: {
+                     labels: labels,
+                     datasets: [
+                         {
+                             label: 'Yes',
+                             data: yesCounts,
+                             backgroundColor: "rgba(54, 162, 235, 0.7)",
+                             borderColor: "rgba(54, 162, 235, 1)",
+                             borderWidth: 1
+                         },
+                         {
+                             label: 'No',
+                             data: noCounts,
+                             backgroundColor: "rgba(255, 99, 132, 0.7)",
+                             borderColor: "rgba(255, 99, 132, 1)",
+                             borderWidth: 1
+                         }
+                     ],
+                     options: {
+                         layout: {
+                             padding: {
+                                 bottom: 20 // Add space at the bottom
+                             }
+                         }
+                     }
+                 },
+                 options: {
+                     indexAxis: 'y',
+                     responsive: true,
+                     maintainAspectRatio: false, 
+                     scales: {
+                         x: {
+                             beginAtZero: true,
+                             ticks: {
+                                 callback: function(value) {
+                                     return Math.abs(value); // Return absolute value without negative sign
+                                 }
+                             }
+                         },
+                         y: {
+                             ticks: { padding: 10 }
+                         }
+                     },
+                     barThickness: 10,
+                     categoryPercentage: 1,
+                     barPercentage: 0.9,
+                     layout: {
+                         padding: { top: 5, bottom: 5 }
+                     },
+                     plugins: {
+                         legend: { position: 'top' },
+                         title: {
+                             display: true,
+                             padding: { bottom: 5 }
+                         }
+                     }
+                 }
+             });
+         })
+         .catch(error => console.error("Error fetching yes/no data:", error));
+ });
+             
+ 
+         </script>
 </body>
 
 </html>

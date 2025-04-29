@@ -36,6 +36,56 @@
     outline: none;
 }
 
+.modal {
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5); /* black with opacity */
+    z-index: 10000;
+}
+
+.modal::-webkit-scrollbar {
+    width: 5px; /* Adjust scrollbar width */
+    background-color: #e4e9ea; /* Scrollbar thumb color */
+}
+
+body.modal-open {
+    overflow: hidden;
+  }
+  
+  .modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 800px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s ease-in-out;
+}
+  
+  .close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+  
+  .close:hover {
+    color: #000;
+}
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+  
+
 body {
     font-family: 'Lato', sans-serif;
     margin: 0;
@@ -1639,8 +1689,23 @@ ul {
     padding: 20px;
     background-color: #fff;
     transition: box-shadow 0.3s ease;
+    /* opacity: 0; */
+  /* transform: translateY(20px);
+  animation: fadeInUp 0.5s ease-out forwards; */
   }
   
+  /* .services:nth-child(1) { animation-delay: 0.1s; }
+.services:nth-child(2) { animation-delay: 0.2s; }
+.services:nth-child(3) { animation-delay: 0.3s; }
+.services:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} */
+
   .services:hover {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   }
@@ -1654,6 +1719,7 @@ ul {
   .services-container i:hover {
     filter: brightness(0.85);
   }
+
   .stat-number {
     font-size: 2rem;
     font-weight: bold;
@@ -1666,6 +1732,32 @@ ul {
     color: #666;
   }
 
+  
+  /* .spinning-hourglass {
+    animation: spin 3s linear infinite;
+  }
+  
+  @keyframes spin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .icon-float {
+    animation: floatY 2.5s ease-in-out infinite;
+  }
+  
+  @keyframes floatY {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  } */
+
+
+  .services:hover {
+    transform: scale(1.03);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
   .stat-item {
     display: flex;
     justify-content: space-between;
@@ -1675,29 +1767,23 @@ ul {
     padding: 10px 0;
     border-bottom: 1px solid #eee;
   }
+
   .stat-item:last-child {
     border-bottom: none;
   }
+
   .stat-label {
     flex: 1;
     padding-right: 10px;
     font-weight: 500;
   }
+
   .stat-count {
     min-width: 40px;
     font-weight: 600;
     text-align: right;
     color: #333;
   }
-
-  .left-charts {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    flex: 1;
-    min-width: 400px;
-  }
-
 
    /* Make layout responsive */
    .responsive-container {
@@ -1707,7 +1793,19 @@ ul {
     margin-top: 10px;
     justify-content: center;
     align-items: flex-start;
+    width: 100%;
+    box-sizing: border-box;
+    /* padding: 10px; */
   }
+
+  .left-charts {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex: 1;
+    min-width: 0;
+  }
+
 
   .chart-card {
     padding: 20px;
@@ -1715,7 +1813,10 @@ ul {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 900px;
+    max-width: 100%;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   }
 
   .chart-card h2 {
@@ -1724,12 +1825,28 @@ ul {
     font-weight: bold;
     margin-bottom: 10px;
     text-align: center;
+    
   }
 
   .chart-wrapper {
     width: 100%;
+    position: relative;
     
   }
+
+  .age-group-chart,
+.yes-no-chart {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+}
+
+canvas {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100%;
+    display: block;
+  }
+  
 
   .age-group-chart {
     height: 200px;  /* Adjust as needed for the Age Group chart */
@@ -1737,13 +1854,40 @@ ul {
   
   /* Specific height for Yes/No Chart */
   .yes-no-chart {
-    height: 370px;  /* Adjust as needed for the Yes/No chart */
+    height: 340px;  /* Adjust as needed for the Yes/No chart */
   }
   
   /* Make the canvas fit inside the container */
   #yesnochart {
     width: 100%;
     height: 100%;
+  }
+
+  @media (max-width: 768px) {
+    .chart-card h2 {
+      font-size: 1rem;
+    }
+  
+    .age-group-chart,
+    .yes-no-chart {
+      aspect-ratio: 4 / 3;
+    }
+  }
+  
+  /* Responsive tweaks for mobile */
+  @media (max-width: 480px) {
+    .chart-card {
+      padding: 15px;
+    }
+  
+    .chart-card h2 {
+      font-size: 0.95rem;
+    }
+  
+    .age-group-chart,
+    .yes-no-chart {
+      aspect-ratio: 1 / 1;
+    }
   }
 
   .card {
@@ -1755,13 +1899,15 @@ ul {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     box-sizing: border-box;
     font-family: "Segoe UI", sans-serif;
+    
   }
   
   .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    height: 55px;
   }
   
   .card-header h2 {
@@ -1840,7 +1986,7 @@ ul {
 
 /* Low urgency - Green background */
 .low-urgency {
-    background-color: #d4edda; /* Light green */
+    background-color: #ffffff;
     color: #2ecc71; /* Green text */
 }
 
@@ -1868,10 +2014,14 @@ ul {
 
 .medium-urgency i {
     color: #f39c12; /* Yellow icon */
+    font-size: 1.2rem;
 }
 
 .low-urgency i {
     color: #2ecc71; /* Green icon */
+    font-size: 1.2rem;
+    
+
 }
 
 
@@ -1944,3 +2094,33 @@ ul {
         font-size: 13px;
     }
 }
+
+
+@media print { 
+    body * {
+      visibility: hidden;
+    }
+  
+    #printableReport, #printableReport * {
+      visibility: visible;
+    }
+  
+    #printableReport {
+      position: absolute;
+      left: 0.5in;      /* start 1 inch from left */
+      right: 0.5in;     /* start 1 inch from right */
+      top: 0.8in;       /* start 1 inch from top */
+   
+      width: calc(100% - 1in);  /* full width minus 2 inches (1in left + 1in right) */
+      margin: 0;      /* no extra margin because we’re positioning with left/top */
+    }
+  
+    /* Hide buttons and icons inside modal */
+    .modal-content .fa-solid.fa-print,
+    .modal-content .fa-floppy-disk,
+    .modal-content .close {
+      display: none !important;
+    }
+  }
+  
+  

@@ -35,7 +35,19 @@
             margin-left: 215px; /* Default margin */
             transition: all 0.3s ease;
         }
-    
+
+        .sidebar-toggle-phone {
+          display: none;
+          background-color: #ffffff;
+          border: none;
+          font-size: 20px;
+          margin-right: 10px;
+          cursor: pointer;
+          padding: 5px 10px;
+          border-radius: 4px;
+          box-shadow: 0 0 4px rgba(0,0,0,0.2);
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .sidebar {
@@ -59,34 +71,20 @@
             }
         }
     
-        @media (max-width: 480px) {
-            .sidebar {
-                position: absolute;
-                width: 100%; /* Full width for smaller screens */
-                height: auto;
-                z-index: 1000;
-            }
-    
-            .content {
-                margin-left: 0; /* Remove margin for smaller screens */
-            }
-    
-            .sidebar ul {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-        }
+      
+        
     </style>
 
 </head>
 
 <body>
     <div class="page d-flex">
+      
         <div class="sidebar bg-white p-20 p-relative">
             <h3 class="p-relative text-center mt-0">HEEADSSS</h3>
             <ul>
 
+            
                 <li>
                     <a href="{{ url_for('admin_dashboard') }}" class="active d-flex align-items-center font-14 p-10 rad-6 color-black">
                         <i class="fas fa-tachometer-alt fa-fw"></i>
@@ -108,13 +106,13 @@
                     </a>
                 </li>
                
-                <li>
+             <!-- <li>
                     <a href="{{ url_for('admin_results')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
                         <i class="fa-solid fa-square-poll-horizontal"></i>
                         <span>Results</span>
                     </a>
                 </li>
-              <!--   <li>
+               <li>
                     <a href="{{ url_for('admin_files')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
                         <i class="fas fa-file fa-fw"></i>
                         <span>Files</span>
@@ -123,17 +121,22 @@
                 <li>
                     <a href="{{ url_for('admin_settings') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
                         <i class="fas fa-cog fa-fw"></i>
-                        <span>Settings</span>
+                        <span>Profile</span>
                     </a>
                 </li>
-                
-                
+                <li>
+                    <a href="{{ url_for('admin_logout') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-sign-out-alt fa-fw"></i>
+                        <span>Logout</span>
+                    </a>
+                </li>  
             </ul>
         </div>
         <div class="content w-full">
             <!-- Start Header -->
             <div class="header bg-white p-15 between-flex">
-                <div class="search-container">
+
+              <div class="search-container">
                     <i class="fas fa-search search-icon"></i>
                     <input id="searchInput" class="search-box" type="search" placeholder="Search Control Number">
                     <div id="searchResults" class="search-results"></div>
@@ -247,6 +250,7 @@
 
                   <div style="padding: 0 20px;">
                     <div style="display: flex; justify-content: flex-start; align-items: center; margin: 10px 0 20px; gap: 15px;">
+                      <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                       <!-- Year Filter -->
                       <div>
                         <label for="yearFilter" style="margin-right: 5px; font-weight: bold;">Year:</label>
@@ -272,7 +276,206 @@
                         </select>
                       </div>
                     </div>
+                    <button onclick="generateReport()" style="padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">
+                      AHDP MONTHLY ACCOMPLISHMENT REPORT
+                    </button>
                   </div>
+                  </div>
+
+                  <!-- Modal -->
+                  
+                  <div id="reportModal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                      <div id="printableReport">
+                      
+                      <span class="close" onclick="closeModal()">&times;</span>
+                  
+                      <!-- Report Header -->
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                        <!-- Left Logo -->
+                        <img src="/static/images/DOH.png" alt="Left Logo" style="height: 80px;">
+                  
+                        <!-- Center Title Block -->
+                        <div style="text-align: center; flex-grow: 1; font-size: 14px; line-height: 1.4;">
+                          <div><strong>Republic of the Philippines</strong></div>
+                          <div>DEPARTMENT OF HEALTH</div>
+                          <div><strong>EASTERN VISAYAS</strong></div>
+                          <div><strong>CENTER FOR HEALTH DEVELOPMENT</strong></div>
+                          <div><strong>Government Center, Candahug, Palo, Leyte</strong></div>
+                          <div><em>Tel No.(053) 323-5025 &nbsp; Fax No. (053) 323-6517</em></div>
+
+                        </div>
+                  
+                        <!-- Right Logo -->
+                        <img src="/static/images/DOH1.png" alt="Right Logo" style="height: 80px;">
+                      </div>
+                  
+                      <!-- Horizontal Line -->
+                      <div style="height: 2px; background-color: #333; margin-bottom: 30px;"></div>
+                  
+                      <!-- Report Body Placeholder -->
+                      <div style="font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 20px;">
+                        AHDP MONTHLY ACCOMPLISHMENT REPORT
+                      </div>
+
+                      <div style="font-size: 14px; font-weight: bold; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: flex-end;">
+                          <span style="width: 200px;">FACILITY NAME:</span>
+                          <div style="border-bottom: 1px solid #000; width: 400px; margin-left: 10px; transform: translateY(3px);">{{ admin.center_name}} </div>
+                        </div>
+                        <div style="display: flex; align-items: flex-end;">
+                          <span style="width: 200px;">PROVINCE/CITY:  </span>
+                          <div style="border-bottom: 1px solid #000; width: 400px; margin-left: 10px; transform: translateY(3px);">   {{ province_map.get(admin.province, admin.province) }} / {{ city_map.get(admin.city, admin.city) }}
+
+                          </div>
+                        </div>
+                        <div style="display: flex; align-items: flex-end;">
+                          <span style="width: 200px;">MONTH AND YEAR:</span>
+                          <div style="border-bottom: 1px solid #000; width: 400px; margin-left: 10px; transform: translateY(3px);"></div>
+                        </div>
+                        <div style="display: flex; align-items: flex-end;">
+                          <span style="width: 200px;">ADOLESCENT POPULATION:</span>
+                          <div style="border-bottom: 1px solid #000; width: 400px; margin-left: 10px; transform: translateY(3px);"> </div>
+                        </div>
+                      </div>
+                      
+
+                      <div style="padding: 10px 0;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                          <thead>
+                            <tr>
+                              <th rowspan="2" style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center; background-color: #28a745;">INDICATORS</th>
+                              <th colspan="2" style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center; background-color: #28a745;">ADOL. AGE BRACKET</th>
+                              <th rowspan="2" style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center; background-color: #28a745;">REMARKS</th>
+                            </tr>
+                            <tr>
+                              <th style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center; background-color: #28a745;">10-14 YO</th>
+                              <th style="border: 1px solid #000; padding: 8px; font-weight: bold; text-align: center; background-color: #28a745;">15-19 YO</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 11px;"># of Adolescent reached by HYO ***</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{ male_hyo_10_14 }} &nbsp;&nbsp; F: {{ female_hyo_10_14 }}</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{ male_hyo_15_19 }} &nbsp;&nbsp; F: {{ female_hyo_15_19 }}</td>
+                              <td style="border: 1px solid #000; padding: 8px;"></td>
+                            </tr>
+                            <tr>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 11px;"># of Adolescent assessed using HEADSSS ***</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M:  {{ male_heeadsss_10_14 }} &nbsp;&nbsp; F: {{ female_heeadsss_10_14 }}</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{ male_heeadsss_15_19 }} &nbsp;&nbsp; F: {{ female_heeadsss_15_19 }}</td>
+                              <td style="border: 1px solid #000; padding: 8px;"></td>
+                            </tr>
+                            <!-- 10 more rows with placeholders -->
+                            <tr>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 11px;"># of Adolescent referred using HEADSSS and accessed services ***</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{ male_referred_10_14 }} &nbsp;&nbsp; F: {{female_referred_10_14}}</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{male_referred_15_19}} &nbsp;&nbsp; F: {{female_referred_15_19}}</td>
+                              <td style="border: 1px solid #000; padding: 8px;"></td>
+                            </tr>
+                            
+                            <tr>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 11px;"># of Adolescent who had Attempted Suicide ***</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{ male_attempted_10_14 }} &nbsp;&nbsp; F: {{female_attempted_10_14}}</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{male_attempted_15_19}} &nbsp;&nbsp; F: {{female_attempted_15_19}}</td>
+                              <td style="border: 1px solid #000; padding: 8px;"></td>
+                            </tr>
+                            <tr>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 11px;"># of Adolescent who committed Suicide ***</td>
+                              <td style="border: 1px solid #000; padding: 8px; text-align: center;"></td>
+                              <td style="border: 1px solid #000; padding: 8px; text-align: center;"></td>
+                              <td style="border: 1px solid #000; padding: 8px;"></td>
+                            </tr>
+                            <tr>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 11px;"># of Adolescent who had been to Road Traffic Accident **</td>
+                              <td style="border: 1px solid #000; padding: 8px; text-align: center;"></td>
+                              <td style="border: 1px solid #000; padding: 8px; text-align: center;"></td>
+                              <td style="border: 1px solid #000; padding: 8px;"></td>
+                            </tr>
+                            <tr>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 11px;"># of Adolescent experienced Drowning *</td>
+                              <td style="border: 1px solid #000; padding: 8px; text-align: center;"></td>
+                              <td style="border: 1px solid #000; padding: 8px; text-align: center;"></td>
+                              <td style="border: 1px solid #000; padding: 8px;"></td>
+                            </tr>
+                            <tr>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 11px;"># of Adolescent experienced Sexual Violence</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{ male_sv_10_14 }} &nbsp;&nbsp; F: {{female_sv_10_14}}</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{male_sv_15_19}} &nbsp;&nbsp; F: {{female_sv_15_19}}</td>
+                              <td style="border: 1px solid #000; padding: 8px;"></td>
+                            </tr>
+                            <tr>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 11px;"># of Adolescent of Binge Drinkers (BD) *</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{ male_binge_10_14 }} &nbsp;&nbsp; F: {{female_binge_10_14}}</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{male_binge_15_19}} &nbsp;&nbsp; F: {{female_binge_15_19}}</td>
+                              <td style="border: 1px solid #000; padding: 8px;"></td>
+                            </tr>
+                            <tr>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 11px;"># of Current Tobacco users (CTU) *</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{ male_tobacco_10_14 }} &nbsp;&nbsp; F: {{female_tobacco_10_14}}</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{male_tobacco_15_19}} &nbsp;&nbsp; F: {{female_tobacco_15_19}}</td>
+                              <td style="border: 1px solid #000; padding: 8px;"></td>
+                            </tr>
+                            <tr>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 11px;"># of Adolescent who are regular drug users or drug dependents **</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{ male_drugs_10_14 }} &nbsp;&nbsp; F: {{female_drugs_10_14}}</td>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 12px;">&nbsp;&nbsp;&nbsp; M: {{male_drugs_15_19}} &nbsp;&nbsp; F: {{female_drugs_15_19}}</td>
+                              <td style="border: 1px solid #000; padding: 8px;"></td>
+                            </tr>
+                            <tr>
+                              <td style="border: 1px solid #000; padding: 8px; font-weight: bold; font-size: 11px;">Others *</td>
+                              <td style="border: 1px solid #000; padding: 8px; text-align: center;"></td>
+                              <td style="border: 1px solid #000; padding: 8px; text-align: center;"></td>
+                              <td style="border: 1px solid #000; padding: 8px;"></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div style="margin-top: 40px; padding: 0 40px; font-size: 13px; font-weight: bold;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                      
+                          <!-- Prepared by -->
+                          <div style="display: flex; align-items: center; gap: 8px;">
+                            <div>Prepared by:</div>
+                            <div>
+                              <span style="border-bottom: 1px solid #000; padding: 0 20px; display: inline-block;">
+                                {{ admin.username }}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          
+                      
+                          <!-- Noted by -->
+                          <div style="display: flex; align-items: center; gap: 8px;">
+                            <div>Noted by:</div>
+                            <div style="border-bottom: 1px solid #000; width: 150px; margin-top: 10px;"></div>
+                          </div>
+                      
+                        </div>
+                        <div style="margin-top: 50px; font-size: 11px; font-style: italic; font-weight: bold;">
+                          <div style="margin-bottom: 4px;">Legend: <span style="font-style: italic; font-weight: bold; margin-left: 158px;">*** Highly important Data</span></div>
+                          <div style="margin-bottom: 4px; margin-left: 200px;"><span style="font-style: italic; font-weight: bold;">** Moderately important Data</span></div>
+                          <div style="margin-left: 200px;"><span style="font-style: italic; font-weight: bold;">* Important Data</span></div>
+                        </div>
+                        <div style="margin-top: 20px; text-align: center;">
+                          <button onclick="window.print()" title="Print" style="background: none; border: none; cursor: pointer; font-size: 20px; margin-right: 10px;">
+                            <i class="fa-solid fa-print"></i>
+                          </button>
+                          <button onclick="saveData()" title="Save" style="background: none; border: none; cursor: pointer; font-size: 20px;">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                          </button>
+                        </div>
+                      </div>
+                      
+                  
+                    </div>
+                    </div>
+                  </div>
+                  
+                  
+
                   
                   
                   
@@ -288,10 +491,10 @@
                             <i class="fa-solid fa-clipboard-check fa-2x" style="color: #28a745;"></i>
                           </div>
                           <p class="stat-number font-30 font-weight-bold text-dark mb-5">
-                            {{ male_heeadsss_count + female_heeadsss_count }}
+                            {{ heeadsss_total }}                          
                           </p>
                           <span class="stat-label font-14 text-muted">
-                            Adolescents Assessed Using HEEADSSS
+                            Adolescents Assessed Using Rapid HEEADSSS
                           </span>
                         </div>
                       </div>
@@ -304,7 +507,7 @@
                             <i class="fas fa-user-friends fa-2x" style="color: #17a2b8;"></i>
                           </div>
                           <p class="stat-number font-30 font-weight-bold text-dark mb-5">
-                            0
+                            {{ hyo_total }}
                           </p>
                           <span class="stat-label font-14 text-muted">
                             Adolescents Reached by HYO
@@ -316,10 +519,10 @@
                       <div class="services bg-white rad-10 p-20 shadow-md transition hover:shadow-lg">
                         <div class="services-container text-center">
                           <div class="icon-wrapper mb-10">
-                            <i class="fas fa-route fa-2x" style="color: #f5a25e;"></i>
+                            <i class="fas fa-route fa-2x icon-float" style="color: #f5a25e;"></i>
                           </div>
                           <p class="stat-number font-30 font-weight-bold text-dark mb-5">
-                            0
+                            {{ referred_using_heeadsss_total }}
                           </p>
                           <span class="stat-label font-14 text-muted">
                             Adolescents referred using HEEADSSS and accessed services
@@ -333,13 +536,15 @@
                       <div class="services bg-white rad-10 p-20 shadow-md transition hover:shadow-lg">
                         <div class="services-container text-center">
                           <div class="icon-wrapper mb-10">
-                            <i class="fas fa-hourglass-half fa-2x" style="color: #5a6268;"></i>
+                            <i class="fas fa-hourglass-half spinning-hourglass fa-2x" style="color: #f5a25e;"></i>
+
                           </div>
                           <p class="stat-number font-30 font-weight-bold text-dark mb-5">
-                            0
+                            {{ pending_review_count }}
+
                           </p>
-                          <span class="stat-label font-14 text-muted">
-                            Pending HEEADSSS Review
+                          <span class="stat-label font-14 text-muted" title="Users who answered but haven’t been assessed yet">
+                            Pending Review
                           </span>
                         </div>
                       </div>
@@ -363,8 +568,6 @@
                           <canvas id="yesnochart" width="800" height="600"></canvas>
                         </div>
                       </div>
-                      
-                      
                     </div>
                                     
                   <!-- Combined Statistics -->
@@ -376,8 +579,12 @@
                   
                     <div class="stat-list">
                       <div class="stat-item">
+                        <span class="stat-label red-border-left">Domestic Violence:</span>
+                        <span class="stat-count">{{ domestic_violence_count }}</span>
+                      </div>
+                      <div class="stat-item">
                         <span class="stat-label red-border-left">Attempted Suicide:</span>
-                        <span class="stat-count">{{ attempted_suicide_count }}</span>
+                        <span class="stat-count">{{ total_attempted_suicide_overall }}</span>
                       </div>
                       <div class="stat-item">
                         <span class="stat-label red-border-left">Committed Suicide:</span>
@@ -385,7 +592,27 @@
                       </div>
                       <div class="stat-item">
                         <span class="stat-label red-border-left">Sexual Violence:</span>
-                        <span class="stat-count">{{ sexual_violence_count }}</span>
+                        <span class="stat-count">{{ total_sv_overall }}</span>
+                      </div>
+                      <div class="stat-item">
+                        <span class="stat-label red-border-left">Adolescents Not Reached by HYO</span>
+                        <span class="stat-count">{{ hyo_no_count }}</span>
+                      </div>
+                      <div class="stat-item">
+                        <span>Bullying:</span>
+                        <span class="stat-count">{{ bullying_count }}</span>
+                      </div>
+                      <div class="stat-item">
+                        <span>Binge Drinkers:</span>
+                        <span class="stat-count">{{ total_binge_overall }}</span>
+                      </div>
+                      <div class="stat-item">
+                        <span>Tobacco Users:</span>
+                        <span class="stat-count">{{ total_tobacco_overall }}</span>
+                      </div>
+                      <div class="stat-item">
+                        <span>Drug Users:</span>
+                        <span class="stat-count">{{ total_drugs_overall }}</span>
                       </div>
                       <div class="stat-item">
                         <span>Road Traffic Accidents:</span>
@@ -395,22 +622,10 @@
                         <span>Drowning:</span>
                         <span class="stat-count">{{ drowning_count }}</span>
                       </div>
+                     
                       <div class="stat-item">
-                        <span>Bullying:</span>
-                        <span class="stat-count">{{ bullying_count }}</span>
-                      </div>
-                      <div class="stat-item">
-                        <span>Binge Drinkers:</span>
-                        <span class="stat-count">{{ binge_drinkers_count }}</span>
-                      </div>
-                      <div class="stat-item">
-                        <span>Tobacco Users:</span>
-                        <span class="stat-count">{{ tobacco_users_count }}</span>
-                      </div>
-                      <div class="stat-item">
-                        <span>Drug Users:</span>
-                        <span class="stat-count">{{ drug_users_count }}</span>
-                      </div>
+                        <span>Others:</span>
+                        <span class="stat-count"></span>
                     </div>
                   </div>
                   
@@ -969,6 +1184,8 @@
                      maintainAspectRatio: false, 
                      scales: {
                          x: {
+                          min: -10,
+                          max: 10,
                              beginAtZero: true,
                              ticks: {
                                  callback: function(value) {
@@ -980,7 +1197,7 @@
                              ticks: { padding: 10 }
                          }
                      },
-                     barThickness: 10,
+                     barThickness: 7,
                      categoryPercentage: 1,
                      barPercentage: 0.9,
                      layout: {
@@ -1001,6 +1218,67 @@
              
  
          </script>
+
+         <script>
+          function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('collapsed');
+          }
+        </script>
+        <script>
+          function generateReport() {
+            document.getElementById('reportModal').style.display = 'block';
+            document.body.classList.add('modal-open');  // Disable background scroll
+          }
+          
+          function closeModal() {
+            document.getElementById('reportModal').style.display = 'none';
+            document.body.classList.remove('modal-open');  // Re-enable background scroll
+          }
+          
+          function submitReport() {
+            alert("Report generation initiated!");
+            closeModal();
+          }
+          
+          // Optional: Close modal on outside click
+          window.onclick = function(event) {
+            const modal = document.getElementById('reportModal');
+            if (event.target === modal) {
+              closeModal();
+            }
+          }
+          
+        </script>
+        <script> 
+          function printReport() {
+            const reportModal = document.getElementById("reportModal");
+            reportModal.style.display = "block"; // Ensure modal is visible before printing
+          
+            setTimeout(() => {
+              window.print();
+            }, 200); // Small delay to allow rendering
+          }
+        </script>
+        <script>
+          const originalTitle = document.title;
+        
+          window.addEventListener('beforeprint', () => {
+            const year = document.getElementById("yearFilter")?.value || '';
+            const month = document.getElementById("monthFilter")?.value || '';
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                                "July", "August", "September", "October", "November", "December"];
+            const formattedMonth = month === 'all' ? "All" : monthNames[parseInt(month) - 1] || '';
+        
+            document.title = `${formattedMonth} ${year} AHDP MONTHLY ACCOMPLISHMENT REPORT`;
+          });
+        
+          window.addEventListener('afterprint', () => {
+            document.title = originalTitle;
+          });
+        </script>
+        
+
 </body>
 
 </html>

@@ -108,13 +108,13 @@
                 </li>
                
                 <li>
-                    <a href="{{ url_for('admin_results')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+            <!--         <a href="{{ url_for('admin_results')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
                         <i class="fa-solid fa-square-poll-horizontal"></i>
                         <span>Results</span>
                     </a>
                 </li>
                
-           <!-- <li>
+           <li>
                     <a href="{{ url_for('admin_files')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
                         <i class="fas fa-file fa-fw"></i>
                         <span>Files</span>
@@ -124,7 +124,7 @@
                 <li>
                     <a href="{{ url_for('admin_settings') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
                         <i class="fas fa-cog fa-fw"></i>
-                        <span>Settings</span>
+                        <span>Profile</span>
                     </a>
                 </li>
 
@@ -206,13 +206,14 @@
                                 <span class="color-grey">Full Name:</span>
                                 <span class="color-black">{{ admin.username }}</span>
                             </div>
-                           
-                           <!--  <div class="font-14">
+                            
+
+                            <div class="font-14">
                                 <span class="color-grey">
-                                    Date of Birth:
+                                    Facility Name:
                                 </span>
-                                <span class="color-black">01/01/1990</span>
-                            </div> -->
+                                <span class="color-black">{{admin.center_name}}</span>
+                            </div> 
                             
                         </div>
                         <div class="box p-20 d-flex align-items-center flex-wrap">
@@ -272,11 +273,15 @@
                     
                     <div class="form-group">
                         <label for="username">Username:</label>
-                        <input type="text" id="username" name="username" value="{{ admin.username }}" required>
+                        <input type="text" id="username" name="username" value="{{ admin.username }}">
                     </div>
                     <div class="form-group">
                         <label for="email">Email:</label>
-                        <input type="email" id="email" name="email" value="{{ admin.email }}">
+                        <input type="text" id="email" name="email" value="{{ admin.email }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="centerName">Facility Name:</label>
+                        <input type="centerName" id="centerName" name="centerName" value="{{ admin.center_name }}">
                     </div>
                     <div class="form-group">
                         <label for="job">Job:</label>

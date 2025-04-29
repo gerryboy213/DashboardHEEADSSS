@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, request, current_app
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
-from sqlalchemy import distinct
+from sqlalchemy import distinct, and_, desc
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mysqldb import MySQL
 from sqlalchemy import or_, func
@@ -98,6 +98,7 @@ class Admin(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    center_name = db.Column(db.String(100), nullable=False)
     region = db.Column(db.String(100), nullable=False)
     province = db.Column(db.String(100), nullable=False)
     city = db.Column(db.String(100), nullable=False)
@@ -113,37 +114,112 @@ class Services(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     service_name = db.Column(db.String(255), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    services_saved = db.Column(db.Boolean, default=False)
+
     
     user_id = db.Column(db.Integer, nullable=False)  # Link to the user
+
+class Recommendations(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    recommendation_text = db.Column(db.String(255), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, nullable=False)
+    recommendation_saved = db.Column(db.Boolean, default=False)  # ✅ Add this
+
 
     
 @app.route('/get_yes_no_distribution', methods=['GET'])
 def get_yes_no_distribution():
-    # Query only responses from users that exist in the database
-    response_counts = (
-        db.session.query(
-            UserResponse.question_number,
-            UserResponse.response,
-            db.func.count(UserResponse.response)
+    if 'admin' not in session:
+        return jsonify({"error": "Not authorized"}), 403
+
+    admin = Admin.query.filter_by(username=session['admin']).first()
+    if not admin:
+        return jsonify({"error": "Admin not found"}), 404
+
+    # Load region, province, city JSON
+    json_files = {
+        "region": "region.json",
+        "province": "province.json",
+        "city": "city.json"
+    }
+
+    json_data = {}
+    try:
+        for key, filename in json_files.items():
+            path = os.path.join(current_app.root_path, 'static', 'ph-json', filename)
+            with open(path, 'r', encoding='utf-8') as f:
+                json_data[key] = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        return jsonify({"error": str(e)}), 500
+
+    region_map = {item["region_code"]: item["region_name"] for item in json_data.get("region", [])}
+    province_map = {item["province_code"]: item["province_name"] for item in json_data.get("province", [])}
+    city_map = {item["city_code"]: item["city_name"] for item in json_data.get("city", [])}
+
+    admin_region = admin.region
+    admin_province = admin.province
+    admin_city = admin.city
+
+    # Subquery to get latest UserResponse per user per question
+    latest_responses_subquery = db.session.query(
+        UserResponse.user_id,
+        UserResponse.question_number,
+        func.max(UserResponse.id).label('max_id')  # Change to created_at if available and preferred
+    ).group_by(
+        UserResponse.user_id,
+        UserResponse.question_number
+    ).subquery()
+
+    # Main query: get latest responses filtered by location
+    latest_responses = db.session.query(
+        UserResponse.question_number,
+        UserResponse.response,
+        func.count(UserResponse.response)
+    ).join(
+        latest_responses_subquery,
+        UserResponse.id == latest_responses_subquery.c.max_id
+    ).join(
+        User, User.id == UserResponse.user_id
+    ).filter(
+        User.control_num.isnot(None),
+        User.control_num != '',
+        or_(
+            func.lower(func.trim(User.region)) == func.lower(func.trim(admin_region)),
+            func.lower(func.trim(User.region)) == func.lower(region_map.get(admin_region, ''))
+        ),
+        or_(
+            func.lower(func.trim(User.province)) == func.lower(func.trim(admin_province)),
+            func.lower(func.trim(User.province)) == func.lower(province_map.get(admin_province, ''))
+        ),
+        or_(
+            func.lower(func.trim(User.city)) == func.lower(func.trim(admin_city)),
+            func.lower(func.trim(User.city)) == func.lower(city_map.get(admin_city, ''))
         )
-        .join(User, UserResponse.user_id == User.id)  # Ensures only existing users are counted
-        .group_by(UserResponse.question_number, UserResponse.response)
-        .all()
-    )
+    ).group_by(
+        UserResponse.question_number,
+        UserResponse.response
+    ).all()
 
-    # Structure the data into a dictionary
-    yes_no_data = {}
+    # Define expected question numbers if known (adjust as needed)
+    expected_question_numbers = range(1, 12)  # example: questions 1 to 5
 
-    for question_number, response, count in response_counts:
+    # Initialize dictionary with zero counts for all questions
+    yes_no_data = {q_num: {"Yes": 0, "No": 0} for q_num in expected_question_numbers}
+
+    # Fill in data from query results
+    for question_number, response, count in latest_responses:
         if question_number not in yes_no_data:
             yes_no_data[question_number] = {"Yes": 0, "No": 0}
-        
-        if response.lower() == "yes":
-            yes_no_data[question_number]["Yes"] = count
-        elif response.lower() == "no":
-            yes_no_data[question_number]["No"] = count
+
+        normalized_response = response.strip().lower()
+        if normalized_response == "yes":
+            yes_no_data[question_number]["Yes"] += count
+        elif normalized_response == "no":
+            yes_no_data[question_number]["No"] += count
 
     return jsonify(yes_no_data)
+
 
     
 @app.route('/')
@@ -167,6 +243,7 @@ def admin_signup():
         region = request.form.get('region')
         province = request.form.get('province')
         city = request.form.get('city')
+        center_name = request.form.get('centerName')
 
         # Ensure password is not empty
         if not password:
@@ -180,7 +257,8 @@ def admin_signup():
             password=hashed_password,
             region=region,
             province=province,
-            city=city
+            city=city,
+            center_name=center_name,
         )
 
         db.session.add(new_admin)
@@ -205,6 +283,41 @@ def admin_login():
         else:
             flash('Invalid credentials. Try again.', 'danger')
             return redirect(url_for('admin_login'))
+        
+def get_grouped_counts_by_question(question_number, start_date, end_date, admin):
+    grouped_counts = {
+        "10-14": {"Male": 0, "Female": 0},
+        "15-19": {"Male": 0, "Female": 0}
+    }
+
+    query = db.session.query(User.age, User.sex).join(
+        UserResponse, User.id == UserResponse.user_id
+    ).join(
+        Services, Services.user_id == User.id
+    ).filter(
+        UserResponse.question_number == question_number,
+        func.lower(UserResponse.response) == 'yes',
+        User.control_num.isnot(None),
+        User.control_num != '',
+        Services.timestamp.between(start_date, end_date),
+        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
+        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
+        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
+    ).all()
+
+    for age, sex in query:
+        if age is None or sex is None:
+            continue
+        sex = sex.capitalize()
+        if sex not in ["Male", "Female"]:
+            continue
+        if 10 <= age <= 14:
+            grouped_counts["10-14"][sex] += 1
+        elif 15 <= age <= 19:
+            grouped_counts["15-19"][sex] += 1
+
+    return grouped_counts
+
 
 @app.route('/admin/dashboard')
 def admin_dashboard():
@@ -236,57 +349,63 @@ def admin_dashboard():
     # Get unread user responses
     unread_responses = UserResponse.query.filter_by(is_read=False).count()
     
-    attempted_suicide_count = db.session.query(UserResponse.user_id).join(
-        User, User.id == UserResponse.user_id  # Explicit join condition between User and UserResponse
-    ).filter(
-        UserResponse.question_number == 4,
-        UserResponse.response == 'yes',  # Assuming "yes" is stored as the answer for question 4
-        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
-        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
-        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
-    ).count()
     
-    sexual_violence_count = db.session.query(UserResponse.user_id).join(
-        User, User.id == UserResponse.user_id
-    ).filter(
-        UserResponse.question_number == 10,
-        UserResponse.response == 'yes',
-        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
-        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
-        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
-    ).count()
+        # Attempted suicide (Q4)
+    grouped_attempted_suicide = get_grouped_counts_by_question(4, start_date, end_date, admin)
+    male_attempted_10_14 = grouped_attempted_suicide["10-14"]["Male"]
+    female_attempted_10_14 = grouped_attempted_suicide["10-14"]["Female"]
+    male_attempted_15_19 = grouped_attempted_suicide["15-19"]["Male"]
+    female_attempted_15_19 = grouped_attempted_suicide["15-19"]["Female"]
     
-    # Binge Drinkers Count (Question 6)
-    binge_drinkers_count = db.session.query(UserResponse.user_id).join(
-        User, User.id == UserResponse.user_id
-    ).filter(
-        UserResponse.question_number == 6,
-        UserResponse.response == 'yes',
-        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
-        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
-        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
-    ).distinct().count()
+    total_attempted_suicide_10_14 = male_attempted_10_14 + female_attempted_10_14
+    total_attempted_suicide_15_19 = male_attempted_15_19 + female_attempted_15_19
+    total_attempted_suicide_overall = total_attempted_suicide_10_14 + total_attempted_suicide_15_19
 
-    # Tobacco Users Count (Question 5)
-    tobacco_users_count = db.session.query(UserResponse.user_id).join(
-        User, User.id == UserResponse.user_id
-    ).filter(
-        UserResponse.question_number == 5,
-        UserResponse.response == 'yes',
-        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
-        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
-        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
-    ).count()
+
+    # Sexual violence (Q10)
+    grouped_sexual_violence = get_grouped_counts_by_question(10, start_date, end_date, admin)
+    male_sv_10_14 = grouped_sexual_violence["10-14"]["Male"]
+    female_sv_10_14 = grouped_sexual_violence["10-14"]["Female"]
+    male_sv_15_19 = grouped_sexual_violence["15-19"]["Male"]
+    female_sv_15_19 = grouped_sexual_violence["15-19"]["Female"]
     
-    drug_users_count = db.session.query(UserResponse.user_id).join(
-        User, User.id == UserResponse.user_id
-    ).filter(
-        UserResponse.question_number == 7,
-        UserResponse.response == 'yes',
-        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
-        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
-        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
-    ).distinct().count()
+    total_sv_10_14 = male_sv_10_14 + female_sv_10_14
+    total_sv_15_19 = male_sv_15_19 + female_sv_15_19
+    total_sv_overall = total_sv_10_14 + total_sv_15_19
+
+    # Binge drinking (Q6)
+    grouped_binge = get_grouped_counts_by_question(6, start_date, end_date, admin)
+    male_binge_10_14 = grouped_binge["10-14"]["Male"]
+    female_binge_10_14 = grouped_binge["10-14"]["Female"]
+    male_binge_15_19 = grouped_binge["15-19"]["Male"]
+    female_binge_15_19 = grouped_binge["15-19"]["Female"]
+    
+    total_binge_10_14 = male_binge_10_14 + female_binge_10_14
+    total_binge_15_19 = male_binge_15_19 + female_binge_15_19
+    total_binge_overall = total_binge_10_14 + total_binge_15_19
+
+    # Tobacco use (Q5)
+    grouped_tobacco = get_grouped_counts_by_question(5, start_date, end_date, admin)
+    male_tobacco_10_14 = grouped_tobacco["10-14"]["Male"]
+    female_tobacco_10_14 = grouped_tobacco["10-14"]["Female"]
+    male_tobacco_15_19 = grouped_tobacco["15-19"]["Male"]
+    female_tobacco_15_19 = grouped_tobacco["15-19"]["Female"]
+    
+    total_tobacco_10_14 = male_tobacco_10_14 + female_tobacco_10_14
+    total_tobacco_15_19 = male_tobacco_15_19 + female_tobacco_15_19
+    total_tobacco_overall = total_tobacco_10_14 + total_tobacco_15_19
+
+    # Drug use (Q7)
+    grouped_drugs = get_grouped_counts_by_question(7, start_date, end_date, admin)
+    male_drugs_10_14 = grouped_drugs["10-14"]["Male"]
+    female_drugs_10_14 = grouped_drugs["10-14"]["Female"]
+    male_drugs_15_19 = grouped_drugs["15-19"]["Male"]
+    female_drugs_15_19 = grouped_drugs["15-19"]["Female"]
+    
+    total_drugs_10_14 = male_drugs_10_14 + female_drugs_10_14
+    total_drugs_15_19 = male_drugs_15_19 + female_drugs_15_19
+    total_drugs_overall = total_drugs_10_14 + total_drugs_15_19
+
     
     bullying_count = db.session.query(
         func.count(distinct(UserResponse.user_id))
@@ -295,12 +414,47 @@ def admin_dashboard():
     ).filter(
         UserResponse.question_number == 3,
         func.lower(func.trim(UserResponse.response)) == 'yes',
+        User.control_num.isnot(None),
+        User.control_num != '',
+        Services.timestamp.between(start_date, end_date),
         func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
         func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
         func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
     ).scalar()
+    
+    domestic_violence_count = db.session.query(UserResponse.user_id).join(
+        User, User.id == UserResponse.user_id
+    ).filter(
+        UserResponse.question_number == 1,
+        UserResponse.response == 'yes',
+        User.control_num.isnot(None),
+        User.control_num != '',
+        Services.timestamp.between(start_date, end_date),
+        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
+        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
+        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
+    ).distinct().count()
+    
+    # Users who submitted responses in the admin’s area
+    responded_users_subquery = db.session.query(UserResponse.user_id).select_from(UserResponse).join(
+        User, UserResponse.user_id == User.id
+        
+    ).filter(
+        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
+        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
+        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
+    ).distinct().subquery()
 
+    # Assessed users from your services table
+    assessed_users_subquery = db.session.query(Services.user_id).distinct().subquery()
 
+    # Pending = those who responded but haven't been assessed yet
+    pending_review_count = db.session.query(User).filter(
+        User.control_num.isnot(None),
+        User.control_num != '',
+        User.id.in_(responded_users_subquery),
+        ~User.id.in_(assessed_users_subquery)
+    ).count()
 
     # Load region, province, and city data from JSON files
     json_files = {
@@ -329,56 +483,240 @@ def admin_dashboard():
     admin_province = admin.province
     admin_city = admin.city
 
-    # Count male and female adolescents assessed using HEEADSSS, filtered by admin's region, province, and city
-    heeadsss_counts = db.session.query(
-        User.sex, db.func.count(User.id).label('count')
-    ).join(Services, Services.user_id == User.id) \
-     .filter(Services.service_name == 'Assessed using HEEADSSS') \
-     .filter(Services.timestamp.between(start_date, end_date)) \
-     .filter(
-         or_(
-             func.lower(func.trim(User.region)) == func.lower(func.trim(admin_region)),
-             func.lower(func.trim(User.region)) == func.lower(region_map.get(admin_region, ''))
-         ),
-         or_(
-             func.lower(func.trim(User.province)) == func.lower(func.trim(admin_province)),
-             func.lower(func.trim(User.province)) == func.lower(province_map.get(admin_province, ''))
-         ),
-         or_(
-             func.lower(func.trim(User.city)) == func.lower(func.trim(admin_city)),
-             func.lower(func.trim(User.city)) == func.lower(city_map.get(admin_city, ''))
-         )
-     ) \
-     .group_by(User.sex).all()
+    def get_gender_age_counts(service_name, start_date, end_date, admin_region, admin_province, admin_city):
+        counts = {
+            'male_10_14': 0,
+            'male_15_19': 0,
+            'female_10_14': 0,
+            'female_15_19': 0,
+        }
 
-    # Separate counts for male and female
-    male_heeadsss_count = next((count for sex, count in heeadsss_counts if sex == 'Male'), 0)
-    female_heeadsss_count = next((count for sex, count in heeadsss_counts if sex == 'Female'), 0)
+        # Base filters
+        filters = [
+            Services.timestamp.between(start_date, end_date),
+            User.age.isnot(None),
+            or_(
+                func.lower(func.trim(User.region)) == func.lower(func.trim(admin_region)),
+                func.lower(func.trim(User.region)) == func.lower(region_map.get(admin_region, ''))
+            ),
+            or_(
+                func.lower(func.trim(User.province)) == func.lower(func.trim(admin_province)),
+                func.lower(func.trim(User.province)) == func.lower(province_map.get(admin_province, ''))
+            ),
+            or_(
+                func.lower(func.trim(User.city)) == func.lower(func.trim(admin_city)),
+                func.lower(func.trim(User.city)) == func.lower(city_map.get(admin_city, ''))
+            ),
+            User.age.between(10, 19),
+            Services.service_name.isnot(None),  # Ensure accessed service
+            Services.service_name != ''
+        ]
 
-    heeadsss_count = Services.query.filter_by(service_name='Assessed using HEEADSSS').count()
+        # Only add service_name filter if not counting 'Any Service Accessed'
+        if service_name != 'Any Service Accessed':
+            filters.append(Services.service_name == service_name)
+
+        # Choose what to COUNT
+        if service_name == 'Any Service Accessed':
+            count_expression = func.count(func.distinct(User.id))  # <-- COUNT DISTINCT USERS
+        else:
+            count_expression = func.count(Services.id)  # Normal count per service
+
+        query_results = (
+            db.session.query(User.sex, User.age, count_expression)
+            .select_from(Services)
+            .join(User, Services.user_id == User.id)
+            .filter(*filters)
+            .group_by(User.sex, User.age)
+            .all()
+        )
+
+        for sex, age, count in query_results:
+            key = None
+            if sex == 'Male':
+                if 10 <= age <= 14:
+                    key = 'male_10_14'
+                elif 15 <= age <= 19:
+                    key = 'male_15_19'
+            elif sex == 'Female':
+                if 10 <= age <= 14:
+                    key = 'female_10_14'
+                elif 15 <= age <= 19:
+                    key = 'female_15_19'
+
+            if key:
+                counts[key] += count
+
+        return counts
+
+
+
+    # Get counts for adolescents assessed using HEEADSSS
+    heeadsss_counts = get_gender_age_counts('Assessed using HEEADSSS', start_date, end_date, admin_region, admin_province, admin_city)
+    heeadsss_total = sum(heeadsss_counts.values())
+
+    # Assign counts individually (optional, if needed somewhere)
+    male_heeadsss_10_14 = heeadsss_counts['male_10_14']
+    female_heeadsss_10_14 = heeadsss_counts['female_10_14']
+    male_heeadsss_15_19 = heeadsss_counts['male_15_19']
+    female_heeadsss_15_19 = heeadsss_counts['female_15_19']
+
+    # Get counts for adolescents reached by HYO
+    hyo_counts = get_gender_age_counts('Reached by HYO', start_date, end_date, admin_region, admin_province, admin_city)
+    hyo_total = sum(hyo_counts.values())
+
+    # Assign counts individually (optional, if needed somewhere)
+    male_hyo_10_14 = hyo_counts['male_10_14']
+    female_hyo_10_14 = hyo_counts['female_10_14']
+    male_hyo_15_19 = hyo_counts['male_15_19']
+    female_hyo_15_19 = hyo_counts['female_15_19']
+
+    
+    # Get counts for adolescents referred using HEEADSSS and accessed services
+    adolescents_with_services = get_gender_age_counts(
+        'Any Service Accessed',  
+        start_date,
+        end_date,
+        admin_region,
+        admin_province,
+        admin_city
+    )
+
+    referred_using_heeadsss_total = sum(adolescents_with_services.values())
+
+    # Assign counts individually
+    male_referred_10_14 = adolescents_with_services['male_10_14']
+    female_referred_10_14 = adolescents_with_services['female_10_14']
+    male_referred_15_19 = adolescents_with_services['male_15_19']
+    female_referred_15_19 = adolescents_with_services['female_15_19']
+
+    matched_users = db.session.query(User.id).filter(
+        Services.timestamp.between(start_date, end_date),
+        or_(
+            func.lower(func.trim(User.region)) == func.lower(func.trim(admin_region)),
+            func.lower(func.trim(User.region)) == func.lower(region_map.get(admin_region, ''))
+        ),
+        or_(
+            func.lower(func.trim(User.province)) == func.lower(func.trim(admin_province)),
+            func.lower(func.trim(User.province)) == func.lower(province_map.get(admin_province, ''))
+        ),
+        or_(
+            func.lower(func.trim(User.city)) == func.lower(func.trim(admin_city)),
+            func.lower(func.trim(User.city)) == func.lower(city_map.get(admin_city, ''))
+        )
+    ).subquery()
+    
+    hyo_yes_user_ids = db.session.query(Services.user_id).join(User, Services.user_id == User.id).filter(
+        Services.service_name == 'Reached by HYO',
+        Services.timestamp.between(start_date, end_date),
+        or_(
+            func.lower(func.trim(User.region)) == func.lower(func.trim(admin_region)),
+            func.lower(func.trim(User.region)) == func.lower(region_map.get(admin_region, ''))
+        ),
+        or_(
+            func.lower(func.trim(User.province)) == func.lower(func.trim(admin_province)),
+            func.lower(func.trim(User.province)) == func.lower(province_map.get(admin_province, ''))
+        ),
+        or_(
+            func.lower(func.trim(User.city)) == func.lower(func.trim(admin_city)),
+            func.lower(func.trim(User.city)) == func.lower(city_map.get(admin_city, ''))
+        )
+    ).subquery()
+    
+        # Count users who matched the admin's location but are not in the list above
+    hyo_no_count = db.session.query(User).filter(
+        User.id.in_(matched_users),
+        ~User.id.in_(hyo_yes_user_ids)
+    ).count()
+
 
     return render_template(
         'admin_dashboard.html',
         admin=admin,
         questions=questions,
         users=users,
+        province_map=province_map,
+        city_map=city_map,
         unread_responses=unread_responses,
         services=services,
-        heeadsss_count=heeadsss_count,
-        male_heeadsss_count=male_heeadsss_count,
-        female_heeadsss_count=female_heeadsss_count,
+        heeadsss_total=heeadsss_total,
         available_years=available_years,
         selected_year=int(selected_year),
         selected_month=selected_month,
-        attempted_suicide_count=attempted_suicide_count,
-        sexual_violence_count=sexual_violence_count,
-        binge_drinkers_count=binge_drinkers_count,
-        tobacco_users_count=tobacco_users_count,
-        drug_users_count=drug_users_count,
-        bullying_count=bullying_count
-    )
+        
+       
+        bullying_count=bullying_count,
+        domestic_violence_count=domestic_violence_count,
+        pending_review_count=pending_review_count,
+        
+        adolescents_with_services=adolescents_with_services,
+        referred_using_heeadsss_total=referred_using_heeadsss_total,
+        male_referred_10_14=male_referred_10_14,
+        female_referred_10_14=female_referred_10_14,
+        male_referred_15_19=male_referred_15_19,
+        female_referred_15_19=female_referred_15_19,
+        
+        # hyo count
+        hyo_no_count=hyo_no_count,
+        male_hyo_10_14=male_hyo_10_14,            # added
+        female_hyo_10_14=female_hyo_10_14,        # added
+        male_hyo_15_19=male_hyo_15_19,            
+        female_hyo_15_19=female_hyo_15_19,
+        hyo_total=hyo_total,
+        
+        # assessed using heeadsss
+        male_heeadsss_10_14=male_heeadsss_10_14,
+        female_heeadsss_10_14=female_heeadsss_10_14,
+        male_heeadsss_15_19=male_heeadsss_15_19,
+        female_heeadsss_15_19=female_heeadsss_15_19,
+        
+        grouped_attempted_suicide=grouped_attempted_suicide,
+        male_attempted_10_14=male_attempted_10_14,
+        female_attempted_10_14=female_attempted_10_14,
+        male_attempted_15_19=male_attempted_15_19,
+        female_attempted_15_19=female_attempted_15_19,
+        total_attempted_suicide_overall=total_attempted_suicide_overall,
+        
+        grouped_sexual_violence=grouped_sexual_violence,
+        male_sv_10_14=male_sv_10_14,
+        female_sv_10_14=female_sv_10_14,
+        male_sv_15_19=male_sv_15_19,
+        female_sv_15_19=female_sv_15_19,
+        total_sv_10_14=total_sv_10_14,
+        total_sv_15_19=total_sv_15_19,
+        total_sv_overall=total_sv_overall,
 
-   
+        grouped_binge=grouped_binge,
+        male_binge_10_14=male_binge_10_14,
+        female_binge_10_14=female_binge_10_14,
+        male_binge_15_19=male_binge_15_19,
+        female_binge_15_19=female_binge_15_19,
+        total_binge_10_14=total_binge_10_14,
+        total_binge_15_19=total_binge_15_19,
+        total_binge_overall=total_binge_overall,
+
+        grouped_tobacco=grouped_tobacco,
+        male_tobacco_10_14=male_tobacco_10_14,
+        female_tobacco_10_14=female_tobacco_10_14,
+        male_tobacco_15_19=male_tobacco_15_19,
+        female_tobacco_15_19=female_tobacco_15_19,
+        total_tobacco_10_14=total_tobacco_10_14,
+        total_tobacco_15_19=total_tobacco_15_19,
+        total_tobacco_overall=total_tobacco_overall,
+
+        grouped_drugs=grouped_drugs,
+        male_drugs_10_14=male_drugs_10_14,
+        female_drugs_10_14=female_drugs_10_14,
+        male_drugs_15_19=male_drugs_15_19,
+        female_drugs_15_19=female_drugs_15_19,
+        total_drugs_10_14=total_drugs_10_14,
+        total_drugs_15_19=total_drugs_15_19,
+        total_drugs_overall=total_drugs_overall,
+
+    )   
+
+
+
 @app.route('/admin/list')
 def admin_list():
     if 'admin' not in session:
@@ -414,6 +752,8 @@ def admin_list():
 
     
     users_query = User.query.filter(
+    User.control_num.isnot(None),
+    User.control_num != '',
     or_(
         func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
         func.lower(func.trim(User.region)) == func.lower(region_map.get(admin.region, ''))
@@ -425,7 +765,7 @@ def admin_list():
     or_(
         func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city)),
         func.lower(func.trim(User.city)) == func.lower(city_map.get(admin.city, ''))
-    )
+    ) 
 )
     users_pagination = users_query.paginate(page=page, per_page=per_page)
     users = users_pagination.items
@@ -433,16 +773,17 @@ def admin_list():
     total_questions = db.session.query(Assessment).count()
 
     user_progress = {}
+    
     highlighted_users = {}
     highlighted_users_yellow = {}
     
     for user in users:
-        answered_questions = (
-            db.session.query(AssessmentResponse)
-            .filter_by(user_id=user.id)
-            .count()
-        )
-        user_progress[user.id] = answered_questions >= total_questions
+        has_services = db.session.query(Services).filter_by(user_id=user.id, services_saved=True).first() is not None
+        has_recommendations = db.session.query(Recommendations).filter_by(user_id=user.id, recommendation_saved=True).first() is not None
+
+        # Status is "Done" if both services and recommendations are saved
+        user_progress[user.id] = has_services and has_recommendations
+
         
         questions_with_answers = get_questions_and_answers(user.id)
         yes_answers = {int(q_id) for q_id, data in questions_with_answers.items() if data["answer"].strip().lower() == "yes"}
@@ -485,7 +826,16 @@ def view_client(user_id):
     admin = Admin.query.filter_by(username=session['admin']).first()
     
     user = User.query.get_or_404(user_id)  # Fetch user once
+    
+    user_services = Services.query.filter_by(user_id=user_id).all()
 
+    saved_services = [service.service_name for service in user_services]
+
+    user_recommendations = Recommendations.query.filter_by(user_id=user_id).all()
+    
+    saved_recommendations = [rec.recommendation_text for rec in user_recommendations]
+
+        
     # Fetch user responses
     questions_with_answers = get_questions_and_answers(user_id)  # Get questions and answers
     
@@ -525,8 +875,7 @@ def view_client(user_id):
     for key, message in question_messages.items():
         formatted_messages[key] = highlight_keywords(message, keywords_to_highlight)
 
-
-       
+   
     # Check if user answered 'Yes' to any special question
     yes_answers = {int(q_id) for q_id, data in questions_with_answers.items() if data["answer"].strip().lower() == "yes"}
     
@@ -598,6 +947,7 @@ def view_client(user_id):
 
     show_message = True
     
+
     return render_template(
         'view_client.html', 
         admin=admin,
@@ -610,7 +960,9 @@ def view_client(user_id):
         brgy_name=brgy_name,
         admin_username=admin_username,
         show_message=show_message,
-        formatted_messages=formatted_messages
+        formatted_messages=formatted_messages,
+        saved_services=saved_services,
+        saved_recommendations=saved_recommendations
     )
     
     
@@ -662,25 +1014,43 @@ def format_substance_use_message(answers):
 def save_services():
     try:
         data = request.get_json()
-        user_id = data.get('user_id')  # Get user_id from the request
+        user_id = data.get('user_id')
         services = data.get('services', [])
+        recommendations = data.get('recommendations', [])
 
         if not user_id:
-            return 'User ID is required', 400  # Bad request if no user_id is provided
+            return 'User ID is required', 400
 
-        print("Received services:", services)  # Log the received data for debugging
+        print("Received services:", services)
+        print("Received recommendations:", recommendations)
 
+        # Optionally: Delete existing services/recommendations first to avoid duplicates
+        Services.query.filter_by(user_id=user_id).delete()
+        Recommendations.query.filter_by(user_id=user_id).delete()
+
+        # Save services
         for service in services:
-            new_service = Services(service_name=service, user_id=user_id)
+            new_service = Services(service_name=service, user_id=user_id, services_saved=True)
             db.session.add(new_service)
 
+        # Save recommendations
+        for recommendation in recommendations:
+            new_recommendation = Recommendations(recommendation_text=recommendation, user_id=user_id, recommendation_saved=True)
+            db.session.add(new_recommendation)
+
+        # ✅ Update user's service status
+        user = User.query.get(user_id)
+        if user:
+            user.services_saved = True
+        else:
+            return 'User not found', 404
+
         db.session.commit()
-        return '', 200  # Success status
+        return jsonify({"status": "success"}), 200
+
     except Exception as e:
         print(f"Error occurred: {e}")
-        return str(e), 500  # Return the error message for debugging
-
-
+        return str(e), 500
    
 @app.route('/edit-user/<int:user_id>', methods=['GET', 'POST'])
 def edit_user(user_id):
@@ -854,35 +1224,41 @@ def edit_admin_profile():
     admin = Admin.query.filter_by(username=session['admin']).first()
 
     if request.method == 'POST':
-        # Update admin details
-        admin.username = request.form.get('username', admin.username)  # Default to current username if not provided
-        admin.email = request.form.get('email', admin.email)          # Default to current email if not provided
-        admin.job = request.form.get('job', admin.job)                # Default to current job if not provided
-        admin.phone = request.form.get('phone', admin.phone)          # Default to current phone if not provided
-        admin.address = request.form.get('address', admin.address)    # Default to current address if not provided
+        # Only update if provided
+        if request.form.get('username'):
+            admin.username = request.form['username']
+        if request.form.get('email'):
+            admin.email = request.form['email']
+        if request.form.get('centerName'):
+            admin.center_name = request.form['centerName']
+        if request.form.get('job'):
+            admin.job = request.form['job']
+        if request.form.get('phone'):
+            admin.phone = request.form['phone']
+        if request.form.get('address'):
+            admin.address = request.form['address']
         
         if 'profile_image' in request.files:
             file = request.files['profile_image']
             if file and file.filename != '':
-                print(f"Uploading file: {file.filename}")  # Debugging
                 filename = f"{uuid.uuid4().hex}_{file.filename}"
                 upload_path = os.path.join('static/uploads', filename)
                 file.save(upload_path)
-                print(f"File saved to: {upload_path}")  # Debugging
                 admin.profile_image = f'/static/uploads/{filename}'
 
-        # Update password if provided
         if request.form.get('password'):
             admin.password = generate_password_hash(request.form['password'], method='pbkdf2:sha256')
 
         db.session.commit()
 
-        # Update the session with the new username
-        session['admin'] = admin.username
+        # Update the session if username changed
+        if request.form.get('username'):
+            session['admin'] = admin.username
 
         return redirect(url_for('admin_profile'))
 
     return render_template('edit_admin_profile.html', admin=admin)
+
 
 @app.route('/admin/messages')
 def admin_messages():
@@ -1217,6 +1593,8 @@ def get_age_distribution():
     # Query users filtered by region, province, and city
     users = db.session.query(User.age, User.sex) \
         .filter(
+            User.control_num.isnot(None),
+            User.control_num != '',
             or_(
                 func.lower(func.trim(User.region)) == func.lower(func.trim(admin_region)),
                 func.lower(func.trim(User.region)) == func.lower(region_map.get(admin_region, ''))
@@ -1231,15 +1609,13 @@ def get_age_distribution():
             )
         ).all()
 
-    if not users:
-        return jsonify({"error": "No user data available for your area"}), 404
-
-    # Define age groups
+    # Initialize age groups with zero counts to ensure chart always has data
     age_groups = {
         "10-14": {"Male": 0, "Female": 0},
         "15-19": {"Male": 0, "Female": 0}
     }
 
+    # Count users in each age group and sex
     for age, sex in users:
         if age is None or sex is None:
             continue
@@ -1251,6 +1627,7 @@ def get_age_distribution():
         elif 15 <= age <= 19:
             age_groups["15-19"][sex] += 1
 
+    # Always return age_groups, even if empty (all zeros)
     return jsonify(age_groups)
 
 

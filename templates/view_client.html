@@ -105,13 +105,13 @@
                     </a>
                 </li>
                
-                <li>
+           <!--      <li>
                     <a href="{{ url_for('admin_results')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
                         <i class="fa-solid fa-square-poll-horizontal"></i>
                         <span>Results</span>
                     </a>
                 </li>
-             <!-- <li>
+             <li>
                     <a href="{{ url_for('admin_files')}}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
                         <i class="fas fa-file fa-fw"></i>
                         <span>Files</span>
@@ -120,10 +120,16 @@
                 <li>
                     <a href="{{ url_for('admin_settings') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
                         <i class="fas fa-cog fa-fw"></i>
-                        <span>Settings</span>
+                        <span>Profile</span>
                     </a>
                 </li>
                 
+                <li>
+                    <a href="{{ url_for('admin_logout') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
+                        <i class="fas fa-sign-out-alt fa-fw"></i>
+                        <span>Logout</span>
+                    </a>
+                </li>  
                 
             </ul>
         </div>
@@ -194,72 +200,74 @@
                                 Only you can see this information
                             </p>
                         </div>
-                        <img class="d-none d-md-block" src="/static/images/welcome.png" alt="Welcome" style="max-width: 150px;">
                     </div>
-                    <img src="/static/images/user.png" alt="User">
+                    
                     <div class="body text-center d-flex flex-column p-20 mt-20 mb-20">
                         <div class="table-scroll-wrapper">
-                        <table class="info-table">
-                            <tr>
-                                <td><strong>Control Number:</strong></td><td>{{ user.control_num }}</td>
-                                <td><strong>Date of Birth:</strong></td><td>{{ user.dob }}</td>
+                            <table class="info-table">
+                                <tr>
+                                    <td><strong>Control Number:</strong></td>
+                                    <td colspan="3">{{ user.control_num }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Full Name:</strong></td>
+                                    <td>{{ user.first_name }} {{ user.middle_initial }} {{ user.last_name }}</td>
+                                    <td><strong>Sex:</strong></td>
+                                    <td>{{ user.sex }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date of Birth:</strong></td>
+                                    <td>{{ user.dob }}</td>
+                                    <td><strong>Age:</strong></td>
+                                    <td>{{ user.age }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Contact:</strong></td>
+                                    <td>{{ user.contact }}</td>
+                                    <td><strong>Location:</strong></td>
+                                    <td>{{ user.location }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Region:</strong></td>
+                                    <td>{{ region_name }}</td>
+                                    <td><strong>Province:</strong></td>
+                                    <td>{{ province_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>City:</strong></td>
+                                    <td>{{ city_name }}</td>
+                                    <td><strong>Barangay:</strong></td>
+                                    <td>{{ brgy_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Street/Sitio/Purok:</strong></td>
+                                    <td>{{ user.street if user.street else 'N/A' }}</td>
+                                    <td><strong>Date of Consultation:</strong></td>
+                                    <td>{{ user.date }}</td>
+                                </tr>
+                            </table>
 
-                            </tr>
-                            <tr>
-                                <td><strong>Full Name:</strong></td><td>{{ user.first_name }} {{ user.middle_initial }} {{ user.last_name }}</td>
-                                <td><strong>Age:</strong></td><td>{{ user.age }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Contact:</strong></td><td>{{ user.contact }}</td>
-                                <td><strong>Sex:</strong></td><td>{{ user.sex }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Region:</strong></td><td>{{ region_name }}</td>
-                                <td><strong>Province:</strong></td><td>{{ province_name }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>City:</strong></td><td>{{ city_name }}</td>
-                                <td><strong>Barangay:</strong></td><td>{{ brgy_name }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Street/Sitio/Purok:</strong></td><td>{{ user.street }}</td>
-                                <td><strong>Reason:</strong></td><td>{{ user.reason }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Location:</strong></td><td>{{ user.location }}</td>
-                                <td><strong>Date of Consultation:</strong></td><td>{{ user.date }}</td>
-                            </tr>
-                        </table>
-                    </div>
-                    </div>
-                    
-                    
-                    <div class="view-rapid">
+                               <div class="view-rapid">
                         <button id="rapid-btn" class="btn profile-btn font-14 color-white p-5" 
                             onclick="toggleSummary('rapid-summary')"> View Rapid Results
                         </button>
-                    
-                        <!--<button id="comprehensive-btn" class="btn profile-btn font-14 color-white p-5" 
-                            onclick="toggleSummary('comprehensive-summary')"> View Comprehensive Results
-                        </button> -->
-
                     </div>
+                        </div>
+                    </div>
+                    
+                    
+
+                 
                     
                     <!-- Rapid HEADSSS Form -->
                 <div id="rapid-summary" style="display: none; margin-top: 20px;">
-                    <div class="wrapper d-grid gap-20">
                         <div class="welcome bg-white rad-10 text-center-mobile">
                            
                             
                             <div class="body text-center d-flex flex-column p-20 mt-20 mb-20">
-
-                                
                                 <!-- Buttons -->
                                 <div class="button-container">
-                                <!--     <button onclick="exportToPDF()" class="export-btn">
-                                        <i class="fas fa-file-pdf"></i> Export to PDF
-                                    </button>  -->
-
+                             
                                     <button onclick="printSummary()" class="print-btn">
                                         <i class="fas fa-print"></i> Print or Save as PDF <i class="fa-solid fa-file-pdf"></i>
                                     </button>
@@ -324,13 +332,13 @@
                                         <!-- Updated table without the "No" column -->
                                         <table class="summary-table" border="1" width="100%">
                                             {% set yes_answers = [] %}
-
+                                        
                                             {% for id, data in questions_with_answers.items() %}
                                                 {% if data.answer == 'Yes' %}
                                                     {% set _ = yes_answers.append(data) %}
                                                 {% endif %}
                                             {% endfor %}
-
+                                        
                                             <tbody style="font-size: 15px;">
                                                 {% if yes_answers | length > 0 %}
                                                     <!-- Display only Yes answers -->
@@ -348,9 +356,16 @@
                                                         </td>
                                                     </tr>
                                                     {% endfor %}
+                                                {% else %}
+                                                    <tr>
+                                                        <td colspan="2" style="text-align: center; padding: 15px; font-style: italic; color: red;">
+                                                            The client answered "No" to all questions.
+                                                        </td>
+                                                    </tr>
                                                 {% endif %}
                                             </tbody>
                                         </table>
+
 
                                         <div class="container-message">
                                             <h3 class="section-title" style="padding-top: 2px">Interpretation</h3>
@@ -373,22 +388,61 @@
                                         <div class="recommendation-section">
                                             <label class="print-label" style="font-weight: bold; font-size: 16px;">Services Provided:</label>
                                             <div class="checkbox-group">
-                                                <div><input type="checkbox" name="services_provided[]" value="Parental Notification"><label>Parental Notification</label></div>
-                                                <div><input type="checkbox" name="services_provided[]" value="Assessed using HEEADSSS"><label>Assessed using HEEADSSS</label></div>
-                                                <div><input type="checkbox" name="services_provided[]" value="Preventive Counseling"><label>Preventive Counseling</label></div>
-                                                <div><input type="checkbox" name="services_provided[]" value="Refer to RHU/Hospital"><label>Refer to RHU/Hospital</label></div>
-                                                <div><input type="checkbox" name="services_provided[]" value="Refer to DSWD"><label>Refer to DSWD</label></div>
-                                                <div><input type="checkbox" name="services_provided[]" value="Health Education Sessions"><label>Health Education Sessions</label></div>
-                                                <div><input type="checkbox" name="services_provided[]" value="Schedule Follow-up"><label>Schedule Follow-up</label></div>
+                                                <div><input type="checkbox" name="services_provided[]" value="Assessed using HEEADSSS"
+                                                    {% if 'Assessed using HEEADSSS' in saved_services %}checked{% endif %}>
+                                                    <label>Assessed using HEEADSSS</label>
+                                                </div>
+                                            
+                                                <div><input type="checkbox" name="services_provided[]" value="Reached by HYO"
+                                                    {% if 'Reached by HYO' in saved_services %}checked{% endif %}>
+                                                    <label>Reached by HYO</label>
+                                                </div>
+                                            
+                                                <div><input type="checkbox" name="services_provided[]" value="Refer to RHU"
+                                                    {% if 'Refer to RHU' in saved_services %}checked{% endif %}>
+                                                    <label>Refer to RHU</label>
+                                                </div>
+                                            
+                                                <div><input type="checkbox" name="services_provided[]" value="Refer to Hospital"
+                                                    {% if 'Refer to Hospital' in saved_services %}checked{% endif %}>
+                                                    <label>Refer to Hospital</label>
+                                                </div>
+                                            
+                                                <div><input type="checkbox" name="services_provided[]" value="Refer to DSWD"
+                                                    {% if 'Refer to DSWD' in saved_services %}checked{% endif %}>
+                                                    <label>Refer to DSWD</label>
+                                                </div>
+                                            
+                                                <div><input type="checkbox" name="services_provided[]" value="Parental Notification"
+                                                    {% if 'Parental Notification' in saved_services %}checked{% endif %}>
+                                                    <label>Parental Notification</label>
+                                                </div>
+                                            
+                                                <div><input type="checkbox" name="services_provided[]" value="Preventive Counseling"
+                                                    {% if 'Preventive Counseling' in saved_services %}checked{% endif %}>
+                                                    <label>Preventive Counseling</label>
+                                                </div>
+                                            
+                                                <div><input type="checkbox" name="services_provided[]" value="Schedule Follow-up"
+                                                    {% if 'Schedule Follow-up' in saved_services %}checked{% endif %}>
+                                                    <label>Schedule Follow-up</label>
+                                                </div>
+                                            
                                             </div>
                                             <div class="other-container">
-                                                <input type="checkbox" id="otherOption" onchange="toggleOtherServiceInput()">
-                                                <label for="otherOption">Other services:</label>
+                                                <input type="checkbox" id="otherOption" name="services_provided[]" value="other"
+                                                    onchange="toggleOtherServiceInput()"
+                                                    {% if 'Other' in saved_services %}checked{% endif %}>
+                                                <label for="otherOption">Other services provided:</label>
+
+                                                <input type="text" id="otherServiceInput" name="other_service_detail" placeholder="Please specify"
+                                                    style="display: none; margin-top: 5px;"
+                                                    value="{{ other_service_detail if other_service_detail }}">
                                             </div>
                                             <div id="otherServiceContainer" style="display: none; margin-top: 10px;">
                                                 <input type="text" id="otherService" name="other_service" class="input-field" placeholder="Enter your service" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; display: block;">
                                             </div>    
-                                            <button id="saveButton" data-user-id="{{ user.id }}">Save Services</button>
+                                           
  
                                         </div>
                                         
@@ -401,26 +455,87 @@
                                         <div class="recommendation-section">
                                             <label class="print-label" style="font-weight: bold; font-size: 16px;">Recommended Action:</label>
                                             <div class="checkbox-group">
-                                                <div><input type="checkbox" name="recommended_action" value="Parental Notification"><label>Parental Notification</label></div>
-                                                <div><input type="checkbox" name="recommended_action" value="Preventive Counseling"><label>Preventive Counseling</label></div>
-                                                <div><input type="checkbox" name="recommended_action" value="Refer to RHU/Hospital"><label>Refer to RHU/Hospital</label></div>
-                                                <div><input type="checkbox" name="recommended_action" value="Refer to Barangay/SK"><label>Refer to Barangay/SK</label></div>
-                                                <div><input type="checkbox" name="recommended_action" value="Refer to DSWD"><label>Refer to DSWD</label></div>
-                                                <div><input type="checkbox" name="recommended_action" value="Health Education Sessions"><label>Health Education Sessions</label></div>
-                                                <div><input type="checkbox" name="recommended_action" value="Schedule Follow-up"><label>Schedule Follow-up</label></div>
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Home Visitation"
+                                                        {% if 'Home Visitation' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Home Visitation</label>
+                                                </div>
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Reached by HYO"
+                                                        {% if 'Reached by HYO' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Reached by HYO</label>
+                                                </div>
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Refer to RHU"
+                                                        {% if 'Refer to RHU' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Refer to RHU</label>
+                                                </div>
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Refer to Hospital"
+                                                        {% if 'Refer to Hospital' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Refer to Hospital</label>
+                                                </div>
+
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Refer to DSWD"
+                                                        {% if 'Refer to DSWD' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Refer to DSWD</label>
+                                                </div>
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Parental Notification"
+                                                        {% if 'Parental Notification' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Parental Notification</label>
+                                                </div>
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Preventive Counseling"
+                                                        {% if 'Preventive Counseling' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Preventive Counseling</label>
+                                                </div>
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Schedule Follow-up"
+                                                        {% if 'Schedule Follow-up' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Schedule Follow-up</label>
+                                                </div>
                                             </div>
+                                            
                                             <div class="other-container">
-                                                <input type="checkbox" id="otherOption2" onchange="toggleOtherRecommendationInput()">
+                                                <input type="checkbox" id="otherOption2" onchange="toggleOtherRecommendationInput()"
+                                                    {% if other_recommendation %}checked{% endif %}>
                                                 <label for="otherOption2">Other recommended actions:</label>
                                             </div>
-                                            <div id="otherRecommendationContainer" style="display: none; margin-top: 10px;">
-                                                <input type="text" id="otherRecommendation" name="other_recommendation" class="input-field" placeholder="Enter your recommendation" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; display: block;">
-                                            </div>                                         
+                                            <div id="otherRecommendationContainer" style="display: {% if other_recommendation %}block{% else %}none{% endif %}; margin-top: 10px;">
+                                                <input type="text" id="otherRecommendation" name="other_recommendation"
+                                                    class="input-field"
+                                                    value="{{ other_recommendation or '' }}"
+                                                    placeholder="Enter your recommendation"
+                                                    style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; display: block;">
+                                            </div>
+                                                                       
                                         </div>
 
                                         <div id="recommendedPrintText"></div>
-                                        
+
                                     </div>
+                                    <div class="administered-wrapper" style="text-align: left; margin-top: 50px; padding-left: 20px;">
+                                        <div id="administered" style="display: flex; align-items: center;">
+                                          <div>Administered by:</div>
+                                          <div>
+                                            <span style="border-bottom: 1px solid #000; padding: 0 20px; display: inline-block; margin-left: 10px;">
+                                              {{ admin.username }}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+
+                                    <div style="text-align: center; margin-top: 20px;">
+                                        <button id="saveButton" data-user-id="{{ user.id }}" style="padding: 10px 20px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                            Save
+                                        </button>
+                                    </div>
+
+                                    
+
                                 </form>
                             </div>
                         </div>
@@ -436,7 +551,7 @@
                                 <div class="body text-center d-flex flex-column p-20 mt-20 mb-20">
                                     <!-- Buttons -->
                                     <div class="button-container">
-                                    <!--     <button onclick="exportToPDF()" class="export-btn">
+                                    <!--<button onclick="exportToPDF()" class="export-btn">
                                             <i class="fas fa-file-pdf"></i> Export to PDF
                                         </button>  -->
     
@@ -740,7 +855,7 @@
         <script>
             document.addEventListener("DOMContentLoaded", function() {
                 // Attach event listeners for checkboxes and inputs
-                document.querySelectorAll('input[name="services_provided"], input[name="recommended_action"]').forEach(input => {
+                document.querySelectorAll('input[name="services_provided[]"], input[name="recommended_action"]').forEach(input => {
                     input.addEventListener("change", updatePrintText);
                 });
             
@@ -751,6 +866,8 @@
                 document.getElementById("otherOption").addEventListener("change", toggleOtherServiceInput);
                 document.getElementById("otherOption2").addEventListener("change", toggleOtherRecommendationInput);
             
+                toggleOtherServiceInput();
+                
                 // Ensure print text updates before printing
                 window.onbeforeprint = updatePrintText;
             });
@@ -763,7 +880,7 @@
             function updateServiceText() {
                 let selectedServices = [];
             
-                document.querySelectorAll('input[name="services_provided"]').forEach(checkbox => {
+                document.querySelectorAll('input[name="services_provided[]"]').forEach(checkbox => {
                     if (checkbox.checked) {
                         selectedServices.push(checkbox.value);
                     }
@@ -844,52 +961,77 @@
             
             </script>
             
+            
             <script>
-                document.getElementById('saveButton').addEventListener('click', function(event) {
+                document.getElementById('saveButton').addEventListener('click', function (event) {
                     event.preventDefault(); // Prevent form submission
-                    saveServices(); // Call the saveServices function
+                    saveServicesAndRecommendations(); // Call the updated function
                 });
                 
-                function saveServices() {
-                    const checkedBoxes = document.querySelectorAll('input[name="services_provided[]"]:checked');
-                    const otherChecked = document.getElementById('otherOption').checked;
-                    const selectedServices = Array.from(checkedBoxes).map(cb => cb.value);
+                function saveServicesAndRecommendations() {
+                    const checkedServices = document.querySelectorAll('input[name="services_provided[]"]:checked');
+                    const otherServiceChecked = document.getElementById('otherOption').checked;
+                    const selectedServices = Array.from(checkedServices).map(cb => cb.value);
                 
-                    if (otherChecked) {
-                        const otherService = document.getElementById('otherService').value;
-                        if (otherService.trim()) {
+                    if (otherServiceChecked) {
+                        const otherService = document.getElementById('otherService').value.trim();
+                        if (otherService) {
                             selectedServices.push(otherService);
                         }
                     }
                 
-                    const userId = document.getElementById('saveButton').getAttribute('data-user-id'); // Get the user_id
+                    const checkedRecommendations = document.querySelectorAll('input[name="recommended_action"]:checked');
+                    const otherRecChecked = document.getElementById('otherOption2').checked;
+                    const selectedRecommendations = Array.from(checkedRecommendations).map(cb => cb.value);
                 
-                    console.log("Selected services to send:", selectedServices);
-                    console.log("User ID:", userId); // Ensure user ID is correct
+                    if (otherRecChecked) {
+                        const otherRec = document.getElementById('otherRecommendation').value.trim();
+                        if (otherRec) {
+                            selectedRecommendations.push(otherRec);
+                        }
+                    }
+                
+                    const userId = document.getElementById('saveButton').getAttribute('data-user-id');
+                
+                    console.log("Selected services:", selectedServices);
+                    console.log("Selected recommendations:", selectedRecommendations);
                 
                     fetch('/save_services', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ user_id: userId, services: selectedServices })
+                        body: JSON.stringify({
+                            user_id: userId,
+                            services: selectedServices,
+                            recommendations: selectedRecommendations
+                        })
                     })
                     .then(response => {
                         if (response.ok) {
-                            alert('Services saved successfully!');
+                            alert('Services and recommendations saved successfully!');
                         } else {
                             response.text().then(errorMessage => {
-                                alert('Failed to save services: ' + errorMessage);
+                                alert('Failed to save data: ' + errorMessage);
                             });
                         }
                     })
                     .catch(error => {
-                        console.error('Error with fetch request:', error);
+                        console.error('Error:', error);
                         alert('An error occurred: ' + error);
                     });
+
+                    document.addEventListener('DOMContentLoaded', function() {
+                        if (document.getElementById('otherOption').checked) {
+                            document.getElementById('otherServiceContainer').style.display = 'block';
+                        }
+                        if (document.getElementById('otherOption2') && document.getElementById('otherOption2').checked) {
+                            document.getElementById('otherRecommendationContainer').style.display = 'block';
+                        }
+                    });
                 }
-                
                 </script>
+                
                 
 </body>
 

@@ -421,57 +421,133 @@ ul {
 }
 
 .welcome {
-    overflow: hidden;
-    width: 200%;
-    margin-top: 10%;
+    width: 100%;       /* Full container width */
+    min-width: 1000px; /* Match table min-width */
+    box-sizing: border-box;
+    margin-top: 2%;
+
 }
 
-.welcome>img {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    border: 3px solid #fff;
-    box-shadow: 0 0 5px #ddd;
-    margin-top: -32px;
-    margin-left: 20px;
+.welcome .body > div {
+    flex: 1;
 }
 
 .welcome .intro p {
-    margin-bottom: 40px;
+    margin-bottom: 0px;
 }
 
 .welcome .intro img {
-    height: 90px;
+    height: 60px;
     margin-top: 10px;
 }
 
 .welcome .body {
     border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
     
 }
 
-.welcome .body>div {
-    flex: 1;
+
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    font-size: 15px;
+    border-radius: 0;
+    overflow: hidden;
 }
 
-@media (max-width: 767px) {
+.info-table tr {
+    display: table-row; /* Maintain table structure */
+}
+
+.info-table td {
+    padding: 14px 18px;
+    border: 1px solid #d0d0d0;
+    text-align: left;
+    vertical-align: middle;
+    word-break: break-word; /* Important for long text */
+    white-space: nowrap; /* Prevent wrapping to keep horizontal width */
+
+}
+
+.info-table tr:first-child td {
+    text-align: center;
+    font-weight: bold;
+    font-size: 17px;
+    background-color: #f7f7f7;
+}
+
+.info-table td:first-child, 
+.info-table td:nth-child(3) {
+    width: 180px;
+    font-weight: bold;
+}
+
+.table-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto; /* Enable horizontal scroll */
+    margin: 0 auto;
+    border-radius: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
+
+
+}
+
+.table-scroll-wrapper table {
+    width: 100%;
+    min-width: 800px; /* Keep good structure */
+    table-layout: auto; /* Let columns adjust naturally */
+}
+
+.table-scroll-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+@media (max-width: 999px) {
+    .welcome {
+        min-width: auto;      /* Remove min-width so it fits smaller screens */
+        display: block;       /* Stack children vertically */
+        overflow-x: hidden;   /* Prevent horizontal scroll on container */
+    }
+
+    .welcome .body > div {
+        flex: none;           /* Disable flex-grow */
+        width: 100%;          /* Full width */
+        margin-bottom: 1rem;  /* space between stacked blocks */
+    }
+    
+    /* Keep table scroll wrapper scrollable horizontally */
+    .table-scroll-wrapper {
+        overflow-x: auto;     /* horizontal scroll if needed */
+    }
+}
+/* @media (max-width: 767px) {
     .welcome .body>div {
         margin-bottom: 20px;
     }
-}
+} */
 
 .view-rapid {
     display: flex;
-    justify-content: center; /* Centers buttons horizontally */
-    gap: 10px; /* Adds spacing between buttons */
+    justify-content: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
+
 
 #rapid-btn {
     background-color: #268bb6; /* Bright Blue */
-    color: white;
     border: none;
-    transition: background-color 0.3s ease;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 15px;
+    cursor: pointer;
 }
 
 #comprehensive-btn {
@@ -692,28 +768,6 @@ ul {
 }
 
 /* End Components */
-
-
-
-
-.info-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.info-table td {
-    padding: 10px;
-    border: 1px solid #ddd; /* Add border for better visibility */
-    text-align: left;
-}
-
-.info-table tr {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 columns */
-    gap: 10px;
-}
-
-
 
 
 .button-container {
@@ -1006,7 +1060,7 @@ th[style*="background-color: lightcoral"] {
         .print-container {
             margin: 0 auto !important;
             padding: 0 !important;
-            width: 80% !important;
+            width: 100% !important;
             text-align: left !important;
             height: 100% !important;
         }
@@ -1030,7 +1084,7 @@ th[style*="background-color: lightcoral"] {
         
         /* Prevent page break inside table */
         .summary-table {
-            width: 90%;
+            width: 100%;
             border-collapse: collapse;
             font-size: 12px;
             margin: auto;
@@ -1087,7 +1141,7 @@ th[style*="background-color: lightcoral"] {
 
         .message-card {
             display: block !important;
-            width: 90% !important;
+            width: 100% !important;
             max-width: none !important;
             margin-left: -10px !important;
             font-size: 14px !important;
@@ -1179,7 +1233,7 @@ th[style*="background-color: lightcoral"] {
         .control-number-container {
             justify-content: flex-start !important; 
             gap: 0 !important; 
-            margin-left: -145px !important; 
+           margin-right: 320px !important;
         }
     
         .control-number-container strong {
@@ -1200,9 +1254,11 @@ th[style*="background-color: lightcoral"] {
  
     .recommendation-container, 
     .recommended-container *,
-    .recommendation-section {
+    .recommendation-section
+     {
         display: block !important;
         visibility: visible !important;
+    
     }
 
     .recommendation-container {
@@ -1211,7 +1267,7 @@ th[style*="background-color: lightcoral"] {
         align-items: flex-start !important;
         width: 100% !important; 
         max-width: 600px !important;
-        margin: 10px auto !important; 
+        margin: 20px auto !important; 
         padding: 10px !important;
         font-size: 12px !important;
         text-align: justify !important;
@@ -1220,7 +1276,7 @@ th[style*="background-color: lightcoral"] {
         box-sizing: border-box; 
         border: 1px solid rgb(48, 48, 48) !important; 
         background-color: #ffffff00;
-        right: 13%;
+        right: 2%;
     }
 
     .checkbox-group, .other-container, #otherServiceContainer, #otherRecommendationContainer, .print-label {
@@ -1380,7 +1436,45 @@ th[style*="background-color: lightcoral"] {
     }
 
 
+
 }
+
+@media print {
+    .administered-wrapper {
+        display: block !important;
+        width: 100% !important;
+        text-align: left !important;
+        margin-top: 30px !important;
+    }
+
+    #administered {
+        display: inline-flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 8px !important;
+        font-size: 12px !important;
+        color: black !important;
+        visibility: visible !important;
+        width: auto !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        position: static !important; /* no floating */
+    }
+
+    #administered * {
+        visibility: visible !important;
+    }
+
+    #administered span {
+        border-bottom: 1px solid #000 !important;
+        padding: 0 20px !important;
+        display: inline-block !important;
+        white-space: nowrap !important;
+    }
+}
+
+
 
 
 .print-mode {
@@ -1443,46 +1537,10 @@ th[style*="background-color: lightcoral"] {
     margin-bottom: 0;
 }
 
-.table-scroll-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+.administered-wrapper{
+    font-family: 'Lato', sans-serif;
 }
 
-.table-scroll-wrapper table {
-    min-width: 600px; /* Ensures scrolling is needed if the screen is small */
-}
 
-.table-scroll-wrapper::-webkit-scrollbar {
-    height: 8px;
-}
 
-.table-scroll-wrapper::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
-}
-
-/* Ensure table doesn't break on small screens */
-@media (max-width: 768px) {
-    .intro {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .intro img {
-        margin-top: 10px;
-    }
-
-    .print-btn, .export-btn {
-        width: 100%;
-        margin-top: 10px;
-    }
-
-    .view-rapid {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding: 0 20px;
-    }
-}
 

@@ -25,6 +25,8 @@ body {
     margin: auto;
     padding: 50px 40px 30px 40px;
     box-sizing: border-box; /* Ensures padding doesn't exceed width */
+    border: 1px solid #3e8e41;
+
 }
 
 /* Headings */

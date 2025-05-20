@@ -76,69 +76,114 @@
             {% endif %}
         {% endwith %}
     
-        <div class="signup-container">
+       <div class="signup-container">
 
             <div class="back-btn">
-                <button onclick="window.location.href='{{ url_for('admin') }}'">
-                    <i class="fas fa-arrow-left"></i> Back
-                </button>       
+              <button onclick="window.location.href='{{ url_for('admin') }}'">
+                <i class="fas fa-arrow-left"></i> Back
+              </button>
             </div>
 
             <form method="POST" action="{{ url_for('admin_signup') }}" class="signup-form" onsubmit="return checkPasswordMatch(event)">
               <h2>Admin Sign Up</h2>
-            
-              <div class="input-group">
-                <input type="text" name="new_username" placeholder="Username" required class="input-style">
-              </div>
-            
-              <div class="password-container">
-                <input type="password" name="new_password" id="new_password" placeholder="Password" required>
-                <i class="fas fa-eye-slash" id="togglePassword" style="cursor: pointer;"></i>
-              </div>
-            
-              <div class="password-container">
-                <div class="input-icon-wrapper">
-                  <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm Password" required>
-                  <i class="fas fa-eye-slash" id="toggleConfirmPassword"></i>
-                </div>
-              </div>
-            
-              <div class="address-row">
-                <div class="input-group">
-                  <label class="form-label">Region *</label>
-                  <select name="region" id="region" required title="Please select a region."></select>
-                </div>
-            
-                <div class="input-group">
-                  <label class="form-label">Province *</label>
-                  <select name="province" id="province" required title="Please select a province."></select>
-                </div>
-            
-                <div class="input-group">
-                  <label class="form-label">City / Municipality *</label>
-                  <select name="city" id="city" required title="Please select a city or municipality."></select>
+
+              <!-- Personal Information Section -->
+              <h3 class="section-title">Personal Information</h3>
+              <div class="form-grid">
+                <div class="left-column">
+                  <div class="input-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" name="full_name" required>
+                  </div>
+
+                  <div class="input-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" name="new_username" required>
+                  </div>
+
+                  <div class="input-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" required>
+                  </div>
                 </div>
 
-                
-              </div>
+                <div class="right-column">
+                  <div class="input-group">
+                    <label class="form-label">Contact Number</label>
+                    <input type="tel" name="contact_number" pattern="[0-9]{11}" title="Please enter a valid 11-digit phone number." required>
+                  </div>
 
-              <div class="address-row center-name-row">
-                <div class="input-group center-name-group">
-                  <label class="form-label" for="centerName">Center Name *</label>
-                  <input type="text" name="centerName" id="centerName" required placeholder="Enter Center Name">
+                  <div class="input-group">
+                    <label class="form-label">Position</label>
+                    <input type="text" name="position" placeholder="e.g., Nurse, Doctor, Health Officer" required>
+                  </div>
                 </div>
               </div>
-              
+
+              <!-- Location Section -->
+              <h3 class="section-title">Location & Facility</h3>
+              <div class="form-grid">
+                <div class="left-column">
+                  <div class="input-group">
+                    <label class="form-label">Region *</label>
+                    <select name="region" id="region" required></select>
+                  </div>
+
+                  <div class="input-group">
+                    <label class="form-label">Province *</label>
+                    <select name="province" id="province" required></select>
+                  </div>
+                </div>
+
+                <div class="right-column">
+                  <div class="input-group">
+                    <label class="form-label">City / Municipality *</label>
+                    <select name="city" id="city" required></select>
+                  </div>
+
+                  <div class="input-group">
+                    <label class="form-label">Facility / Center Name *</label>
+                    <select name="centerName" id="centerName" required>
+                      <option value="" disabled selected>Select Facility / Center Name:</option>
+                      <option value="BHS Union AFHF">BHS Union AFHF</option>
+                      <option value="RHU Mayorga">RHU Mayorga</option>
+                      <option value="Gandara AFHF">Gandara AFHF</option>
+                      <option value="RHU Gandara">RHU Gandara</option>
+                      <option value="RHU Pagsanghan">RHU Pagsanghan</option>
+                      <option value="Abuyog District Hospital AFHF">Abuyog District Hospital AFHF</option>
+                      <option value="Gandara District Hospital AFHF">Gandara District Hospital AFHF</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Password Section -->
+              <div class="form-grid">
+                <div class="left-column">
+                  <div class="input-group password-container">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="new_password" id="new_password" required>
+                    <i class="fas fa-eye-slash" id="togglePassword"></i>
+                  </div>
+                </div>
+
+                <div class="right-column">
+                  <div class="input-group password-container">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" name="confirm_password" id="confirm_password" required>
+                    <i class="fas fa-eye-slash" id="toggleConfirmPassword"></i>
+                  </div>
+                </div>
+              </div>
+
               <button type="submit" class="signup-btn">Sign Up</button>
-            
-              <p class="login-link">Already have an account?
-                <a href="{{ url_for('admin_login') }}">Login here</a>
+
+              <p class="login-link">
+                Already have an account? <a href="{{ url_for('admin_login') }}">Login here</a>
               </p>
             </form>
-            
-
           </div>
-          
+
           
           <script>
             // Toggle password visibility for main password

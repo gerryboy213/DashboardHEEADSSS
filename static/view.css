@@ -276,8 +276,9 @@ ul {
 
 .notification-item {
     display: flex;
-    flex-direction: column;
-    padding: 12px;
+    flex-direction: row; /* Align icon and text horizontally */
+    padding: 7px;
+    padding-left: 2px; /* Add space on the left */
     border-radius: 5px;
     transition: background 0.2s ease-in-out;
     background: #f0f9ff;
@@ -285,7 +286,7 @@ ul {
     min-width: 0; /* Important to prevent content from overflowing */
     overflow-wrap: break-word; /* Allows breaking long words */
     word-break: break-word; /* Ensures proper word wrapping */
-    max-width: 120%; /* Avoids exceeding the container */
+    max-width: 100%; /* Avoids exceeding the container */
     margin-bottom: 5px;
 }
 
@@ -299,19 +300,24 @@ ul {
 
 .notification-item .content {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row; /* Align icon and text horizontally */
+    align-items: center; /* Align items vertically in the center */
     text-align: left;
     word-wrap: break-word;
     flex-grow: 1;
-    min-width: 0; 
-    overflow: hidden; 
+    min-width: 0;
+    overflow: hidden;
+}
+
+.notification-item .content i {
+    font-size: 16px;
+    margin-right: 10px; /* Space between the icon and text */
 }
 
 .notification-item .content .sender {
     font-weight: bold;
     color: #333;
-    display: block; 
+    display: block;
 }
 
 .notification-item .content .message-preview {
@@ -319,8 +325,8 @@ ul {
     color: #666;
     white-space: normal; /* Allows text to wrap */
     overflow: hidden;
-    margin-bottom: 2px; 
-    white-space: normal; 
+    margin-bottom: 2px;
+    white-space: normal;
 }
 
 .notification-item .content .time {
@@ -329,6 +335,70 @@ ul {
     text-align: left;
     margin-top: 3px;
 }
+
+#notification-list p {
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+    margin: 140px 0;
+
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .notification-item {
+        flex-direction: column; /* Stack items vertically on smaller screens */
+        padding: 10px;
+    }
+
+    .notification-item .content {
+        flex-direction: column; /* Stack icon and text vertically */
+        align-items: flex-start; /* Align to the left on small screens */
+        text-align: left;
+    }
+
+    .notification-item .content i {
+        font-size: 18px; /* Make the icon slightly bigger on smaller screens */
+        margin-right: 0; /* Remove right margin for better stacking */
+        margin-bottom: 8px; /* Add margin below the icon when stacked */
+    }
+
+    .notification-item .content .sender {
+        font-size: 16px; /* Increase the sender's font size on smaller screens */
+    }
+
+    .notification-item .content .message-preview {
+        font-size: 13px; /* Adjust the message preview font size */
+    }
+
+    .notification-item .content .time {
+        font-size: 11px; /* Make the time font slightly smaller */
+    }
+}
+
+@media (max-width: 480px) {
+    .notification-item {
+        padding: 8px; /* Adjust padding for very small screens */
+    }
+
+    .notification-item .content i {
+        font-size: 20px; /* Increase the icon size on very small screens */
+        margin-bottom: 10px; /* Add more space below the icon */
+    }
+
+    .notification-item .content .sender {
+        font-size: 18px; /* Increase the sender's font size */
+    }
+
+    .notification-item .content .message-preview {
+        font-size: 14px; /* Adjust font size for message preview */
+    }
+
+    .notification-item .content .time {
+        font-size: 10px; /* Make the time even smaller on very small screens */
+    }
+}
+
 
 .dropdown-menu .footer {
     text-align: center;
@@ -366,7 +436,7 @@ ul {
 }
 
 .user-img {
-    cursor: pointer; /* Pointer cursor on hover */
+    /* cursor: pointer;  */
     transition: transform 0.3s ease-in-out; /* Smooth transition */
 }
 
@@ -1011,25 +1081,29 @@ th[style*="background-color: lightcoral"] {
 
     @media print {
 
+           @page {
+         size: A4;
+        margin-top: .1in;
+        margin-right: 10mm;
+        margin-bottom: .10mm;
+        margin-left: 10mm;
+}
+
         body, html {
             margin: 0 !important;
             padding: 0 !important;
             height: 100% !important;
             width: 100% !important;
+                    background: none !important;
+
             
         }
 
-        /* * {
-            page-break-before: auto !important;
-            page-break-after: auto !important;
-            page-break-inside: auto !important;
-        } */
-
         body {
             background: none !important;
-            /* margin: 0 !important;
-            padding: 0 !important; */
-                
+            margin: 0 !important;
+            padding: 0 !important;
+                margin-top: -20px  !important;
         }
 
         body * {
@@ -1037,7 +1111,7 @@ th[style*="background-color: lightcoral"] {
             background-color: none !important;
             background: none !important;
             margin: 0 auto !important;
-            /* margin-top: 0   !important; */
+            
             
         }
 
@@ -1069,6 +1143,8 @@ th[style*="background-color: lightcoral"] {
             margin: 0 !important;
             padding: 0 !important;
         }
+
+        
 
         .sidebar, .navbar, .dashboard-header, .topbar, .header {
             display: none !important;
@@ -1276,8 +1352,14 @@ th[style*="background-color: lightcoral"] {
         box-sizing: border-box; 
         border: 1px solid rgb(48, 48, 48) !important; 
         background-color: #ffffff00;
-        right: 2%;
+        right: 2px;
+        
     }
+
+      #printSpacer {
+    display: block !important;
+    height: 10mm !important;
+  }
 
     .checkbox-group, .other-container, #otherServiceContainer, #otherRecommendationContainer, .print-label {
         display: none !important;  /* Hide checkboxes and text input */
@@ -1435,8 +1517,18 @@ th[style*="background-color: lightcoral"] {
         font-weight: normal !important; /* Ensure text is not bold */
     }
 
+    #recommendedCalendarContainer {
+        display: block !important;
+    }
 
+    #recommendedPrintText li {
+        margin-bottom: 8px;
+        margin-left: 50px;
+    }
 
+     #calendarContainer {
+        display: block !important;
+  }
 }
 
 @media print {
@@ -1542,5 +1634,47 @@ th[style*="background-color: lightcoral"] {
 }
 
 
+.modal {
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* align modal top */
+    padding: 20px 0;
+    
+    overflow-y: auto; /* scroll on modal overlay only */
+    -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
+}
+
+.modal::-webkit-scrollbar {
+    width: 5px;
+    background-color: #e4e9ea;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 40px auto;
+    padding: 30px;
+    border-radius: 10px;
+
+    width: 800px;
+    max-width: 98vw;
+
+    overflow: visible !important; /* disable inner scroll */
+    max-height: none !important;  /* no max height to limit content */
+    
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s ease-in-out;
+}
 
 

@@ -1,9 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap');
-
-
 /* General Styles */
 body {
-    font-family: 'Lato', sans-serif;
+    font-family: 'Poppins', sans-serif;
     background-color: #ffffff;
     display: flex;
     justify-content: center;
@@ -21,7 +18,6 @@ html, body {
     margin: 0;
     padding: 0;
 }
-
 .header {
     display: flex;
     justify-content: center; /* Centers the logo horizontally */
@@ -31,9 +27,10 @@ html, body {
     flex-wrap: wrap;
 }
 .logo {
-    width: 10vh; /* Adjust size as needed */
+    width: 20vh; /* Adjust size as needed */
     max-width: 80px;
     height: auto;
+    margin-bottom: 10px;
 }
 
 .logo.large{
@@ -52,8 +49,9 @@ html, body {
 }
 
 .logolarger {
-    width: 380px; /* Special size for the last image */
-    height:55px;
+    width: 350px; /* Special size for the last image */
+    height:60px;
+    margin-top: 6px;
 
 }
 
@@ -64,7 +62,7 @@ html, body {
     border-radius: 12px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
     width: 40vw;
-    max-width: 400px; /* Prevents excessive stretching */
+    max-width: 450px; /* Prevents excessive stretching */
     min-width: 280px;
     transition: transform 0.3s ease-in-out;
     margin-top: 10px;
@@ -84,6 +82,7 @@ html, body {
     padding: 10px 0;
     margin-top: 20px;
     gap: 10px;
+    
 }
 
 /* Heading */
@@ -106,7 +105,6 @@ p {
     flex-direction: column;
     gap: 15px;
 }
-
 
 .btn {
     background: #4CAF50;

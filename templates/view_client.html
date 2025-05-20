@@ -23,7 +23,7 @@
             position: fixed;
             top: 0;
             left: 0;
-            height: 100%;
+            height: 367%;
             width: 215px; /* Default width */
             overflow: hidden;
             background-color: #fff;
@@ -138,7 +138,7 @@
             <div class="header bg-white p-15 between-flex">
                 <div class="search-container">
                     <i class="fas fa-search search-icon"></i>
-                    <input id="searchInput" class="search-box" type="search" placeholder="Search Control Number">
+                    <input id="searchInput" class="search-box" type="search" placeholder="Search ... ">
                     <div id="searchResults" class="search-results"></div>
                 </div>
                 <div class="user d-flex align-items-center">
@@ -154,7 +154,7 @@
                         <strong>Notifications</strong>
                         <div id="notification-list" style=" overflow: hidden; margin-left:-200px; margin-top: 20px;"></div>
                         <div class="footer">
-                            <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a>
+                            <a href="{{ url_for('admin_list') }}">See All <i class="fa fa-angle-right"></i></a>
                         </div>
                     </div>
             
@@ -165,24 +165,7 @@
                         </div>
                     </div>
                     
-                    <!-- Dropdown Menu -->
-                    <div id="userDropdown" class="dropdown-menu">
-                        <ul>
-                            <li>
-                                <a href="{{ url_for('admin_profile') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
-                                    <i class="fas fa-user fa-fw"></i>
-                                    <span>Profile</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('admin_logout') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
-                                    <i class="fas fa-sign-out-alt fa-fw"></i>
-                                    <span>Logout</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    
+                 
                 </div>
             </div>
             <!-- End Header -->
@@ -201,6 +184,8 @@
                             </p>
                         </div>
                     </div>
+
+               
                     
                     <div class="body text-center d-flex flex-column p-20 mt-20 mb-20">
                         <div class="table-scroll-wrapper">
@@ -249,142 +234,299 @@
 
                                <div class="view-rapid">
                         <button id="rapid-btn" class="btn profile-btn font-14 color-white p-5" 
-                            onclick="toggleSummary('rapid-summary')"> View Rapid Results
+                            onclick="generateReport()"> View Rapid Results
                         </button>
                     </div>
                         </div>
                     </div>
                     
-                    
+               
 
                  
                     
                     <!-- Rapid HEADSSS Form -->
-                <div id="rapid-summary" style="display: none; margin-top: 20px;">
-                        <div class="welcome bg-white rad-10 text-center-mobile">
-                           
-                            
-                            <div class="body text-center d-flex flex-column p-20 mt-20 mb-20">
-                                <!-- Buttons -->
-                                <div class="button-container">
-                             
-                                    <button onclick="printSummary()" class="print-btn">
-                                        <i class="fas fa-print"></i> Print or Save as PDF <i class="fa-solid fa-file-pdf"></i>
-                                    </button>
+                      <!-- Modal Container -->
+<div id="reportModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+        <!-- Begin form -->
+        <form method="POST" action="/save_services">
 
+          <div style="text-align: center; margin-top: 20px;">
+   <button type="button" onclick="printSummary()" class="print-btn">
+  <i class="fas fa-print"></i> Print or Save as PDF <i class="fa-solid fa-file-pdf"></i>
+</button>
+
+</div>
+
+            <div class="print-container">
+                <table class="summary-table" id="summaryTable" style="margin-top: 40px;">
+                    <thead>
+                        <tr>
+                            <th colspan="2" class="summary-title">Rapid HEEADSSS Results</th>
+                        </tr>
+
+                        <tr>
+                            <th colspan="2" style="text-align: left;">
+                                <div style="display: flex; flex-direction: column; gap: 5px;">
+                                    <div style="display: flex; align-items: center; gap: 2px; height: 30px;">
+                                        <label for="serviceProvider" style="width: 180px; font-size: 15px;">Accredited Facility Name:</label>
+                                        <input type="text" id="centerName" name="center_name" class="input-field"
+                                               value="{{ admin.center_name }}" readonly
+                                               style="height: 35px; padding: 5px; font-size: 14px; border:none;" />
+                                        <span id="serviceProviderText"></span>
+                                    </div>
                                 </div>
-                
-                                <!-- Summary Table -->
-                                <form method="POST" action="/save_services">
-                                    <div class="print-container">
-                                        <table class="summary-table" id="summaryTable" style="margin-top: 40px;">
-                                            <thead>
-                                                <tr>
-                                                    <th colspan="2" class="summary-title">  Rapid HEEADSSS Results</th>
-                                                </tr>
+                            </th>
+                        </tr>
 
-                                                <tr>
-                                                    <th colspan="2" style="text-align: left;">
-                                                        <div style="display: flex; flex-direction: column; gap: 5px;">
-                                                            <div style="display: flex; align-items: center; gap: 10px; height: 30px;">
-                                                                <label for="serviceProvider" style="width: 100px; font-size: 15px;">Center Name:</label>
-                                                                <select id="serviceProvider" name="service_provider" class="input-field" required onchange="updateProviderText()" 
-                                                                    style="height: 35px; padding: 5px;font-size: 14px;">
-                                                                    <option value="" disabled selected>Select center name</option>
-                                                                    <option value="RHU">RHU</option>
-                                                                    <option value="Hospital">Hospital</option>
-                                                                    <option value="School">School</option>
-                                                                </select>
-                                                                <span id="serviceProviderText"></span>                                                       
-                                                            </div>
-                                                                
-                                                        </div>
-                                                    </th>
-                                                </tr>
-
-                                                <tr>
-                                                    <th colspan="2" style="text-align: left;">
-                                                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                                                            <div style="display: flex; align-items: center; gap: 10px; height: 30px;">
-                                                                    <label for="centerName" style="width: 180px; font-size: 15px;">Name of Service Provider: </label>
-                                                                    <input type="text" id="centerName" name="center_name" class="input-field" 
-                                                                    style="font-size: 14px; height: 35px; padding: 5px; border:none;" value="{{ admin_username or '' }}" readonly>                                                                                          
-                                                                    <span id="centerNameText"></span>
-                                                            </div>
-                                                        </div>
-                                                    </th>
-                                                </tr>
-            
-                                                <tr>
-                                                    <th colspan="2" style="text-align: left;">
-                                                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                                                            <div class="control-number-container"  style="display: flex; align-items: center; gap: 10px;">
-                                                                <strong style="width: 115px; font-size: 15px;">Control Number:</strong>
-                                                                <span style="width: 200px; font-size: 15px;">{{ user.control_num }}</span>
-                                                            </div>    
-                                                        </div>
-                                                    </th>
-                                                </tr>
-                                                
-                                            </thead>
-                                        </table>
-                                        
-                                        <!-- Updated table without the "No" column -->
-                                        <table class="summary-table" border="1" width="100%">
-                                            {% set yes_answers = [] %}
-                                        
-                                            {% for id, data in questions_with_answers.items() %}
-                                                {% if data.answer == 'Yes' %}
-                                                    {% set _ = yes_answers.append(data) %}
-                                                {% endif %}
-                                            {% endfor %}
-                                        
-                                            <tbody style="font-size: 15px;">
-                                                {% if yes_answers | length > 0 %}
-                                                    <!-- Display only Yes answers -->
-                                                    <tr>
-                                                        <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Question</th>
-                                                        <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Answer</th>
-                                                    </tr>
-                                                    {% for data in yes_answers %}
-                                                    <tr>
-                                                        <td style="padding: 8px; text-align: justify;">
-                                                            {{ data.question }}
-                                                        </td>
-                                                        <td style="padding: 8px; text-align: center;">
-                                                            <i class="fas fa-check-circle" style="color: green;"></i> Yes
-                                                        </td>
-                                                    </tr>
-                                                    {% endfor %}
-                                                {% else %}
-                                                    <tr>
-                                                        <td colspan="2" style="text-align: center; padding: 15px; font-style: italic; color: red;">
-                                                            The client answered "No" to all questions.
-                                                        </td>
-                                                    </tr>
-                                                {% endif %}
-                                            </tbody>
-                                        </table>
-
-
-                                        <div class="container-message">
-                                            <h3 class="section-title" style="padding-top: 2px">Interpretation</h3>
-                                            {% if formatted_messages %}
-                                                <div class="message-card">
-                                                    <ul>
-                                                        {% for paragraph in formatted_messages %}
-                                                            <li class="justified-text">{{ paragraph | safe }}</li>  <!-- important: use |safe -->
-                                                        {% endfor %}
-                                                    </ul>
-                                                    
-                                                </div>
-                                            {% endif %}
-                                        </div>
+                        <tr>
+                            <th colspan="2" style="text-align: left;">
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 2px; height: 30px;">
+                                        <label for="centerName" style="width: 180px; font-size: 15px;">Name of Service Provider: </label>
+                                        <input type="text" id="centerName" name="center_name" class="input-field"
+                                               style="font-size: 14px; height: 35px; padding: 5px; border:none;"
+                                               value="{{ admin.full_name or '' }}" readonly>
+                                        <span id="centerNameText"></span>
+                                    </div>
                                 </div>
+                            </th>
+                        </tr>
+
+                        <tr>
+                            <th colspan="2" style="text-align: left;">
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div class="control-number-container" style="display: flex; align-items: center; gap: 10px;">
+                                        <strong style="width: 115px; font-size: 15px;">Control Number:</strong>
+                                        <span style="width: 200px; font-size: 15px;">{{ user.control_num }}</span>
+                                    </div>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+
+            <!-- Updated table without the "No" column -->
+            <table class="summary-table" border="1" width="100%">
+                {% set yes_answers = [] %}
+                {% for id, data in questions_with_answers.items() %}
+                    {% if data.answer == 'Yes' %}
+                        {% set _ = yes_answers.append(data) %}
+                    {% endif %}
+                {% endfor %}
+
+                <tbody style="font-size: 15px;">
+                    {% if yes_answers | length > 0 %}
+                        <tr>
+                            <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Question</th>
+                            <th style="font-size: 15px; text-align: center; background-color: lightgreen; padding: 10px 10px;">Answer</th>
+                        </tr>
+                        {% for data in yes_answers %}
+                        <tr>
+                            <td style="padding: 8px; text-align: justify;">
+                                {{ data.question }}
+                            </td>
+                            <td style="padding: 8px; text-align: center;">
+                                <i class="fas fa-check-circle" style="color: green;"></i> Yes
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="2" style="text-align: center; padding: 15px; font-style: italic; color: red;">
+                                The client answered "No" to all questions.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+
+            <div class="container-message">
+                <h3 class="section-title" style="padding-top: 2px">Interpretation</h3>
+                {% if formatted_messages %}
+                    <div class="message-card">
+                        <ul>
+                            {% for paragraph in formatted_messages %}
+                                <li class="justified-text">{{ paragraph | safe }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+            <h4> Services Provided and Recommended Action from the Brgy</h4> 
+
+<div class="recommendation-container">
+    <div class="recommendation-section">
+        <label class="print-label" style="font-weight: bold; font-size: 16px;">Services Provided:</label>
+        <div class="checkbox-group">
+            <div>
+                <input type="checkbox" name="services_provided[]" value="Assessed using HEEADSSS"
+                    {% if 'Assessed using HEEADSSS' in saved_services %}checked{% endif %}>
+                <label>Assessed using HEEADSSS</label>
+            </div>
+            <div>
+                <input type="checkbox" name="services_provided[]" value="Reached by HYO"
+                    {% if 'Reached by HYO' in saved_services %}checked{% endif %}>
+                <label>Reached by HYO</label>
+            </div>
+            <div>
+                <input type="checkbox" name="services_provided[]" value="Refer to RHU"
+                    {% if 'Refer to RHU' in saved_services %}checked{% endif %}>
+                <label>Referred to RHU</label>
+            </div>
+            <div>
+                <input type="checkbox" name="services_provided[]" value="Refer to Hospital"
+                    {% if 'Refer to Hospital' in saved_services %}checked{% endif %}>
+                <label>Referred to Hospital</label>
+            </div>
+            <div>
+                <input type="checkbox" name="services_provided[]" value="Refer to DSWD"
+                    {% if 'Refer to DSWD' in saved_services %}checked{% endif %}>
+                <label>Referred to DSWD</label>
+            </div>
+            <div>
+                <input type="checkbox" name="services_provided[]" value="Parental Notification"
+                    {% if 'Parental Notification' in saved_services %}checked{% endif %}>
+                <label>Parental Notification</label>
+            </div>
+            <div>
+                <input type="checkbox" name="services_provided[]" value="Preventive Counseling"
+                    {% if 'Preventive Counseling' in saved_services %}checked{% endif %}>
+                <label>Preventive Counseling</label>
+            </div>
+            <div>
+                <input type="checkbox" id="scheduleFollowUp" name="services_provided[]" value="Schedule Follow-up"
+                    {% if 'Schedule Follow-up' in saved_services or follow_up_datetime %}checked{% endif %}>
+                <label for="scheduleFollowUp">Schedule Follow-up</label>
+            </div>
+            <div id="calendarContainer"
+                style="{% if 'Schedule Follow-up' in saved_services or follow_up_datetime %}display: block;{% else %}display: none;{% endif %} margin-top: 10px;">
+                <label for="followUpDateTime">Set date and time:</label>
+                <input type="datetime-local" id="followUpDateTime" name="follow_up_datetime"
+                    value="{{ follow_up_datetime }}">
+            </div>
+        </div>
+
+        <div class="other-container">
+            <input type="checkbox" id="otherOption" name="services_provided[]" value="other"
+                onchange="toggleOtherServiceInput()"
+                {% if 'Other' in saved_services %}checked{% endif %}>
+            <label for="otherOption">Other services provided:</label>
+
+            <input type="text" id="otherServiceInput" name="other_service_detail" placeholder="Please specify"
+                style="{% if 'Other' in saved_services %}display: block;{% else %}display: none;{% endif %} margin-top: 5px;"
+                value="{{ other_service_detail }}">
+        </div>
+
+        <div id="otherServiceContainer" style="display: none; margin-top: 10px;">
+            <input type="text" id="otherService" name="other_service" class="input-field" placeholder="Enter your service"
+                style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; display: block;">
+        </div>
+    </div>
+
+    <div id="servicesPrintText"></div>
+
+    <div class="separator"></div>
+
+    <div class="recommendation-section">
+        <label class="print-label" style="font-weight: bold; font-size: 16px;">Recommended Action:</label>
+        <div class="checkbox-group">
+            <div>
+                <input type="checkbox" name="recommended_action" value="Home Visitation"
+                    {% if 'Home Visitation' in saved_recommendations %}checked{% endif %}>
+                <label>Home Visitation</label>
+            </div>
+            <div>
+                <input type="checkbox" name="recommended_action" value="Reached by HYO"
+                    {% if 'Reached by HYO' in saved_recommendations %}checked{% endif %}>
+                <label>Reached by HYO</label>
+            </div>
+            <div>
+                <input type="checkbox" name="recommended_action" value="Refer to RHU"
+                    {% if 'Refer to RHU' in saved_recommendations %}checked{% endif %}>
+                <label>Refer to RHU</label>
+            </div>
+            <div>
+                <input type="checkbox" name="recommended_action" value="Refer to Hospital"
+                    {% if 'Refer to Hospital' in saved_recommendations %}checked{% endif %}>
+                <label>Refer to Hospital</label>
+            </div>
+            <div>
+                <input type="checkbox" name="recommended_action" value="Refer to DSWD"
+                    {% if 'Refer to DSWD' in saved_recommendations %}checked{% endif %}>
+                <label>Refer to DSWD</label>
+            </div>
+            <div>
+                <input type="checkbox" name="recommended_action" value="Parental Notification"
+                    {% if 'Parental Notification' in saved_recommendations %}checked{% endif %}>
+                <label>Parental Notification</label>
+            </div>
+            <div>
+                <input type="checkbox" name="recommended_action" value="Preventive Counseling"
+                    {% if 'Preventive Counseling' in saved_recommendations %}checked{% endif %}>
+                <label>Preventive Counseling</label>
+            </div>
+            <div>
+                <input type="checkbox" id="recommendedFollowUp" name="recommended_action" value="Schedule Follow-up"
+                    {% if 'Schedule Follow-up' in saved_recommendations or recommended_follow_up_datetime %}checked{% endif %}>
+                <label for="recommendedFollowUp">Schedule Follow-up</label>
+            </div>
+            <div id="recommendedCalendarContainer"
+                style="{% if 'Schedule Follow-up' in saved_recommendations or recommended_follow_up_datetime %}display: block;{% else %}display: none;{% endif %} margin-top: 10px;">
+                <label for="recommendedFollowUpDateTime">Set date and time:</label>
+                <input type="datetime-local" id="recommendedFollowUpDateTime" name="recommended_follow_up_datetime"
+                    value="{{ recommended_follow_up_datetime }}">
+            </div>
+        </div>
+
+        <div class="other-container">
+            <input type="checkbox" id="otherOption2" onchange="toggleOtherRecommendationInput()"
+                {% if other_recommendation %}checked{% endif %}>
+            <label for="otherOption2">Other recommended actions:</label>
+        </div>
+        <div id="otherRecommendationContainer"
+            style="display: {% if other_recommendation %}block{% else %}none{% endif %}; margin-top: 10px;">
+            <input type="text" id="otherRecommendation" name="other_recommendation" class="input-field"
+                value="{{ other_recommendation or '' }}" placeholder="Enter your recommendation"
+                style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; display: block;">
+        </div>
+    </div>
+
+    <div id="recommendedPrintText"></div>
+</div>
+<div class="administered-wrapper" style="text-align: left; margin-top: 50px; padding-left: 20px;">
+    <div id="administered" style="display: flex; align-items: center;">
+        <div>Administered by:</div>
+        <div style="margin-left: 10px;">
+            <div style="text-align: center;">
+                {% if signature %}
+                <img src="{{ url_for('static', filename='uploads/' + signature.filename) }}"
+                    alt="Signature" style="height: 50px; display: block; margin: 0 auto 5px auto;">
+                {% endif %}
+                <span style="border-bottom: 1px solid #000; padding: 0 20px; display: inline-block;">
+                    {{ admin.username }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+        </form>
+        <!-- End form -->
+    </div>
+</div>
+
+
                                     
-   
+<!--<div id="printSpacer" style="display: none;"></div>
+
+                                        <h4> Services Provided and Recommended Action by the  Brgy</h4> 
+
                                     <div class="recommendation-container">
-                                        <!-- Services Provided -->
+                                   
                                         <div class="recommendation-section">
                                             <label class="print-label" style="font-weight: bold; font-size: 16px;">Services Provided:</label>
                                             <div class="checkbox-group">
@@ -423,12 +565,26 @@
                                                     <label>Preventive Counseling</label>
                                                 </div>
                                             
-                                                <div><input type="checkbox" name="services_provided[]" value="Schedule Follow-up"
-                                                    {% if 'Schedule Follow-up' in saved_services %}checked{% endif %}>
-                                                    <label>Schedule Follow-up</label>
+                                                <div>
+                                                    <input type="checkbox" id="scheduleFollowUp" name="services_provided[]" value="Schedule Follow-up"
+                                                    {% if 'Schedule Follow-up' in saved_services or follow_up_datetime %}checked{% endif %}>
+                                                  <label for="scheduleFollowUp">Schedule Follow-up</label>
+                                                  
                                                 </div>
+                                                  
+                                               
+                                                  <div id="calendarContainer"
+                                                  style="{% if 'Schedule Follow-up' in saved_services or follow_up_datetime %}display: block;{% else %}display: none;{% endif %} margin-top: 10px;">
+                                               <label for="followUpDateTime">Set date and time:</label>
+                                               <input type="datetime-local" id="followUpDateTime" name="follow_up_datetime"
+                                               value="{{ follow_up_datetime }}">
+
+                                          
+
+                                             </div>
                                             
                                             </div>
+
                                             <div class="other-container">
                                                 <input type="checkbox" id="otherOption" name="services_provided[]" value="other"
                                                     onchange="toggleOtherServiceInput()"
@@ -436,22 +592,23 @@
                                                 <label for="otherOption">Other services provided:</label>
 
                                                 <input type="text" id="otherServiceInput" name="other_service_detail" placeholder="Please specify"
-                                                    style="display: none; margin-top: 5px;"
-                                                    value="{{ other_service_detail if other_service_detail }}">
+                                                    style="{% if 'Other' in saved_services %}display: block;{% else %}display: none;{% endif %} margin-top: 5px;"
+                                                    value="{{ other_service_detail }}">
+
                                             </div>
+                                            
                                             <div id="otherServiceContainer" style="display: none; margin-top: 10px;">
                                                 <input type="text" id="otherService" name="other_service" class="input-field" placeholder="Enter your service" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; display: block;">
                                             </div>    
-                                           
- 
+
                                         </div>
                                         
                                         <div id="servicesPrintText"></div>
 
-                                        <!-- Separator Line -->
+                                      
                                         <div class="separator"></div>
                                     
-                                        <!-- Recommended Action -->
+                                        
                                         <div class="recommendation-section">
                                             <label class="print-label" style="font-weight: bold; font-size: 16px;">Recommended Action:</label>
                                             <div class="checkbox-group">
@@ -491,11 +648,24 @@
                                                         {% if 'Preventive Counseling' in saved_recommendations %}checked{% endif %}>
                                                     <label>Preventive Counseling</label>
                                                 </div>
+
                                                 <div>
-                                                    <input type="checkbox" name="recommended_action" value="Schedule Follow-up"
-                                                        {% if 'Schedule Follow-up' in saved_recommendations %}checked{% endif %}>
-                                                    <label>Schedule Follow-up</label>
+                                                    <input type="checkbox" id="recommendedFollowUp" name="recommended_action" value="Schedule Follow-up"
+                                                           {% if 'Schedule Follow-up' in saved_recommendations or recommended_follow_up_datetime %}checked{% endif %}>
+                                                    <label for="recommendedFollowUp">Schedule Follow-up</label>
                                                 </div>
+                                                
+                                               
+                                                <div id="recommendedCalendarContainer"
+                                                     style="{% if 'Schedule Follow-up' in saved_recommendations or recommended_follow_up_datetime %}display: block;{% else %}display: none;{% endif %} margin-top: 10px;">
+                                                    <label for="recommendedFollowUpDateTime">Set date and time:</label>
+                                                    <input type="datetime-local" id="recommendedFollowUpDateTime" name="recommended_follow_up_datetime"
+                                                           value="{{ recommended_follow_up_datetime }}">
+                                                </div>
+                                                
+                                                
+
+                                                
                                             </div>
                                             
                                             <div class="other-container">
@@ -515,17 +685,193 @@
 
                                         <div id="recommendedPrintText"></div>
 
+
+
                                     </div>
-                                    <div class="administered-wrapper" style="text-align: left; margin-top: 50px; padding-left: 20px;">
-                                        <div id="administered" style="display: flex; align-items: center;">
-                                          <div>Administered by:</div>
-                                          <div>
-                                            <span style="border-bottom: 1px solid #000; padding: 0 20px; display: inline-block; margin-left: 10px;">
-                                              {{ admin.username }}
-                                            </span>
-                                          </div>
+
+                                    <h4> Services Provided and Recommended Action by the Brgy</h4> 
+
+                                 <div class="recommendation-container">
+                                      
+                                        <div class="recommendation-section">
+                                            <label class="print-label" style="font-weight: bold; font-size: 16px;">Services Provided:</label>
+                                            <div class="checkbox-group">
+                                                <div><input type="checkbox" name="services_provided[]" value="Assessed using HEEADSSS"
+                                                    {% if 'Assessed using HEEADSSS' in saved_services %}checked{% endif %}>
+                                                    <label>Assessed using HEEADSSS</label>
+                                                </div>
+                                            
+                                                <div><input type="checkbox" name="services_provided[]" value="Reached by HYO"
+                                                    {% if 'Reached by HYO' in saved_services %}checked{% endif %}>
+                                                    <label>Reached by HYO</label>
+                                                </div>
+                                            
+                                                <div><input type="checkbox" name="services_provided[]" value="Refer to RHU"
+                                                    {% if 'Refer to RHU' in saved_services %}checked{% endif %}>
+                                                    <label>Refer to RHU</label>
+                                                </div>
+                                            
+                                                <div><input type="checkbox" name="services_provided[]" value="Refer to Hospital"
+                                                    {% if 'Refer to Hospital' in saved_services %}checked{% endif %}>
+                                                    <label>Refer to Hospital</label>
+                                                </div>
+                                            
+                                                <div><input type="checkbox" name="services_provided[]" value="Refer to DSWD"
+                                                    {% if 'Refer to DSWD' in saved_services %}checked{% endif %}>
+                                                    <label>Refer to DSWD</label>
+                                                </div>
+                                            
+                                                <div><input type="checkbox" name="services_provided[]" value="Parental Notification"
+                                                    {% if 'Parental Notification' in saved_services %}checked{% endif %}>
+                                                    <label>Parental Notification</label>
+                                                </div>
+                                            
+                                                <div><input type="checkbox" name="services_provided[]" value="Preventive Counseling"
+                                                    {% if 'Preventive Counseling' in saved_services %}checked{% endif %}>
+                                                    <label>Preventive Counseling</label>
+                                                </div>
+                                            
+                                                <div>
+                                                    <input type="checkbox" id="scheduleFollowUp" name="services_provided[]" value="Schedule Follow-up"
+                                                    {% if 'Schedule Follow-up' in saved_services or follow_up_datetime %}checked{% endif %}>
+                                                  <label for="scheduleFollowUp">Schedule Follow-up</label>
+                                                  
+                                                </div>
+                                                  
+                                                 
+                                                  <div id="calendarContainer"
+                                                  style="{% if 'Schedule Follow-up' in saved_services or follow_up_datetime %}display: block;{% else %}display: none;{% endif %} margin-top: 10px;">
+                                               <label for="followUpDateTime">Set date and time:</label>
+                                               <input type="datetime-local" id="followUpDateTime" name="follow_up_datetime"
+                                               value="{{ follow_up_datetime }}">
+
+                                           
+
+                                             </div>
+                                            
+                                            </div>
+
+                                            <div class="other-container">
+                                                <input type="checkbox" id="otherOption" name="services_provided[]" value="other"
+                                                    onchange="toggleOtherServiceInput()"
+                                                    {% if 'Other' in saved_services %}checked{% endif %}>
+                                                <label for="otherOption">Other services provided:</label>
+
+                                                <input type="text" id="otherServiceInput" name="other_service_detail" placeholder="Please specify"
+                                                    style="{% if 'Other' in saved_services %}display: block;{% else %}display: none;{% endif %} margin-top: 5px;"
+                                                    value="{{ other_service_detail }}">
+
+                                            </div>
+                                            
+                                            <div id="otherServiceContainer" style="display: none; margin-top: 10px;">
+                                                <input type="text" id="otherService" name="other_service" class="input-field" placeholder="Enter your service" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; display: block;">
+                                            </div>    
+
                                         </div>
-                                      </div>
+                                        
+                                        <div id="servicesPrintText"></div>
+
+                                       
+                                        <div class="separator"></div>
+                                    
+                                      
+                                        <div class="recommendation-section">
+                                            <label class="print-label" style="font-weight: bold; font-size: 16px;">Recommended Action:</label>
+                                            <div class="checkbox-group">
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Home Visitation"
+                                                        {% if 'Home Visitation' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Home Visitation</label>
+                                                </div>
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Reached by HYO"
+                                                        {% if 'Reached by HYO' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Reached by HYO</label>
+                                                </div>
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Refer to RHU"
+                                                        {% if 'Refer to RHU' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Refer to RHU</label>
+                                                </div>
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Refer to Hospital"
+                                                        {% if 'Refer to Hospital' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Refer to Hospital</label>
+                                                </div>
+
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Refer to DSWD"
+                                                        {% if 'Refer to DSWD' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Refer to DSWD</label>
+                                                </div>
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Parental Notification"
+                                                        {% if 'Parental Notification' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Parental Notification</label>
+                                                </div>
+                                                <div>
+                                                    <input type="checkbox" name="recommended_action" value="Preventive Counseling"
+                                                        {% if 'Preventive Counseling' in saved_recommendations %}checked{% endif %}>
+                                                    <label>Preventive Counseling</label>
+                                                </div>
+
+                                                <div>
+                                                    <input type="checkbox" id="recommendedFollowUp" name="recommended_action" value="Schedule Follow-up"
+                                                           {% if 'Schedule Follow-up' in saved_recommendations or recommended_follow_up_datetime %}checked{% endif %}>
+                                                    <label for="recommendedFollowUp">Schedule Follow-up</label>
+                                                </div>
+                                                
+                                              
+                                                <div id="recommendedCalendarContainer"
+                                                     style="{% if 'Schedule Follow-up' in saved_recommendations or recommended_follow_up_datetime %}display: block;{% else %}display: none;{% endif %} margin-top: 10px;">
+                                                    <label for="recommendedFollowUpDateTime">Set date and time:</label>
+                                                    <input type="datetime-local" id="recommendedFollowUpDateTime" name="recommended_follow_up_datetime"
+                                                           value="{{ recommended_follow_up_datetime }}">
+                                                </div>
+                                                
+                                                
+
+                                                
+                                            </div>
+                                            
+                                            <div class="other-container">
+                                                <input type="checkbox" id="otherOption2" onchange="toggleOtherRecommendationInput()"
+                                                    {% if other_recommendation %}checked{% endif %}>
+                                                <label for="otherOption2">Other recommended actions:</label>
+                                            </div>
+                                            <div id="otherRecommendationContainer" style="display: {% if other_recommendation %}block{% else %}none{% endif %}; margin-top: 10px;">
+                                                <input type="text" id="otherRecommendation" name="other_recommendation"
+                                                    class="input-field"
+                                                    value="{{ other_recommendation or '' }}"
+                                                    placeholder="Enter your recommendation"
+                                                    style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; display: block;">
+                                            </div>
+                                                                       
+                                        </div>
+
+                                        <div id="recommendedPrintText"></div>
+
+                                        
+
+                                    </div>
+                           <div class="administered-wrapper" style="text-align: left; margin-top: 50px; padding-left: 20px;">
+                                <div id="administered" style="display: flex; align-items: center;">
+                                    <div>Administered by:</div>
+                                    <div style="margin-left: 10px;">
+                                    <div style="text-align: center;">
+                                        {% if signature %}
+                                        <img src="{{ url_for('static', filename='uploads/' + signature.filename) }}"
+                                            alt="Signature" style="height: 50px; display: block; margin: 0 auto 5px auto;">
+
+                                        {% endif %}
+                                        <span style="border-bottom: 1px solid #000; padding: 0 20px; display: inline-block;">
+                                        {{ admin.username }}
+                                        </span>
+                                    </div>
+                                    </div>
+                                </div>
+                                </div>
+
                                       
 
                                     <div style="text-align: center; margin-top: 20px;">
@@ -534,13 +880,11 @@
                                         </button>
                                     </div>
 
-                                    
-
                                 </form>
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>-->
                 
                      <!-- Comprehensive HEADSSS Form -->
                      <div id="comprehensive-summary" style="display: none; margin-top: 20px;">
@@ -620,7 +964,6 @@
                     </div>
                  
                 </div>
-   
             </div>
 
         </div>
@@ -676,9 +1019,14 @@
             
                         notificationList.innerHTML = ""; // Clear previous notifications
             
-                        if (data.length === 0) {
+                        if (!data || data.length === 0) {
                             unreadCount.style.display = "none";
-                            notificationList.innerHTML = "<p>No new notifications.</p>";
+                            notificationList.innerHTML = `
+                                <div style="text-align: center; color: #888; font-size: 14px; padding-left: 180px; margin-bottom:20px">
+                                    <i class="fas fa-inbox" style="font-size: 20px; margin-bottom: 5px;"></i><br>
+                                    No new notifications
+                                </div>
+                            `;
                             return;
                         }
             
@@ -697,14 +1045,32 @@
                             // Ensure notification contains `user_id`
                             notificationItem.dataset.userId = notification.user_id;
             
+                           // Determine icon and color based on urgency
+                            let iconClass = "fas fa-check-circle"; // default low urgency
+                            let iconColor = "#10b981"; // green
+
+                            if (notification.urgency === "high") {
+                                iconClass = "fas fa-exclamation-circle";
+                                iconColor = "#dc2626"; // red
+                            } else if (notification.urgency === "medium") {
+                                iconClass = "fas fa-exclamation-circle";
+                                iconColor = "#eab308"; // yellow
+                            }
+
                             notificationItem.innerHTML = `
-                           
-                            <div class="content">
-                                <span class="sender">${notification.sender}</span>
-                                <span class="message-preview">${notification.content}</span>
-                                <span class="time">${formatTime(notification.time)}</span>
-                            </div>
-                        `;
+                              <div class="content" style="display: flex; align-items: center; gap: 10px;">
+                                  <!-- Icon on the left side -->
+                                  <i class="${iconClass}" style="color: ${iconColor}; font-size: 16px;"></i>
+                                  
+                                  <div>
+                                      <span class="sender" style="font-weight: bold;">${notification.sender}</span><br>
+                                      <span class="message-preview">${notification.content}</span><br>
+                                      <span class="time">${formatTime(notification.time)}</span>
+                                  </div>
+                              </div>
+                          `;
+
+
             
                             // Redirect to view-client when clicked
                             notificationItem.addEventListener("click", function () {
@@ -745,7 +1111,9 @@
                 setInterval(fetchNotifications, 10000);
             });
             
+
         </script>
+        
 
         <script>
 
@@ -770,46 +1138,37 @@
 
         <script>
             document.getElementById("searchInput").addEventListener("input", async function () {
-                let query = this.value.trim();
-                let searchResults = document.getElementById("searchResults");
-            
-                if (query === "") {
-                    searchResults.style.display = "none";
-                    return;
-                }
-            
-                try {
-                    let response = await fetch(`/search_control_num?q=${query}`);
-                    let data = await response.json();
-            
-                    searchResults.innerHTML = "";
-                    if (data.length === 0) {
-                        searchResults.innerHTML = "<div>No results found</div>";
-                    } else {
-                        data.forEach(user => {
-                            let div = document.createElement("div");
-                            div.textContent = user.control_num;
-                            div.onclick = () => window.location.href = `/view-client/${user.id}`;
-                            searchResults.appendChild(div);
-                        });
-                    }
-                    searchResults.style.display = "block";
-                } catch (error) {
-                    console.error("Error fetching search results:", error);
-                }
-            });
-            
-            // Hide results when clicking outside
-            document.addEventListener("click", function (e) {
-                let searchBox = document.getElementById("searchInput");
-                let searchResults = document.getElementById("searchResults");
-            
-                if (!searchBox.contains(e.target) && !searchResults.contains(e.target)) {
-                    searchResults.style.display = "none";
-                }
-            });
-            
-        </script>
+              let query = this.value.trim();
+              let searchResults = document.getElementById("searchResults");
+          
+              if (query === "") {
+                  searchResults.style.display = "none";
+                  return;
+              }
+          
+              try {
+                  let response = await fetch(`/search_control_num?q=${encodeURIComponent(query)}`);
+                  let data = await response.json();
+          
+                  searchResults.innerHTML = "";
+                  if (data.length === 0) {
+                      searchResults.innerHTML = "<div>No results found</div>";
+                  } else {
+                      data.forEach(user => {
+                          let div = document.createElement("div");
+                          div.textContent = `${user.control_num} - ${user.first_name} ${user.last_name}`;
+                          div.onclick = () => window.location.href = `/view-client/${user.id}`;
+                          searchResults.appendChild(div);
+                      });
+                  }
+                  searchResults.style.display = "block";
+              } catch (error) {
+                  console.error("Error fetching search results:", error);
+              }
+          });
+          
+              
+          </script>
         
         <script>
             function toggleSummary(summaryId) {
@@ -836,6 +1195,11 @@
             function printSummary() {
                 
                 window.print();
+
+                window.onafterprint = function() {
+  console.log('Print dialog closed');
+}
+
             }
             
         </script>
@@ -877,65 +1241,106 @@
                 updateRecommendedText();
             }
             
-            function updateServiceText() {
-                let selectedServices = [];
-            
-                document.querySelectorAll('input[name="services_provided[]"]').forEach(checkbox => {
-                    if (checkbox.checked) {
-                        selectedServices.push(checkbox.value);
-                    }
-                });
-            
-                if (document.getElementById("otherOption").checked) {
-                    let otherText = document.getElementById("otherService").value.trim();
-                    if (otherText !== "") {
-                        selectedServices.push(otherText);
-                    }
+                function updateServiceText() {
+    let selectedServices = [];
+
+    document.querySelectorAll('input[name="services_provided[]"]').forEach(checkbox => {
+        if (checkbox.checked) {
+            if (checkbox.value === "Schedule Follow-up") {
+                const datetimeInput = document.getElementById("followUpDateTime");
+                const datetimeValue = datetimeInput.value;
+                if (datetimeValue) {
+                    const dateObj = new Date(datetimeValue);
+
+                    const optionsDate = { year: 'numeric', month: 'long', day: '2-digit' };
+                    const optionsTime = { hour: '2-digit', minute: '2-digit', hour12: true };
+
+                    const formattedDate = dateObj.toLocaleDateString(undefined, optionsDate); // e.g., May 14, 2025
+                    const formattedTime = dateObj.toLocaleTimeString(undefined, optionsTime); // e.g., 10:30 AM
+
+                    selectedServices.push(`Schedule Follow-up\nDate: ${formattedDate}\nTime: ${formattedTime}`);
+                } else {
+                    selectedServices.push("Schedule Follow-up");
                 }
-            
-                let servicesPrintText = document.getElementById("servicesPrintText");
-                servicesPrintText.innerHTML = "";
-            
-                if (selectedServices.length > 0) {
-                    let ul = document.createElement("ul");
-                    selectedServices.forEach(service => {
-                        let li = document.createElement("li");
-                        li.textContent = service;
-                        ul.appendChild(li);
-                    });
-                    servicesPrintText.appendChild(ul);
-                }
+            } else {
+                selectedServices.push(checkbox.value);
             }
-            
-            function updateRecommendedText() {
-                let selectedActions = [];
-            
-                document.querySelectorAll('input[name="recommended_action"]').forEach(checkbox => {
-                    if (checkbox.checked) {
-                        selectedActions.push(checkbox.value);
-                    }
-                });
-            
-                if (document.getElementById("otherOption2").checked) {
-                    let otherText = document.getElementById("otherRecommendation").value.trim();
-                    if (otherText !== "") {
-                        selectedActions.push(otherText);
-                    }
-                }
-            
-                let recommendedPrintText = document.getElementById("recommendedPrintText");
-                recommendedPrintText.innerHTML = "";
-            
-                if (selectedActions.length > 0) {
-                    let ul = document.createElement("ul");
-                    selectedActions.forEach(action => {
-                        let li = document.createElement("li");
-                        li.textContent = action;
-                        ul.appendChild(li);
+        }
+    });
+
+    if (document.getElementById("otherOption").checked) {
+        let otherText = document.getElementById("otherService").value.trim();
+        if (otherText !== "") {
+            selectedServices.push(otherText);
+        }
+    }
+
+    let servicesPrintText = document.getElementById("servicesPrintText");
+    servicesPrintText.innerHTML = "";
+
+    if (selectedServices.length > 0) {
+        let ul = document.createElement("ul");
+        selectedServices.forEach(service => {
+            let li = document.createElement("li");
+            // Replace \n with <br> for HTML display
+            li.innerHTML = service.replace(/\n/g, "<br>");
+            ul.appendChild(li);
+        });
+        servicesPrintText.appendChild(ul);
+    }
+}
+
+
+               function updateRecommendedText() {
+                    let selectedActions = [];
+                    const recommendedPrintText = document.getElementById("recommendedPrintText");
+                    recommendedPrintText.innerHTML = "";
+
+                    // Handle each recommended action checkbox
+                    document.querySelectorAll('input[name="recommended_action"]').forEach(checkbox => {
+                        if (checkbox.checked) {
+                            if (checkbox.value === "Schedule Follow-up") {
+                                const datetimeInput = document.getElementById("recommendedFollowUpDateTime");
+                                const datetimeValue = datetimeInput.value;
+                                if (datetimeValue) {
+                                    const dateObj = new Date(datetimeValue);
+
+                                    const optionsDate = { year: 'numeric', month: 'long', day: '2-digit' };
+                                    const optionsTime = { hour: '2-digit', minute: '2-digit', hour12: true };
+
+                                    const formattedDate = dateObj.toLocaleDateString(undefined, optionsDate); // e.g., May 14, 2025
+                                    const formattedTime = dateObj.toLocaleTimeString(undefined, optionsTime); // e.g., 10:30 AM
+
+                                    selectedActions.push(`Schedule Follow-up\nDate: ${formattedDate}\nTime: ${formattedTime}`);
+                                } else {
+                                    selectedActions.push("Schedule Follow-up");
+                                }
+                            } else {
+                                selectedActions.push(checkbox.value);
+                            }
+                        }
                     });
-                    recommendedPrintText.appendChild(ul);
+
+                    // Handle "Other" recommendation input
+                    if (document.getElementById("otherOption2").checked) {
+                        const otherText = document.getElementById("otherRecommendation").value.trim();
+                        if (otherText !== "") {
+                            selectedActions.push(otherText);
+                        }
+                    }
+
+                    // Render to DOM
+                    if (selectedActions.length > 0) {
+                        const ul = document.createElement("ul");
+                        selectedActions.forEach(action => {
+                            const li = document.createElement("li");
+                            li.innerHTML = action.replace(/\n/g, "<br>"); // Convert \n to <br> for HTML display
+                            ul.appendChild(li);
+                        });
+                        recommendedPrintText.appendChild(ul);
+                    }
                 }
-            }
+
             
             function toggleOtherServiceInput() {
                 let otherServiceContainer = document.getElementById("otherServiceContainer");
@@ -972,6 +1377,13 @@
                     const checkedServices = document.querySelectorAll('input[name="services_provided[]"]:checked');
                     const otherServiceChecked = document.getElementById('otherOption').checked;
                     const selectedServices = Array.from(checkedServices).map(cb => cb.value);
+
+                    if (selectedServices.includes('Schedule Follow-up')) {
+                        const followUpDateTime = document.getElementById('followUpDateTime')?.value;
+                        if (followUpDateTime) {
+                            selectedServices.push(`Follow-up at ${followUpDateTime}`);
+                        }
+                    }
                 
                     if (otherServiceChecked) {
                         const otherService = document.getElementById('otherService').value.trim();
@@ -983,6 +1395,14 @@
                     const checkedRecommendations = document.querySelectorAll('input[name="recommended_action"]:checked');
                     const otherRecChecked = document.getElementById('otherOption2').checked;
                     const selectedRecommendations = Array.from(checkedRecommendations).map(cb => cb.value);
+
+                     // Include follow-up datetime if "Schedule Follow-up" is checked in recommendations
+                    if (selectedRecommendations.includes('Schedule Follow-up')) {
+                        const recFollowUpDateTime = document.getElementById('recommendedFollowUpDateTime')?.value;
+                        if (recFollowUpDateTime) {
+                            selectedRecommendations.push(`Follow-up at ${recFollowUpDateTime}`);
+                        }
+                    }
                 
                     if (otherRecChecked) {
                         const otherRec = document.getElementById('otherRecommendation').value.trim();
@@ -1031,7 +1451,85 @@
                     });
                 }
                 </script>
+
+                <script>
+                    const checkbox = document.getElementById('scheduleFollowUp');
+                    const calendar = document.getElementById('calendarContainer');
+                  
+                    function toggleCalendar() {
+                      calendar.style.display = checkbox.checked ? 'block' : 'none';
+                    }
+                  
+                    // Show/hide on load
+                    toggleCalendar();
+                  
+                    // Toggle on checkbox change
+                    checkbox.addEventListener('change', toggleCalendar);
+                  </script>
                 
+                  <script>
+                    // Toggle calendar for recommended follow-up
+                    const recommendedCheckbox = document.getElementById('recommendedFollowUp');
+                    const recommendedCalendar = document.getElementById('recommendedCalendarContainer');
+                  
+                    function toggleRecommendedCalendar() {
+                      recommendedCalendar.style.display = recommendedCheckbox.checked ? 'block' : 'none';
+                    }
+                  
+                    // Initial check
+                    toggleRecommendedCalendar();
+                  
+                    // Event listener
+                    recommendedCheckbox.addEventListener('change', toggleRecommendedCalendar);
+                  </script>
+
+                  <script>
+  window.addEventListener('beforeprint', function () {
+    const container = document.querySelector('.recommendation-container');
+    const spacer = document.getElementById('printSpacer');
+
+    if (container && spacer) {
+      const rect = container.getBoundingClientRect();
+      const pageHeight = 1122; // Rough height for A4 @ 96 DPI
+
+      // If it's near the top of a new page (below threshold), add spacer
+      if (rect.top < 200) {
+        spacer.style.display = 'block';
+        spacer.style.height = '50mm'; // Add more if needed
+      } else {
+        spacer.style.display = 'none';
+        spacer.style.height = '0';
+      }
+    }
+  });
+</script>
+
+ <script>
+          function generateReport() {
+            document.getElementById('reportModal').style.display = 'block';
+            document.body.classList.add('modal-open');  // Disable background scroll
+          }
+          
+          function closeModal() {
+            document.getElementById('reportModal').style.display = 'none';
+            document.body.classList.remove('modal-open');  // Re-enable background scroll
+          }
+          
+          function submitReport() {
+            alert("Report generation initiated!");
+            closeModal();
+          }
+          
+          // Optional: Close modal on outside click
+          window.onclick = function(event) {
+            const modal = document.getElementById('reportModal');
+            if (event.target === modal) {
+              closeModal();
+            }
+          }
+          
+        </script>
+
                 
 </body>
 

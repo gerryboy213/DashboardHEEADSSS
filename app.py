@@ -4,11 +4,14 @@ from sqlalchemy import text
 from sqlalchemy import distinct, and_, desc
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mysqldb import MySQL
+from werkzeug.utils import secure_filename
 from sqlalchemy import or_, func
+from sqlalchemy import extract
 import json
 import os
 import uuid
 import mysql.connector
+import re
 from datetime import datetime
 from collections import defaultdict
 
@@ -27,6 +30,17 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root@localhost/form_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+
+# Folder to save uploaded signatures
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static/uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Allowed extensions (optional but recommended)
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def get_questions():
     return Questions.query.filter_by(category='HOME').all()
@@ -50,7 +64,7 @@ with open("static/ph-json/province.json", "r", encoding="utf-8") as file:
     
 # Define User Model
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     control_num = db.Column(db.String(20), nullable=False)
     first_name = db.Column(db.String(100), nullable=False)
     middle_initial = db.Column(db.String(5), nullable=True)
@@ -69,7 +83,13 @@ class User(db.Model):
     date = db.Column(db.Date, nullable=False)
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    
+    responses = db.relationship(
+        'UserResponse',
+        backref='user',
+        cascade='all, delete-orphan',
+        passive_deletes=True
+    )
+       
 class Questions(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     question_text = db.Column(db.Text, nullable=False)
@@ -82,7 +102,11 @@ class Assessment(db.Model):
     
 class UserResponse(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)  # Link to the user
+    user_id = db.Column(
+            db.Integer,
+            db.ForeignKey('user.id', ondelete='CASCADE'),
+            nullable=False
+        )    
     question_number = db.Column(db.Integer, nullable=False)
     response = db.Column(db.String(10), nullable=False)  # 'Yes' or 'No'
     is_read = db.Column(db.Boolean, default=False)
@@ -96,8 +120,11 @@ class AssessmentResponse(db.Model):
     
 class Admin(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    full_name = db.Column(db.String(255), nullable=False)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    position = db.Column(db.String(100), nullable=True)
+    email = db.Column(db.String(100), nullable=True)
     center_name = db.Column(db.String(100), nullable=False)
     region = db.Column(db.String(100), nullable=False)
     province = db.Column(db.String(100), nullable=False)
@@ -105,7 +132,6 @@ class Admin(db.Model):
     email = db.Column(db.String(100), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
     address = db.Column(db.String(255), nullable=True)
-    job = db.Column(db.String(100), nullable=True)
     profile_image = db.Column(db.String(255), nullable=True)  # New field for profile image
     
 class Services(db.Model):
@@ -115,8 +141,7 @@ class Services(db.Model):
     service_name = db.Column(db.String(255), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     services_saved = db.Column(db.Boolean, default=False)
-
-    
+    service_detail = db.Column(db.String(255), nullable=False, default='')
     user_id = db.Column(db.Integer, nullable=False)  # Link to the user
 
 class Recommendations(db.Model):
@@ -126,6 +151,13 @@ class Recommendations(db.Model):
     user_id = db.Column(db.Integer, nullable=False)
     recommendation_saved = db.Column(db.Boolean, default=False)  # ✅ Add this
 
+
+class Signature(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    admin_id = db.Column(db.Integer, db.ForeignKey('admin.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    filename = db.Column(db.String(255), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     
 @app.route('/get_yes_no_distribution', methods=['GET'])
@@ -137,7 +169,26 @@ def get_yes_no_distribution():
     if not admin:
         return jsonify({"error": "Admin not found"}), 404
 
-    # Load region, province, city JSON
+    # Define center codes mapping
+    center_codes = {
+        "BHS Union AFHF": ("0837", "01"),
+        "RHU Mayorga": ("0837", "02"),
+        "Gandara AFHF": ("0860", "02"),
+        "RHU Gandara": ("0860", "03"),
+        "RHU Pagsanghan": ("0860", "04"),
+        "Abuyog District Hospital AFHF": ("0837", "04"),
+        "Gandara District Hospital AFHF": ("0860", "05")
+    }
+
+    center_name = admin.center_name
+    center_info = center_codes.get(center_name)
+
+    if not center_info:
+        return jsonify({"error": "Center not found"}), 404
+
+    province_code, city_code = center_info
+
+    # Load region, province, city JSON for mapping (same approach as before)
     json_files = {
         "region": "region.json",
         "province": "province.json",
@@ -151,7 +202,7 @@ def get_yes_no_distribution():
             with open(path, 'r', encoding='utf-8') as f:
                 json_data[key] = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Error loading JSON data: {str(e)}"}), 500
 
     region_map = {item["region_code"]: item["region_name"] for item in json_data.get("region", [])}
     province_map = {item["province_code"]: item["province_name"] for item in json_data.get("province", [])}
@@ -161,18 +212,21 @@ def get_yes_no_distribution():
     admin_province = admin.province
     admin_city = admin.city
 
-    # Subquery to get latest UserResponse per user per question
+    year = request.args.get('year')
+    month = request.args.get('month')
+
+    # Subquery to get the latest UserResponse per user per question
     latest_responses_subquery = db.session.query(
         UserResponse.user_id,
         UserResponse.question_number,
-        func.max(UserResponse.id).label('max_id')  # Change to created_at if available and preferred
+        func.max(UserResponse.id).label('max_id')
     ).group_by(
         UserResponse.user_id,
         UserResponse.question_number
     ).subquery()
 
-    # Main query: get latest responses filtered by location
-    latest_responses = db.session.query(
+    # Main query with center code-based filtering (based on control_num prefix)
+    query = db.session.query(
         UserResponse.question_number,
         UserResponse.response,
         func.count(UserResponse.response)
@@ -184,30 +238,24 @@ def get_yes_no_distribution():
     ).filter(
         User.control_num.isnot(None),
         User.control_num != '',
-        or_(
-            func.lower(func.trim(User.region)) == func.lower(func.trim(admin_region)),
-            func.lower(func.trim(User.region)) == func.lower(region_map.get(admin_region, ''))
-        ),
-        or_(
-            func.lower(func.trim(User.province)) == func.lower(func.trim(admin_province)),
-            func.lower(func.trim(User.province)) == func.lower(province_map.get(admin_province, ''))
-        ),
-        or_(
-            func.lower(func.trim(User.city)) == func.lower(func.trim(admin_city)),
-            func.lower(func.trim(User.city)) == func.lower(city_map.get(admin_city, ''))
-        )
-    ).group_by(
+        User.control_num.like(f"{province_code}-{city_code}-%"),  # Filter by control number prefix
+    )
+
+    # Optional filters by year and month
+    if year and year != 'all':
+        query = query.filter(extract('year', UserResponse.submitted_at) == int(year))
+    if month and month != 'all':
+        query = query.filter(extract('month', UserResponse.submitted_at) == int(month))
+
+    latest_responses = query.group_by(
         UserResponse.question_number,
         UserResponse.response
     ).all()
 
-    # Define expected question numbers if known (adjust as needed)
-    expected_question_numbers = range(1, 12)  # example: questions 1 to 5
-
-    # Initialize dictionary with zero counts for all questions
+    expected_question_numbers = range(1, 12)
     yes_no_data = {q_num: {"Yes": 0, "No": 0} for q_num in expected_question_numbers}
 
-    # Fill in data from query results
+    # Accumulate "Yes" and "No" responses per question number
     for question_number, response, count in latest_responses:
         if question_number not in yes_no_data:
             yes_no_data[question_number] = {"Yes": 0, "No": 0}
@@ -238,27 +286,36 @@ def admin_signup_page():
 @app.route('/admin/signup', methods=['GET', 'POST'])
 def admin_signup():
     if request.method == 'POST':
+        full_name = request.form.get('full_name')
         username = request.form.get('new_username')
         password = request.form.get('new_password')
+        position = request.form.get('position')
         region = request.form.get('region')
         province = request.form.get('province')
         city = request.form.get('city')
         center_name = request.form.get('centerName')
+        contact_number = request.form.get('contact_number')
+        email = request.form.get('email')
 
-        # Ensure password is not empty
-        if not password:
-            return "Password is required", 400
+
+        # Validate required fields
+        if not full_name or not username or not password or not region or not province or not city or not center_name:
+            return "Please fill in all required fields", 400
 
         # Hash the password
         hashed_password = generate_password_hash(password)
 
         new_admin = Admin(
+            full_name=full_name,
             username=username,
             password=hashed_password,
+            position=position,
             region=region,
             province=province,
             city=city,
             center_name=center_name,
+            phone=contact_number,
+            email=email,
         )
 
         db.session.add(new_admin)
@@ -285,26 +342,45 @@ def admin_login():
             return redirect(url_for('admin_login'))
         
 def get_grouped_counts_by_question(question_number, start_date, end_date, admin):
+    # Initialize the grouped counts dictionary
     grouped_counts = {
         "10-14": {"Male": 0, "Female": 0},
         "15-19": {"Male": 0, "Female": 0}
     }
 
+    # Define the center codes mapping
+    center_codes = {
+        "BHS Union AFHF": ("0837", "01"),
+        "RHU Mayorga": ("0837", "02"),
+        "Gandara AFHF": ("0860", "02"),
+        "RHU Gandara": ("0860", "03"),
+        "RHU Pagsanghan": ("0860", "04"),
+        "Abuyog District Hospital AFHF": ("0837", "04"),
+        "Gandara District Hospital AFHF": ("0860", "05")
+    }
+
+    # Get the province and city codes from the admin's center
+    center_name = admin.center_name
+    center_info = center_codes.get(center_name)
+
+    if not center_info:
+        return {"error": "Center not found"}
+
+    province_code, city_code = center_info
+
+    # Query to get the grouped counts by question number, filtering by center code
     query = db.session.query(User.age, User.sex).join(
         UserResponse, User.id == UserResponse.user_id
-    ).join(
-        Services, Services.user_id == User.id
     ).filter(
         UserResponse.question_number == question_number,
-        func.lower(UserResponse.response) == 'yes',
+        func.lower(func.trim(UserResponse.response)) == 'yes',  # Only 'Yes' responses
         User.control_num.isnot(None),
-        User.control_num != '',
-        Services.timestamp.between(start_date, end_date),
-        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
-        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
-        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
+        func.trim(User.control_num) != '',
+        UserResponse.submitted_at.between(start_date, end_date),
+        User.control_num.like(f"{province_code}-{city_code}-%")  # Center code filter
     ).all()
 
+    # Process the query results
     for age, sex in query:
         if age is None or sex is None:
             continue
@@ -317,6 +393,8 @@ def get_grouped_counts_by_question(question_number, start_date, end_date, admin)
             grouped_counts["15-19"][sex] += 1
 
     return grouped_counts
+
+
 
 
 @app.route('/admin/dashboard')
@@ -350,7 +428,7 @@ def admin_dashboard():
     unread_responses = UserResponse.query.filter_by(is_read=False).count()
     
     
-        # Attempted suicide (Q4)
+    # Attempted suicide (Q4)
     grouped_attempted_suicide = get_grouped_counts_by_question(4, start_date, end_date, admin)
     male_attempted_10_14 = grouped_attempted_suicide["10-14"]["Male"]
     female_attempted_10_14 = grouped_attempted_suicide["10-14"]["Female"]
@@ -360,7 +438,6 @@ def admin_dashboard():
     total_attempted_suicide_10_14 = male_attempted_10_14 + female_attempted_10_14
     total_attempted_suicide_15_19 = male_attempted_15_19 + female_attempted_15_19
     total_attempted_suicide_overall = total_attempted_suicide_10_14 + total_attempted_suicide_15_19
-
 
     # Sexual violence (Q10)
     grouped_sexual_violence = get_grouped_counts_by_question(10, start_date, end_date, admin)
@@ -406,43 +483,34 @@ def admin_dashboard():
     total_drugs_15_19 = male_drugs_15_19 + female_drugs_15_19
     total_drugs_overall = total_drugs_10_14 + total_drugs_15_19
 
+    # Domestic Violence (Q1)
+    grouped_domestic = get_grouped_counts_by_question(1, start_date, end_date, admin)
+    male_domestic_10_14 = grouped_domestic["10-14"]["Male"]
+    female_domestic_10_14 = grouped_domestic["10-14"]["Female"]
+    male_domestic_15_19 = grouped_domestic["15-19"]["Male"]
+    female_domestic_15_19 = grouped_domestic["15-19"]["Female"]
     
-    bullying_count = db.session.query(
-        func.count(distinct(UserResponse.user_id))
-    ).join(
-        User, User.id == UserResponse.user_id
-    ).filter(
-        UserResponse.question_number == 3,
-        func.lower(func.trim(UserResponse.response)) == 'yes',
-        User.control_num.isnot(None),
-        User.control_num != '',
-        Services.timestamp.between(start_date, end_date),
-        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
-        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
-        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
-    ).scalar()
+    total_domestic_10_14 = male_domestic_10_14 + female_domestic_10_14
+    total_domestic_15_19 = male_domestic_15_19 + female_domestic_15_19
+    total_domestic_overall = total_domestic_10_14 + total_domestic_15_19
     
-    domestic_violence_count = db.session.query(UserResponse.user_id).join(
-        User, User.id == UserResponse.user_id
-    ).filter(
-        UserResponse.question_number == 1,
-        UserResponse.response == 'yes',
-        User.control_num.isnot(None),
-        User.control_num != '',
-        Services.timestamp.between(start_date, end_date),
-        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
-        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
-        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
-    ).distinct().count()
+    # Bullying (Q3)
+    grouped_bullying = get_grouped_counts_by_question(3, start_date, end_date, admin)
+    male_bullying_10_14 = grouped_bullying ["10-14"]["Male"]
+    female_bullying_10_14 = grouped_bullying["10-14"]["Female"]
+    male_bullying_15_19 = grouped_bullying["15-19"]["Male"]
+    female_bullying_15_19 = grouped_bullying["15-19"]["Female"]
+    
+    total_bullying_10_14 = male_bullying_10_14 + female_bullying_10_14
+    total_bullying_15_19 = male_bullying_15_19 + female_bullying_15_19
+    total_bullying_overall = total_bullying_10_14 + total_bullying_15_19
     
     # Users who submitted responses in the admin’s area
     responded_users_subquery = db.session.query(UserResponse.user_id).select_from(UserResponse).join(
         User, UserResponse.user_id == User.id
         
     ).filter(
-        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
-        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
-        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city))
+        func.lower(func.trim(User.location)) == func.lower(func.trim(admin.center_name)),
     ).distinct().subquery()
 
     # Assessed users from your services table
@@ -496,16 +564,8 @@ def admin_dashboard():
             Services.timestamp.between(start_date, end_date),
             User.age.isnot(None),
             or_(
-                func.lower(func.trim(User.region)) == func.lower(func.trim(admin_region)),
-                func.lower(func.trim(User.region)) == func.lower(region_map.get(admin_region, ''))
-            ),
-            or_(
-                func.lower(func.trim(User.province)) == func.lower(func.trim(admin_province)),
-                func.lower(func.trim(User.province)) == func.lower(province_map.get(admin_province, ''))
-            ),
-            or_(
-                func.lower(func.trim(User.city)) == func.lower(func.trim(admin_city)),
-                func.lower(func.trim(User.city)) == func.lower(city_map.get(admin_city, ''))
+                func.lower(func.trim(User.location)) == func.lower(func.trim(admin.center_name)),
+               
             ),
             User.age.between(10, 19),
             Services.service_name.isnot(None),  # Ensure accessed service
@@ -571,7 +631,6 @@ def admin_dashboard():
     male_hyo_15_19 = hyo_counts['male_15_19']
     female_hyo_15_19 = hyo_counts['female_15_19']
 
-    
     # Get counts for adolescents referred using HEEADSSS and accessed services
     adolescents_with_services = get_gender_age_counts(
         'Any Service Accessed',  
@@ -593,34 +652,16 @@ def admin_dashboard():
     matched_users = db.session.query(User.id).filter(
         Services.timestamp.between(start_date, end_date),
         or_(
-            func.lower(func.trim(User.region)) == func.lower(func.trim(admin_region)),
-            func.lower(func.trim(User.region)) == func.lower(region_map.get(admin_region, ''))
+            func.lower(func.trim(User.location)) == func.lower(func.trim(admin.center_name)),
         ),
-        or_(
-            func.lower(func.trim(User.province)) == func.lower(func.trim(admin_province)),
-            func.lower(func.trim(User.province)) == func.lower(province_map.get(admin_province, ''))
-        ),
-        or_(
-            func.lower(func.trim(User.city)) == func.lower(func.trim(admin_city)),
-            func.lower(func.trim(User.city)) == func.lower(city_map.get(admin_city, ''))
-        )
     ).subquery()
     
     hyo_yes_user_ids = db.session.query(Services.user_id).join(User, Services.user_id == User.id).filter(
         Services.service_name == 'Reached by HYO',
         Services.timestamp.between(start_date, end_date),
         or_(
-            func.lower(func.trim(User.region)) == func.lower(func.trim(admin_region)),
-            func.lower(func.trim(User.region)) == func.lower(region_map.get(admin_region, ''))
+            func.lower(func.trim(User.location)) == func.lower(func.trim(admin.center_name)),
         ),
-        or_(
-            func.lower(func.trim(User.province)) == func.lower(func.trim(admin_province)),
-            func.lower(func.trim(User.province)) == func.lower(province_map.get(admin_province, ''))
-        ),
-        or_(
-            func.lower(func.trim(User.city)) == func.lower(func.trim(admin_city)),
-            func.lower(func.trim(User.city)) == func.lower(city_map.get(admin_city, ''))
-        )
     ).subquery()
     
         # Count users who matched the admin's location but are not in the list above
@@ -628,7 +669,6 @@ def admin_dashboard():
         User.id.in_(matched_users),
         ~User.id.in_(hyo_yes_user_ids)
     ).count()
-
 
     return render_template(
         'admin_dashboard.html',
@@ -644,9 +684,6 @@ def admin_dashboard():
         selected_year=int(selected_year),
         selected_month=selected_month,
         
-       
-        bullying_count=bullying_count,
-        domestic_violence_count=domestic_violence_count,
         pending_review_count=pending_review_count,
         
         adolescents_with_services=adolescents_with_services,
@@ -712,6 +749,24 @@ def admin_dashboard():
         total_drugs_10_14=total_drugs_10_14,
         total_drugs_15_19=total_drugs_15_19,
         total_drugs_overall=total_drugs_overall,
+        
+        grouped_domestic=grouped_domestic,
+        male_domestic_10_14=male_domestic_10_14,
+        female_domestic_10_14=female_domestic_10_14,
+        male_domestic_15_19=male_domestic_15_19,
+        female_domestic_15_19=female_domestic_15_19,
+        total_domestic_10_14=total_domestic_10_14,
+        total_domestic_15_19=total_domestic_15_19,
+        total_domestic_overall=total_domestic_overall,
+        
+        grouped_bullying=grouped_bullying,
+        male_bullying_10_14=male_bullying_10_14,
+        female_bullying_10_14=female_bullying_10_14,
+        male_bullying_15_19=male_bullying_15_19,
+        female_bullying_15_19=female_bullying_15_19,
+        total_bullying_10_14=total_bullying_10_14,
+        total_bullying_15_19=total_domestic_15_19,
+        total_bullying_overall=total_bullying_overall,
 
     )   
 
@@ -725,17 +780,18 @@ def admin_list():
 
     admin = Admin.query.filter_by(username=session['admin']).first()
 
-    # ✅ Filter users by the admin's region, province, and city
+    # Get pagination parameters
     page = request.args.get('page', 1, type=int)
     per_page = 10
-    
+
+    # Load JSON files (optional, used for location display maybe)
     json_files = {
-    "region": "region.json",
-    "province": "province.json",
-    "city": "city.json",
-    "barangay": "barangay.json"
-}
-    
+        "region": "region.json",
+        "province": "province.json",
+        "city": "city.json",
+        "barangay": "barangay.json"
+    }
+
     json_data = {}
     try:
         for key, filename in json_files.items():
@@ -743,55 +799,53 @@ def admin_list():
             with open(path, 'r', encoding='utf-8') as f:
                 json_data[key] = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        return f"Error: {str(e)}", 500  # Provide the actual error message for debugging
+        return f"Error: {str(e)}", 500
 
-    # Initialize the region_map, province_map, and city_map from JSON data
-    region_map = {item["region_code"]: item["region_name"] for item in json_data.get("region", [])}
-    province_map = {item["province_code"]: item["province_name"] for item in json_data.get("province", [])}
-    city_map = {item["city_code"]: item["city_name"] for item in json_data.get("city", [])}
+    # Center code mapping
+    center_codes = {
+        "BHS Union AFHF": ("0837", "01"),
+        "RHU Mayorga": ("0837", "02"),
+        "Gandara AFHF": ("0860", "02"),
+        "RHU Gandara": ("0860", "03"),
+        "RHU Pagsanghan": ("0860", "04"),
+        "Abuyog District Hospital AFHF": ("0837", "04"),
+        "Gandara District Hospital AFHF": ("0860", "05")
+    }
 
-    
+    # Get province and city codes for center
+    center_info = center_codes.get(admin.center_name)
+    if not center_info:
+        flash('Center not found in center codes.', 'danger')
+        return redirect(url_for('admin'))
+
+    province_code, city_code = center_info
+
+    # Filter users by control number matching center code
     users_query = User.query.filter(
-    User.control_num.isnot(None),
-    User.control_num != '',
-    or_(
-        func.lower(func.trim(User.region)) == func.lower(func.trim(admin.region)),
-        func.lower(func.trim(User.region)) == func.lower(region_map.get(admin.region, ''))
-    ),
-    or_(
-        func.lower(func.trim(User.province)) == func.lower(func.trim(admin.province)),
-        func.lower(func.trim(User.province)) == func.lower(province_map.get(admin.province, ''))
-    ),
-    or_(
-        func.lower(func.trim(User.city)) == func.lower(func.trim(admin.city)),
-        func.lower(func.trim(User.city)) == func.lower(city_map.get(admin.city, ''))
-    ) 
-)
+        User.control_num.isnot(None),
+        User.control_num != '',
+        User.control_num.like(f"{province_code}-{city_code}-%")
+    )
+
+    # Pagination
     users_pagination = users_query.paginate(page=page, per_page=per_page)
     users = users_pagination.items
 
     total_questions = db.session.query(Assessment).count()
-
     user_progress = {}
-    
     highlighted_users = {}
     highlighted_users_yellow = {}
-    
+
     for user in users:
         has_services = db.session.query(Services).filter_by(user_id=user.id, services_saved=True).first() is not None
         has_recommendations = db.session.query(Recommendations).filter_by(user_id=user.id, recommendation_saved=True).first() is not None
-
-        # Status is "Done" if both services and recommendations are saved
         user_progress[user.id] = has_services and has_recommendations
 
-        
         questions_with_answers = get_questions_and_answers(user.id)
         yes_answers = {int(q_id) for q_id, data in questions_with_answers.items() if data["answer"].strip().lower() == "yes"}
 
-        # If answered 'Yes' to questions 1, 4, or 10, mark user for highlighting
         if 1 in yes_answers or 4 in yes_answers or 10 in yes_answers:
             highlighted_users[user.id] = True
-            
         if any(q not in [1, 4, 10] and q in yes_answers for q in yes_answers):
             highlighted_users_yellow[user.id] = True
 
@@ -807,6 +861,7 @@ def admin_list():
         unread_responses=unread_responses,
         pagination=users_pagination
     )
+
 
 
 @app.template_filter('datetimeformat')
@@ -827,6 +882,10 @@ def view_client(user_id):
     
     user = User.query.get_or_404(user_id)  # Fetch user once
     
+    signature = Signature.query.filter_by(user_id=user.id).order_by(Signature.id.desc()).first()
+
+    
+    
     user_services = Services.query.filter_by(user_id=user_id).all()
 
     saved_services = [service.service_name for service in user_services]
@@ -834,7 +893,38 @@ def view_client(user_id):
     user_recommendations = Recommendations.query.filter_by(user_id=user_id).all()
     
     saved_recommendations = [rec.recommendation_text for rec in user_recommendations]
-
+    
+    other_service = Services.query.filter_by(user_id=user_id, service_name='Other').first()
+    
+    other_service_detail = other_service.service_detail if other_service else ''
+    
+    other_recommendation = Recommendations.query.filter_by(user_id=user_id, recommendation_text='Other').first()
+    other_recommendation_detail = other_recommendation.recommendation_text if other_recommendation and other_recommendation.recommendation_text else ''
+    
+    # For input value in HTML (datetime-local format)
+    follow_up_datetime_input = ''
+    follow_up_datetime_display = ''
+    for service in saved_services:
+        if service.startswith('Follow-up at '):
+            raw_dt = service.replace('Follow-up at ', '')
+            try:
+                dt_obj = datetime.fromisoformat(raw_dt)
+                follow_up_datetime_input = dt_obj.strftime('%Y-%m-%dT%H:%M')  # for input
+                follow_up_datetime_display = dt_obj.strftime('%m/%d/%y')      # for showing to user
+            except ValueError:
+                pass
+            break
+        
+    recommended_follow_up_datetime_input = ''
+    for rec in saved_recommendations:
+        if rec.startswith('Follow-up at '):
+            raw_rec_dt = rec.replace('Follow-up at ', '')
+            try:
+                dt_obj = datetime.fromisoformat(raw_rec_dt)
+                recommended_follow_up_datetime_input = dt_obj.strftime('%Y-%m-%dT%H:%M')  # Correct format for input field
+            except ValueError:
+                recommended_follow_up_datetime_input = ''
+            break
         
     # Fetch user responses
     questions_with_answers = get_questions_and_answers(user_id)  # Get questions and answers
@@ -951,6 +1041,7 @@ def view_client(user_id):
     return render_template(
         'view_client.html', 
         admin=admin,
+        signature=signature,
         user=user, 
         questions_with_answers=questions_with_answers,
         displayed_messages=displayed_messages,
@@ -962,11 +1053,15 @@ def view_client(user_id):
         show_message=show_message,
         formatted_messages=formatted_messages,
         saved_services=saved_services,
-        saved_recommendations=saved_recommendations
+        saved_recommendations=saved_recommendations,
+        follow_up_datetime=follow_up_datetime_input,
+        follow_up_display=follow_up_datetime_display,
+         recommended_follow_up_datetime=recommended_follow_up_datetime_input,
+         other_service_detail=other_service_detail,
+         other_recommendation_detail=other_recommendation_detail,
+
     )
     
-    
-
 def format_messages(messages):
     formatted_paragraphs = []
     current_paragraph = []
@@ -1004,9 +1099,7 @@ def format_substance_use_message(answers):
         else:
             substance_list = ", ".join(substances[:-1]) + ", and " + substances[-1] if len(substances) > 2 else substances[0]
 
-        return (f"The client disclosed {substance_list}. This may indicate potential dependence or exposure to harmful environments. "
-                "Assess usage patterns and provide guidance, counseling, or intervention, with referrals to health professionals "
-                "specializing in substance abuse prevention and rehabilitation if needed")
+        return (f"The client disclosed {substance_list}. This may indicate potential dependence or exposure to harmful environments")
     
     return None  # No message if no "Yes" answers
 
@@ -1017,31 +1110,69 @@ def save_services():
         user_id = data.get('user_id')
         services = data.get('services', [])
         recommendations = data.get('recommendations', [])
+        follow_up_datetime = data.get('follow_up_datetime')
+        recommended_follow_up_datetime = data.get('recommended_follow_up_datetime')
+        
+        # Custom "Other" inputs
+        other_service_detail = data.get('other_service_detail', '').strip()
+        other_recommendation_detail = data.get('other_recommendation_detail', '').strip()
 
         if not user_id:
             return 'User ID is required', 400
 
         print("Received services:", services)
         print("Received recommendations:", recommendations)
+        print("Other service detail:", other_service_detail)
+        print("Other recommendation detail:", other_recommendation_detail)
+        print("Follow-up datetime (service):", follow_up_datetime)
+        print("Follow-up datetime (recommendation):", recommended_follow_up_datetime)
 
-        # Optionally: Delete existing services/recommendations first to avoid duplicates
+        # Clear existing entries
         Services.query.filter_by(user_id=user_id).delete()
         Recommendations.query.filter_by(user_id=user_id).delete()
 
         # Save services
         for service in services:
-            new_service = Services(service_name=service, user_id=user_id, services_saved=True)
+            if service == "Other":
+                new_service = Services(
+                    service_name="Other",
+                    service_detail=other_service_detail,  # ✅ Save custom input
+                    user_id=user_id,
+                    services_saved=True
+                )
+            else:
+                new_service = Services(
+                    service_name=service,
+                    service_detail="",  # Optional: blank for non-Other
+                    user_id=user_id,
+                    services_saved=True
+                )
             db.session.add(new_service)
 
         # Save recommendations
         for recommendation in recommendations:
-            new_recommendation = Recommendations(recommendation_text=recommendation, user_id=user_id, recommendation_saved=True)
+            if recommendation == "Other":
+                new_recommendation = Recommendations(
+                    recommendation_text=other_recommendation_detail,  # ✅ Save custom input
+                    user_id=user_id,
+                    recommendation_saved=True
+                )
+            else:
+                new_recommendation = Recommendations(
+                    recommendation_text=recommendation,
+                    user_id=user_id,
+                    recommendation_saved=True
+                )
             db.session.add(new_recommendation)
 
-        # ✅ Update user's service status
+        # Update user follow-up datetimes
         user = User.query.get(user_id)
         if user:
             user.services_saved = True
+            if follow_up_datetime:
+                user.follow_up_datetime = follow_up_datetime
+            if recommended_follow_up_datetime:
+                user.recommended_follow_up_datetime = recommended_follow_up_datetime
         else:
             return 'User not found', 404
 
@@ -1051,7 +1182,8 @@ def save_services():
     except Exception as e:
         print(f"Error occurred: {e}")
         return str(e), 500
-   
+
+
 @app.route('/edit-user/<int:user_id>', methods=['GET', 'POST'])
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
@@ -1100,16 +1232,51 @@ def admin_summary(user_id):
 @app.route("/search_control_num", methods=["GET"])
 def search_control_num():
     query = request.args.get("q", "").strip().lower()
-    
-    if not query:
-        return jsonify([])  # Return empty if no query
+    admin = Admin.query.filter_by(username=session.get('admin')).first()
 
-    results = User.query.filter(User.control_num.ilike(f"%{query}%")).all()
-    
+    if not query or not admin:
+        return jsonify([])
+
+    # Load location JSON files
+    json_files = {
+        "region": "region.json",
+        "province": "province.json",
+        "city": "city.json"
+    }
+
+    json_data = {}
+    try:
+        for key, filename in json_files.items():
+            path = os.path.join(current_app.root_path, 'static', 'ph-json', filename)
+            with open(path, 'r', encoding='utf-8') as f:
+                json_data[key] = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        return jsonify({"error": str(e)}), 500
+
+    # Main search filtered by location
+    results = User.query.filter(
+        or_(
+            User.control_num.ilike(f"%{query}%"),
+            User.first_name.ilike(f"%{query}%"),
+            User.last_name.ilike(f"%{query}%")
+        ),
+        User.control_num.isnot(None),
+        User.control_num != '',
+        or_(
+            func.lower(func.trim(User.location)) == func.lower(func.trim(admin.center_name)),
+            
+        )
+    ).all()
+
     return jsonify([
-        {"id": user.id, "control_num": user.control_num} 
-        for user in results
+        {
+            "id": user.id,
+            "control_num": user.control_num,
+            "first_name": user.first_name,
+            "last_name": user.last_name
+        } for user in results
     ])
+
 
 @app.route('/admin/unread_notifications')
 def get_unread_notifications():
@@ -1144,54 +1311,125 @@ def mark_notification_read():
 
 @app.route('/get_notifications')
 def get_notifications():
+    if 'admin' not in session:
+        return jsonify({"error": "Not authorized"}), 403
+
+    admin = Admin.query.filter_by(username=session['admin']).first()
+    if not admin:
+        return jsonify({"error": "Admin not found"}), 404
+
+    # Load region, province, city JSON
+    json_files = {
+        "region": "region.json",
+        "province": "province.json",
+        "city": "city.json"
+    }
+
+    json_data = {}
+    try:
+        for key, filename in json_files.items():
+            path = os.path.join(current_app.root_path, 'static', 'ph-json', filename)
+            with open(path, 'r', encoding='utf-8') as f:
+                json_data[key] = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        return jsonify({"error": str(e)}), 500
+
+    all_question_numbers = list(range(1, 13))
     key_question_numbers = [1, 4, 10]
 
-    # Fetch users who answered "Yes" to key questions
-    user_responses = (
-        db.session.query(UserResponse.user_id, User.control_num, UserResponse.question_number, UserResponse.submitted_at)
+    # Get users who already received any service
+    served_user_ids = set(
+        db.session.query(Services.user_id)
+        .join(User, Services.user_id == User.id)
+        .filter(
+            Services.service_name.isnot(None),
+            Services.service_name != '',
+            func.lower(func.trim(User.location)) == func.lower(func.trim(admin.center_name))
+        )
+        .distinct()
+        .all()
+    )
+    # Unpack tuples into plain IDs
+    served_user_ids = set(uid for (uid,) in served_user_ids)
+
+    # Fetch all relevant responses for all 12 questions
+    all_answers = (
+        db.session.query(UserResponse.user_id, User.control_num, UserResponse.question_number,
+                         UserResponse.response, UserResponse.submitted_at)
         .join(User, UserResponse.user_id == User.id)
-        .filter(UserResponse.question_number.in_(key_question_numbers))
-        .filter(UserResponse.response == "Yes")
+        .filter(UserResponse.question_number.in_(all_question_numbers))
+        .filter(User.control_num.isnot(None), User.control_num != '')
+        .filter(
+            or_(
+                func.lower(func.trim(User.location)) == func.lower(func.trim(admin.center_name)),
+            ),
+        )
         .all()
     )
 
-    user_data = {}
-    for user_id, control_num, question, submitted_at in user_responses:
-        if user_id not in user_data:
-            user_data[user_id] = {
+    # Group responses by user
+    from collections import defaultdict
+
+    responses_by_user = defaultdict(dict)
+    latest_by_user = {}
+
+    for user_id, control_num, qnum, resp, submitted_at in all_answers:
+        if user_id in served_user_ids:
+            continue  # Skip users who already received a service
+
+        responses_by_user[user_id][qnum] = resp
+        if user_id not in latest_by_user or submitted_at > latest_by_user[user_id]["submitted_at"]:
+            latest_by_user[user_id] = {
                 "control_num": control_num,
-                "answered": set(),
-                "submitted_at": submitted_at  # Store the timestamp
+                "submitted_at": submitted_at
             }
-        user_data[user_id]["answered"].add(question)
 
     notifications = []
-    for user_id, data in user_data.items():
+
+    for user_id, answers in responses_by_user.items():
+        responses = [answers.get(qn, "") for qn in all_question_numbers]
+        control_num = latest_by_user[user_id]["control_num"]
+        submitted_at = latest_by_user[user_id]["submitted_at"]
+
+        # Determine urgency
+        key_yes = any(answers.get(qn) == "Yes" for qn in key_question_numbers)
+        all_no = all(answers.get(qn) == "No" for qn in all_question_numbers)
+        yellow_criteria = (
+            all(answers.get(qn) == "No" for qn in key_question_numbers) and
+            any(answers.get(qn) == "Yes" for qn in all_question_numbers if qn not in key_question_numbers)
+        )
+
+        if all_no:
+            continue  # Green - skip notification
+
+        if key_yes:
+            urgency = "high"
+        elif yellow_criteria:
+            urgency = "medium"
+        else:
+            urgency = "medium"  # Fallback
+
         notifications.append({
-            "id": user_id,  # Unique ID for frontend use
-            "user_id": user_id,  # Corrected from n.user_id to user_id
-            "sender": f"User {data['control_num']}",  # Name of the user
-            "content": f"User {data['control_num']} requires immediate evaluation.",
-            "time": data["submitted_at"].strftime("%Y-%m-%d %H:%M:%S"),  # Use actual submission time
-            "unread": True  # Mark all as unread initially
+            "id": user_id,
+            "user_id": user_id,
+            "sender": f"{control_num}",
+            "content": f"Client {control_num} requires immediate evaluation.",
+            "submitted_at": submitted_at,
+            "urgency": urgency,
+            "unread": True
         })
+
+    # Sort by submission time
+    notifications.sort(key=lambda x: x["submitted_at"], reverse=True)
+
+    for notif in notifications:
+        notif["time"] = notif["submitted_at"].strftime("%Y-%m-%d %H:%M:%S")
+        del notif["submitted_at"]
 
     return jsonify(notifications)
 
-# @app.route('/get_assessment_summary', methods=['GET'])
-# def get_assessment_summary():
-#     user_id = request.args.get('user_id')
-#     # Fetch data from your database based on user_id
-#     summary_data = {
-#         "summary": [
-#             {"question": "Did you complete the test?", "answer": "Yes"},
-#             {"question": "Was it helpful?", "answer": "No"},
-#         ]
-#     }
-#     return jsonify(summary_data)
 
-
-@app.route('/admin/settings')
+@app.route('/admin/profile')
 def admin_settings():
     if 'admin' not in session:
         flash('Please log in first.', 'danger')
@@ -1203,17 +1441,20 @@ def admin_settings():
 
     return render_template('admin_settings.html', admin=admin, questions=questions, users=users)
 
-@app.route('/admin/profile')
-def admin_profile():
-    if 'admin' not in session:
-        flash('Please log in first.', 'danger')
-        return redirect(url_for('admin'))
+# @app.route('/admin/profile')
+# def admin_profile():
+#     if 'admin' not in session:
+#         flash('Please log in first.', 'danger')
+#         return redirect(url_for('admin'))
 
-    admin = Admin.query.filter_by(username=session['admin']).first()
-    questions = Questions.query.all()
-    users = User.query.all()
+#     admin = Admin.query.filter_by(username=session['admin']).first()
+#     print(f"Admin fetched: username={admin.username}, full_name={admin.full_name}")  # Debug
 
-    return render_template('admin_profile.html', admin=admin, questions=questions, users=users)
+#     questions = Questions.query.all()
+#     users = User.query.all()
+
+#     return render_template('admin_profile.html', admin=admin, questions=questions, users=users)
+
 
 @app.route('/admin/edit_profile', methods=['GET', 'POST'])
 def edit_admin_profile():
@@ -1255,7 +1496,7 @@ def edit_admin_profile():
         if request.form.get('username'):
             session['admin'] = admin.username
 
-        return redirect(url_for('admin_profile'))
+        return redirect(url_for('admin_settings'))
 
     return render_template('edit_admin_profile.html', admin=admin)
 
@@ -1396,8 +1637,6 @@ def personal_info():
             flash("An error occurred. Please try again.", "danger")
 
     return render_template("personal_info.html", user=user_data)
-
-
 
 @app.route('/headsss-assessment', methods=['GET', 'POST'])
 def headsss():
@@ -1566,7 +1805,27 @@ def get_age_distribution():
     if not admin:
         return jsonify({"error": "Admin not found"}), 404
 
-    # Load region, province, city JSON
+    # Define center codes mapping
+    center_codes = {
+        "BHS Union AFHF": ("0837", "01"),
+        "RHU Mayorga": ("0837", "02"),
+        "Gandara AFHF": ("0860", "02"),
+        "RHU Gandara": ("0860", "03"),
+        "RHU Pagsanghan": ("0860", "04"),
+        "Abuyog District Hospital AFHF": ("0837", "04"),
+        "Gandara District Hospital AFHF": ("0860", "05")
+    }
+
+    center_name = admin.center_name  # Assuming `location` is the center name for the admin
+
+    # Fetch center information based on the center name
+    center_info = center_codes.get(center_name)
+    if not center_info:
+        return jsonify({"error": "Center not found"}), 404
+
+    province_code, city_code = center_info
+
+    # Load region, province, city JSON for mapping (we can use the same approach)
     json_files = {
         "region": "region.json",
         "province": "province.json",
@@ -1582,41 +1841,34 @@ def get_age_distribution():
     except (FileNotFoundError, json.JSONDecodeError) as e:
         return jsonify({"error": str(e)}), 500
 
-    region_map = {item["region_code"]: item["region_name"] for item in json_data.get("region", [])}
-    province_map = {item["province_code"]: item["province_name"] for item in json_data.get("province", [])}
-    city_map = {item["city_code"]: item["city_name"] for item in json_data.get("city", [])}
+    # Get the year and month parameters from the request
+    year = request.args.get('year')
+    month = request.args.get('month')
 
-    admin_region = admin.region
-    admin_province = admin.province
-    admin_city = admin.city
+    # Start query with users who have a control number matching the center's province and city
+    query = db.session.query(User.age, User.sex, User.control_num).filter(
+        User.control_num.isnot(None),
+        User.control_num != '',
+        User.control_num.like(f"{province_code}-{city_code}-%")  # Filter by control number prefix
+    )
 
-    # Query users filtered by region, province, and city
-    users = db.session.query(User.age, User.sex) \
-        .filter(
-            User.control_num.isnot(None),
-            User.control_num != '',
-            or_(
-                func.lower(func.trim(User.region)) == func.lower(func.trim(admin_region)),
-                func.lower(func.trim(User.region)) == func.lower(region_map.get(admin_region, ''))
-            ),
-            or_(
-                func.lower(func.trim(User.province)) == func.lower(func.trim(admin_province)),
-                func.lower(func.trim(User.province)) == func.lower(province_map.get(admin_province, ''))
-            ),
-            or_(
-                func.lower(func.trim(User.city)) == func.lower(func.trim(admin_city)),
-                func.lower(func.trim(User.city)) == func.lower(city_map.get(admin_city, ''))
-            )
-        ).all()
+    # Apply optional filters for year and month
+    if year:
+        query = query.filter(extract('year', User.date) == int(year))
+    if month and month.lower() != 'all':
+        query = query.filter(extract('month', User.date) == int(month))
 
-    # Initialize age groups with zero counts to ensure chart always has data
+    # Fetch the users based on the query
+    users = query.all()
+
+    # Initialize age groups with zero counts
     age_groups = {
         "10-14": {"Male": 0, "Female": 0},
         "15-19": {"Male": 0, "Female": 0}
     }
 
-    # Count users in each age group and sex
-    for age, sex in users:
+    # Count users by age and sex
+    for age, sex, _ in users:
         if age is None or sex is None:
             continue
         sex = sex.capitalize()
@@ -1627,10 +1879,7 @@ def get_age_distribution():
         elif 15 <= age <= 19:
             age_groups["15-19"][sex] += 1
 
-    # Always return age_groups, even if empty (all zeros)
     return jsonify(age_groups)
-
-
 
 @app.route('/get_user_details', methods=['GET'])
 def get_user_details():
@@ -1787,6 +2036,41 @@ def get_summary1():
     except Exception as e:
         print(f"❌ Error fetching summary: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/upload_signature', methods=['POST'])
+def upload_signature():
+    if 'signature' not in request.files:
+        return jsonify({"error": "No signature file part"}), 400
+
+    file = request.files['signature']
+    user_id = request.form.get('user_id')
+
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    if not user_id:
+        return jsonify({"error": "user_id is required"}), 400
+
+    if not allowed_file(file.filename):
+        return jsonify({"error": "File type not allowed"}), 400
+
+    # Secure filename and add timestamp for uniqueness
+    timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S%f')
+    filename = secure_filename(f"{timestamp}_{file.filename}")
+
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(file_path)
+
+    # Save record to database
+    signature = Signature(
+        user_id=int(user_id),
+        filename=filename
+    )
+    db.session.add(signature)
+    db.session.commit()
+
+    return jsonify({"message": "Signature uploaded successfully", "filename": filename}), 200
 
 # Run App
 if __name__ == '__main__':

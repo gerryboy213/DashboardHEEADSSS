@@ -77,6 +77,64 @@
                 align-items: center;
             }
         }
+
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto; 
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            text-align: center;
+        }
+        
+        .modal-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .confirm-btn {
+            background-color: rgb(161, 12, 12);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .cancel-btn {
+            background-color: #ccc;
+            color: black;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .popup-message {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50; /* Green */
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 2000;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
     </style>
     
 </head>
@@ -138,7 +196,7 @@
             <div class="header bg-white p-15 between-flex">
                 <div class="search-container">
                     <i class="fas fa-search search-icon"></i>
-                    <input id="searchInput" class="search-box" type="search" placeholder="Search Control Number">
+                    <input id="searchInput" class="search-box" type="search" placeholder="Search ... ">
                     <div id="searchResults" class="search-results"></div>
                 </div>
                 <div class="user d-flex align-items-center">
@@ -150,11 +208,11 @@
                     </span>
                     
                     <!-- Notification Dropdown -->
-                    <div id="notification-dropdown" class="dropdown-menu">
+                    <div id="notification-dropdown" class="dropdown-menu-notif">
                         <strong>Notifications</strong>
                         <div id="notification-list" style=" overflow: hidden; margin-left:-200px; margin-top: 20px;"></div>
                         <div class="footer">
-                           <!-- <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a> -->
+                            <a href="{{ url_for('admin_list') }}">See All <i class="fa fa-angle-right"></i></a>
                         </div>
                     </div>
             
@@ -165,23 +223,7 @@
                         </div>
                     </div>
                     
-                    <!-- Dropdown Menu -->
-                    <div id="userDropdown" class="dropdown-menu">
-                        <ul>
-                            <li>
-                                <a href="{{ url_for('admin_profile') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
-                                    <i class="fas fa-user fa-fw"></i>
-                                    <span>Profile</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('admin_logout') }}" class="d-flex align-items-center font-14 p-10 rad-6 color-black">
-                                    <i class="fas fa-sign-out-alt fa-fw"></i>
-                                    <span>Logout</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+                   
                     
                 </div>
             </div>
@@ -276,11 +318,7 @@
                                 </i>
                                 {% endif %}
                             </td>
-
-                
-
-                        
-
+            
                                 <td>{{ user.control_num }}</td>
 
                                 <td>{{ user.first_name }} {{ user.middle_initial if user.middle_initial and '.' in user.middle_initial else (user.middle_initial + '.' if user.middle_initial else '') }} {{ user.last_name }}</td>
@@ -314,9 +352,25 @@
                                    <!-- <button onclick="editRecord('{{ user.id }}')" style="background: none; border: none; cursor: pointer;">
                                         <i class="fa-solid fa-file-pen" style="color: #28a745;"></i>
                                     </button> --> 
-                                    <button onclick="deleteRecord('{{ user.id }}')" style="background: none; border: none; cursor: pointer;">
+
+                                   <!-- Delete Button -->
+                                    <button onclick="openConfirmModal('{{ user.id }}')" style="background: none; border: none; cursor: pointer;">
                                         <i class="fa-solid fa-trash-can" style="color:rgb(161, 12, 12);"></i>
                                     </button>
+
+                                    <!-- Confirmation Modal -->
+                                    <div id="confirmModal" class="modal">
+                                        <div class="modal-content">
+                                            <p>Are you sure you want to delete this record?</p>
+                                            <div class="modal-buttons">
+                                                <button onclick="confirmDelete()" class="confirm-btn">Yes</button>
+                                                <button onclick="closeConfirmModal()" class="cancel-btn">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="successPopup" class="popup-message">Deleted successfully.</div>
+
                                 </td>
                             </tr>
                             {% endfor %}
@@ -371,9 +425,14 @@
             
                         notificationList.innerHTML = ""; // Clear previous notifications
             
-                        if (data.length === 0) {
+                        if (!data || data.length === 0) {
                             unreadCount.style.display = "none";
-                            notificationList.innerHTML = "<p>No new notifications.</p>";
+                            notificationList.innerHTML = `
+                                <div style="text-align: center; color: #888; font-size: 14px; padding-left: 180px; margin-bottom:20px">
+                                    <i class="fas fa-inbox" style="font-size: 20px; margin-bottom: 5px;"></i><br>
+                                    No new notifications
+                                </div>
+                            `;
                             return;
                         }
             
@@ -392,14 +451,32 @@
                             // Ensure notification contains `user_id`
                             notificationItem.dataset.userId = notification.user_id;
             
+                           // Determine icon and color based on urgency
+                            let iconClass = "fas fa-check-circle"; // default low urgency
+                            let iconColor = "#10b981"; // green
+
+                            if (notification.urgency === "high") {
+                                iconClass = "fas fa-exclamation-circle";
+                                iconColor = "#dc2626"; // red
+                            } else if (notification.urgency === "medium") {
+                                iconClass = "fas fa-exclamation-circle";
+                                iconColor = "#eab308"; // yellow
+                            }
+
                             notificationItem.innerHTML = `
-                           
-                            <div class="content">
-                                <span class="sender">${notification.sender}</span>
-                                <span class="message-preview">${notification.content}</span>
-                                <span class="time">${formatTime(notification.time)}</span>
-                            </div>
-                        `;
+                              <div class="content" style="display: flex; align-items: center; gap: 10px;">
+                                  <!-- Icon on the left side -->
+                                  <i class="${iconClass}" style="color: ${iconColor}; font-size: 16px;"></i>
+                                  
+                                  <div>
+                                      <span class="sender" style="font-weight: bold;">${notification.sender}</span><br>
+                                      <span class="message-preview">${notification.content}</span><br>
+                                      <span class="time">${formatTime(notification.time)}</span>
+                                  </div>
+                              </div>
+                          `;
+
+
             
                             // Redirect to view-client when clicked
                             notificationItem.addEventListener("click", function () {
@@ -442,7 +519,7 @@
             
 
         </script>
-
+        
         <script>
             document.addEventListener("DOMContentLoaded", function () {
                 const userDropdownToggle = document.getElementById("userDropdownToggle");
@@ -473,67 +550,68 @@
             }
             
             function deleteRecord(recordId) {
-                if (confirm("Are you sure you want to delete this record?")) {
-                    fetch(`/delete-user/${recordId}`, {
-                        method: "POST"
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert("Record deleted successfully.");
+                fetch(`/delete-user/${recordId}`, {
+                    method: "POST"
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccessPopup();
+                        setTimeout(() => {
                             location.reload();
-                        } else {
-                            alert("Error deleting record.");
-                        }
-                    })
-                    .catch(error => console.error("Error:", error));
-                }
+                        }, 1000); // wait 2 seconds before reload
+                    } else {
+                        alert("Error deleting record.");
+                    }
+                })
+                .catch(error => console.error("Error:", error));
             }
+            
+            function showSuccessPopup() {
+                const popup = document.getElementById("successPopup");
+                popup.style.display = "block";
+                setTimeout(() => {
+                    popup.style.display = "none";
+                }, 1500); // auto-hide after 1.5 seconds
+            }
+            
+            
             
         </script>
 
         <script>
             document.getElementById("searchInput").addEventListener("input", async function () {
-                let query = this.value.trim();
-                let searchResults = document.getElementById("searchResults");
-            
-                if (query === "") {
-                    searchResults.style.display = "none";
-                    return;
-                }
-            
-                try {
-                    let response = await fetch(`/search_control_num?q=${query}`);
-                    let data = await response.json();
-            
-                    searchResults.innerHTML = "";
-                    if (data.length === 0) {
-                        searchResults.innerHTML = "<div>No results found</div>";
-                    } else {
-                        data.forEach(user => {
-                            let div = document.createElement("div");
-                            div.textContent = user.control_num;
-                            div.onclick = () => window.location.href = `/view-client/${user.id}`;
-                            searchResults.appendChild(div);
-                        });
-                    }
-                    searchResults.style.display = "block";
-                } catch (error) {
-                    console.error("Error fetching search results:", error);
-                }
-            });
-            
-            // Hide results when clicking outside
-            document.addEventListener("click", function (e) {
-                let searchBox = document.getElementById("searchInput");
-                let searchResults = document.getElementById("searchResults");
-            
-                if (!searchBox.contains(e.target) && !searchResults.contains(e.target)) {
-                    searchResults.style.display = "none";
-                }
-            });
-            
-        </script>
+              let query = this.value.trim();
+              let searchResults = document.getElementById("searchResults");
+          
+              if (query === "") {
+                  searchResults.style.display = "none";
+                  return;
+              }
+          
+              try {
+                  let response = await fetch(`/search_control_num?q=${encodeURIComponent(query)}`);
+                  let data = await response.json();
+          
+                  searchResults.innerHTML = "";
+                  if (data.length === 0) {
+                      searchResults.innerHTML = "<div>No results found</div>";
+                  } else {
+                      data.forEach(user => {
+                          let div = document.createElement("div");
+                          div.textContent = `${user.control_num} - ${user.first_name} ${user.last_name}`;
+                          div.onclick = () => window.location.href = `/view-client/${user.id}`;
+                          searchResults.appendChild(div);
+                      });
+                  }
+                  searchResults.style.display = "block";
+              } catch (error) {
+                  console.error("Error fetching search results:", error);
+              }
+          });
+          
+              
+          </script>
 
         <script>
             function filterTable() {
@@ -589,7 +667,39 @@
                     .catch(error => console.error("Error:", error));
                 });
                 </script>
+           
                 
+                <script>
+                    let currentUserId = null;
+                    
+                    function openConfirmModal(userId) {
+                        currentUserId = userId;
+                        document.getElementById('confirmModal').style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                    }
+                    
+                    function closeConfirmModal() {
+                        document.getElementById('confirmModal').style.display = 'none';
+                        document.body.style.overflow = ''; 
+                        currentUserId = null;
+                    }
+                    
+                    function confirmDelete() {
+                        if (currentUserId) {
+                            deleteRecord(currentUserId);
+                            closeConfirmModal();
+                        }
+                    }
+                    
+                    // Optional: close modal if user clicks outside of it
+                    window.onclick = function(event) {
+                        const modal = document.getElementById('confirmModal');
+                        if (event.target === modal) {
+                            closeConfirmModal();
+                        }
+                    }
+                    </script>
+                    
 </body>
 
 </html>

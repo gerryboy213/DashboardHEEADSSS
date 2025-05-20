@@ -153,7 +153,7 @@
                         <strong>Notifications</strong>
                         <div id="notification-list" style=" overflow: hidden; margin-left:-200px; margin-top: 20px;"></div>
                         <div class="footer">
-                           <!-- <a href="{{ url_for('admin_messages') }}">See All Messages <i class="fa fa-angle-right"></i></a> -->
+                            <a href="{{ url_for('admin_list') }}">See All <i class="fa fa-angle-right"></i></a>
                         </div>
                     </div>
             
@@ -193,8 +193,8 @@
                 <div class="d-flex">
                     <div class="profile-info text-center p-20">
                         <img class="rad-half mb-10" src="{{ admin.profile_image or '/static/images/user.png' }}" alt="User">                        
-                        <p><strong>{{ admin.username }} </strong> </p>
-                        <P class="mt-10 color-grey">{{ admin.job }}</P>
+                        <p><strong>{{ admin.full_name }} </strong> </p>
+                        <P class="mt-10 color-grey">{{ admin.position }}</P>
                         <div class="level rad-6 bg-eee p-relative"></div>
                         <div class="rating mt-10 mb-10"> </div>
                         <a href="javascript:void(0)" onclick="openEditProfilePanel()" class="btn btn-primary mt-10">Edit Profile</a>
@@ -204,7 +204,7 @@
                             <h4 class="color-grey font-15 m-0 w-full">General Information</h4>
                             <div class="font-14">
                                 <span class="color-grey">Full Name:</span>
-                                <span class="color-black">{{ admin.username }}</span>
+                                <span class="color-black">{{ admin.full_name }}</span>
                             </div>
                             
 
@@ -377,9 +377,14 @@
         
                     notificationList.innerHTML = ""; // Clear previous notifications
         
-                    if (data.length === 0) {
+                    if (!data || data.length === 0) {
                         unreadCount.style.display = "none";
-                        notificationList.innerHTML = "<p>No new notifications.</p>";
+                        notificationList.innerHTML = `
+                            <div style="text-align: center; color: #888; font-size: 14px; padding-left: 180px; margin-bottom:20px">
+                                <i class="fas fa-inbox" style="font-size: 20px; margin-bottom: 5px;"></i><br>
+                                No new notifications
+                            </div>
+                        `;
                         return;
                     }
         
@@ -398,14 +403,32 @@
                         // Ensure notification contains `user_id`
                         notificationItem.dataset.userId = notification.user_id;
         
+                       // Determine icon and color based on urgency
+                        let iconClass = "fas fa-check-circle"; // default low urgency
+                        let iconColor = "#10b981"; // green
+
+                        if (notification.urgency === "high") {
+                            iconClass = "fas fa-exclamation-circle";
+                            iconColor = "#dc2626"; // red
+                        } else if (notification.urgency === "medium") {
+                            iconClass = "fas fa-exclamation-circle";
+                            iconColor = "#eab308"; // yellow
+                        }
+
                         notificationItem.innerHTML = `
-                       
-                        <div class="content">
-                            <span class="sender">${notification.sender}</span>
-                            <span class="message-preview">${notification.content}</span>
-                            <span class="time">${formatTime(notification.time)}</span>
-                        </div>
-                    `;
+                          <div class="content" style="display: flex; align-items: center; gap: 10px;">
+                              <!-- Icon on the left side -->
+                              <i class="${iconClass}" style="color: ${iconColor}; font-size: 16px;"></i>
+                              
+                              <div>
+                                  <span class="sender" style="font-weight: bold;">${notification.sender}</span><br>
+                                  <span class="message-preview">${notification.content}</span><br>
+                                  <span class="time">${formatTime(notification.time)}</span>
+                              </div>
+                          </div>
+                      `;
+
+
         
                         // Redirect to view-client when clicked
                         notificationItem.addEventListener("click", function () {
@@ -448,6 +471,7 @@
         
 
     </script>
+    
     
 
         <script>

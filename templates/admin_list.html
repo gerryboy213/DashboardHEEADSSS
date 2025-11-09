@@ -294,7 +294,7 @@
                         <thead>
                             <tr>
                                 <td>Urgency</td>
-                                <td>Control Number</td>
+                                <td>Client Number</td>
                                 <td>Name</td>
                               <!--  <td>Contact Number</td> -->
                                 <td>Date of First Visit</td>
@@ -328,7 +328,7 @@
                                     {% set user_date = user_date | datetimeformat('%Y-%m-%d') %}
                                 {% endif %} 
                                 
-                                <td>{{ user_date.strftime('%m/%d/%Y') if user_date else 'N/A' }}</td>
+                                <td>{{ user_date | datetimeformat('%m/%d/%Y') }}</td>
                                 
                                 <td>
                                     {% if user.id in user_progress and user_progress[user.id] %}
@@ -669,36 +669,74 @@
                 </script>
            
                 
-                <script>
-                    let currentUserId = null;
-                    
-                    function openConfirmModal(userId) {
-                        currentUserId = userId;
-                        document.getElementById('confirmModal').style.display = 'block';
-                        document.body.style.overflow = 'hidden';
+               <script>
+    let currentUserId = null;
+
+    function openConfirmModal(userId) {
+        currentUserId = userId;
+        document.getElementById('confirmModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeConfirmModal() {
+        document.getElementById('confirmModal').style.display = 'none';
+        document.body.style.overflow = '';
+        currentUserId = null;
+    }
+
+    function confirmDelete() {
+        if (currentUserId) {
+            deleteRecord(currentUserId)
+                .then(success => {
+                    if (success) {
+                        closeConfirmModal();
+                    } else {
+                        alert("Failed to delete record.");
                     }
-                    
-                    function closeConfirmModal() {
-                        document.getElementById('confirmModal').style.display = 'none';
-                        document.body.style.overflow = ''; 
-                        currentUserId = null;
-                    }
-                    
-                    function confirmDelete() {
-                        if (currentUserId) {
-                            deleteRecord(currentUserId);
-                            closeConfirmModal();
-                        }
-                    }
-                    
-                    // Optional: close modal if user clicks outside of it
-                    window.onclick = function(event) {
-                        const modal = document.getElementById('confirmModal');
-                        if (event.target === modal) {
-                            closeConfirmModal();
-                        }
-                    }
-                    </script>
+                });
+        }
+    }
+
+    async function deleteRecord(userId) {
+        try {
+            const response = await fetch(`/delete-user/${userId}`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccessPopup();
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+                return true;
+            } else {
+                alert(data.error || "Error deleting record.");
+                return false;
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("An unexpected error occurred.");
+            return false;
+        }
+    }
+
+    function showSuccessPopup() {
+        const popup = document.getElementById("successPopup");
+        popup.style.display = "block";
+        setTimeout(() => {
+            popup.style.display = "none";
+        }, 1500);
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+        const modal = document.getElementById('confirmModal');
+        if (event.target === modal) {
+            closeConfirmModal();
+        }
+    }
+</script>
+
                     
 </body>
 

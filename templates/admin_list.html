@@ -328,7 +328,7 @@
                                     {% set user_date = user_date | datetimeformat('%Y-%m-%d') %}
                                 {% endif %} 
                                 
-                                <td>{{ user_date | datetimeformat('%m/%d/%Y') }}</td>
+                                <td>{{ user_date.strftime('%m/%d/%Y') if user_date else 'N/A' }}</td>
                                 
                                 <td>
                                     {% if user.id in user_progress and user_progress[user.id] %}

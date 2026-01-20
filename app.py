@@ -26,7 +26,7 @@ app.config['MYSQL_DB'] = 'heeadsss_db'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'  # Add this to fetch results as dictionaries
 
 # Database Configuration (Update your MySQL credentials)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@localhost/mayorga_form_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@localhost/form_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -201,13 +201,16 @@ def get_yes_no_distribution():
 
     # Define center codes mapping
     center_codes = {
-        "BHS Union AFHF": ("0837", "01"),
-        "RHU Mayorga": ("0837", "02"),
-        "Gandara AFHF": ("0860", "02"),
-        "RHU Gandara": ("0860", "03"),
-        "RHU Pagsanghan": ("0860", "04"),
-        "Abuyog DH AFHF": ("0837", "04"),
-        "Gandara DH AFHF": ("0860", "05")
+        "Gandara AFHF/RHU": ("0860", "01"),
+        "Pagsanghan AFHF/RHU": ("0860", "02"),
+        "Matuguinao AFHF/RHU": ("0860", "03"),
+        "Gandara District Hospital": ("0860", "04"),
+        "BHS Union AFHF": ("0837", "05"),
+        "Mayorga AFHF/RHU": ("0837", "06"),
+        "MacArthur AFHF/RHU": ("0837", "07"),
+        "Javier AFHF/RHU": ("0837", "08"),
+        "Abuyog AFHF/RHU": ("0837", "09"),
+        "Abuyog District Hospital": ("0837", "10")
     }
 
     center_name = admin.center_name
@@ -361,13 +364,16 @@ def admin_login():
 
             # Determine source from center_name
             center_source_map = {
+                "Gandara AFHF/RHU": "rhu",
+                "Pagsanghan AFHF/RHU": "rhu",
+                "Matuguinao AFHF/RHU": "rhu",
+                "Gandara District Hospital": "hospital",
                 "BHS Union AFHF": "brgy",
-                "RHU Mayorga": "rhu",
-                "Gandara AFHF": "hospital",
-                "RHU Gandara": "rhu",
-                "RHU Pagsanghan": "rhu",
-                "Abuyog DH AFHF": "hospital",
-                "Gandara DH AFHF": "hospital"
+                "Mayorga AFHF/RHU": "rhu",
+                "MacArthur AFHF/RHU": "rhu",
+                "Javier AFHF/RHU": "rhu",
+                "Abuyog AFHF/RHU": "rhu",
+                "Abuyog District Hospital": "hospital"
             }
 
             session['source'] = center_source_map.get(admin_data.center_name, 'unknown')
@@ -395,13 +401,16 @@ def get_grouped_counts_by_question(question_number, start_date, end_date, admin)
 
     # Define the center codes mapping
     center_codes = {
-        "BHS Union AFHF": ("0837", "01"),
-        "RHU Mayorga": ("0837", "02"),
-        "Gandara AFHF": ("0860", "02"),
-        "RHU Gandara": ("0860", "03"),
-        "RHU Pagsanghan": ("0860", "04"),
-        "Abuyog DH AFHF": ("0837", "04"),
-        "Gandara DH AFHF": ("0860", "05")
+        "Gandara AFHF/RHU": ("0860", "01"),
+        "Pagsanghan AFHF/RHU": ("0860", "02"),
+        "Matuguinao AFHF/RHU": ("0860", "03"),
+        "Gandara District Hospital": ("0860", "04"),
+        "BHS Union AFHF": ("0837", "05"),
+        "Mayorga AFHF/RHU": ("0837", "06"),
+        "MacArthur AFHF/RHU": ("0837", "07"),
+        "Javier AFHF/RHU": ("0837", "08"),
+        "Abuyog AFHF/RHU": ("0837", "09"),
+        "Abuyog District Hospital": ("0837", "10")
     }
 
     # Get the province and city codes from the admin's center
@@ -850,23 +859,29 @@ def admin_list():
 
     # Center code and source mapping
     center_codes = {
-        "BHS Union AFHF": ("0837", "01"),
-        "RHU Mayorga": ("0837", "02"),
-        "Gandara AFHF": ("0860", "02"),
-        "RHU Gandara": ("0860", "03"),
-        "RHU Pagsanghan": ("0860", "04"),
-        "Abuyog DH AFHF": ("0837", "04"),
-        "Gandara DH AFHF": ("0860", "05")
+        "Gandara AFHF/RHU": ("0860", "01"),
+        "Pagsanghan AFHF/RHU": ("0860", "02"),
+        "Matuguinao AFHF/RHU": ("0860", "03"),
+        "Gandara District Hospital": ("0860", "04"),
+        "BHS Union AFHF": ("0837", "05"),
+        "Mayorga AFHF/RHU": ("0837", "06"),
+        "MacArthur AFHF/RHU": ("0837", "07"),
+        "Javier AFHF/RHU": ("0837", "08"),
+        "Abuyog AFHF/RHU": ("0837", "09"),
+        "Abuyog District Hospital": ("0837", "10")
     }
 
     center_source_map = {
+        "Gandara AFHF/RHU": "rhu",
+        "Pagsanghan AFHF/RHU": "rhu",
+        "Matuguinao AFHF/RHU": "rhu",
+        "Gandara District Hospital": "hospital",
         "BHS Union AFHF": "brgy",
-        "RHU Mayorga": "rhu",
-        "Gandara AFHF": "hospital",
-        "RHU Gandara": "rhu",
-        "RHU Pagsanghan": "rhu",
-        "Abuyog DH AFHF": "hospital",
-        "Gandara DH AFHF": "hospital"
+        "Mayorga AFHF/RHU": "rhu",
+        "MacArthur AFHF/RHU": "rhu",
+        "Javier AFHF/RHU": "rhu",
+        "Abuyog AFHF/RHU": "rhu",
+        "Abuyog District Hospital": "hospital"
     }
 
     center_info = center_codes.get(admin.center_name)
@@ -1295,23 +1310,25 @@ def save_services():
 
 
 center_codes = {
-        "BHS Union AFHF": ("0837", "01"),
-        "RHU Mayorga": ("0837", "02"),
-        "Gandara AFHF": ("0860", "02"),
-        "RHU Gandara": ("0860", "03"),
-        "RHU Pagsanghan": ("0860", "04"),
-        "Abuyog DH AFHF": ("0837", "04"),
-        "Gandara DH AFHF": ("0860", "05")
+    "Gandara AFHF/RHU": ("0860", "01"),
+    "Pagsanghan AFHF/RHU": ("0860", "02"),
+    "Matuguinao AFHF/RHU": ("0860", "03"),
+    "Gandara District Hospital": ("0860", "04"),
+    "BHS Union AFHF": ("0837", "05"),
+    "Mayorga AFHF/RHU": ("0837", "06"),
+    "MacArthur AFHF/RHU": ("0837", "07"),
+    "Javier AFHF/RHU": ("0837", "08"),
+    "Abuyog AFHF/RHU": ("0837", "09"),
+    "Abuyog District Hospital": ("0837", "10")
 }
 
 
 def determine_forwarding_chain(center_name):
     chains = {
-        "BHS Union AFHF": ["BHS Union AFHF", "RHU Mayorga", "Abuyog DH AFHF"],
-        "RHU Mayorga": ["RHU Mayorga", "Abuyog DH AFHF"],
-        "Gandara AFHF": ["Gandara AFHF", "RHU Gandara", "Gandara DH AFHF"],
-        "RHU Gandara": ["RHU Gandara", "Gandara DH AFHF"],
-        "RHU Pagsanghan": ["RHU Pagsanghan", "Gandara DH AFHF"]
+        "BHS Union AFHF": ["BHS Union AFHF", "Mayorga AFHF/RHU", "Abuyog District Hospital"],
+        "Mayorga AFHF/RHU": ["Mayorga AFHF/RHU", "Abuyog District Hospital"],
+        "Gandara AFHF/RHU": ["Gandara AFHF/RHU", "Gandara District Hospital"],
+        "Pagsanghan AFHF/RHU": ["Pagsanghan AFHF/RHU", "Gandara District Hospital"]
     }
     return chains.get(center_name, [])
 
@@ -1351,13 +1368,16 @@ def send_to_rhu():
 
     # ✅ Update visibility: Keep brgy if already visible
     center_source_map = {
+        "Gandara AFHF/RHU": "rhu",
+        "Pagsanghan AFHF/RHU": "rhu",
+        "Matuguinao AFHF/RHU": "rhu",
+        "Gandara District Hospital": "hospital",
         "BHS Union AFHF": "brgy",
-        "RHU Mayorga": "rhu",
-        "Gandara AFHF": "hospital",
-        "RHU Gandara": "rhu",
-        "RHU Pagsanghan": "rhu",
-        "Abuyog DH AFHF": "hospital",
-        "Gandara DH AFHF": "hospital"
+        "Mayorga AFHF/RHU": "rhu",
+        "MacArthur AFHF/RHU": "rhu",
+        "Javier AFHF/RHU": "rhu",
+        "Abuyog AFHF/RHU": "rhu",
+        "Abuyog District Hospital": "hospital"
     }
 
     center_source = center_source_map.get(next_center)
@@ -2054,13 +2074,16 @@ def get_age_distribution():
 
     # Define center codes mapping
     center_codes = {
-        "BHS Union AFHF": ("0837", "01"),
-        "RHU Mayorga": ("0837", "02"),
-        "Gandara AFHF": ("0860", "02"),
-        "RHU Gandara": ("0860", "03"),
-        "RHU Pagsanghan": ("0860", "04"),
-        "Abuyog DH AFHF": ("0837", "04"),
-        "Gandara DH AFHF": ("0860", "05")
+        "Gandara AFHF/RHU": ("0860", "01"),
+        "Pagsanghan AFHF/RHU": ("0860", "02"),
+        "Matuguinao AFHF/RHU": ("0860", "03"),
+        "Gandara District Hospital": ("0860", "04"),
+        "BHS Union AFHF": ("0837", "05"),
+        "Mayorga AFHF/RHU": ("0837", "06"),
+        "MacArthur AFHF/RHU": ("0837", "07"),
+        "Javier AFHF/RHU": ("0837", "08"),
+        "Abuyog AFHF/RHU": ("0837", "09"),
+        "Abuyog District Hospital": ("0837", "10")
     }
 
     center_name = admin.center_name  # Assuming `location` is the center name for the admin
@@ -2324,5 +2347,5 @@ def upload_signature():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()  # Create tables if they don't exist
-    app.run(host='0.0.0.0', port=8003, debug=True)
+    app.run(host='0.0.0.0', port=5005, debug=True)
 

@@ -201,16 +201,16 @@ def get_yes_no_distribution():
 
     # Define center codes mapping
     center_codes = {
-        "Gandara AFHF/RHU": ("0860", "01"),
-        "Pagsanghan AFHF/RHU": ("0860", "02"),
-        "Matuguinao AFHF/RHU": ("0860", "03"),
-        "Gandara District Hospital": ("0860", "04"),
-        "BHS Union AFHF": ("0837", "05"),
-        "Mayorga AFHF/RHU": ("0837", "06"),
-        "MacArthur AFHF/RHU": ("0837", "07"),
-        "Javier AFHF/RHU": ("0837", "08"),
-        "Abuyog AFHF/RHU": ("0837", "09"),
-        "Abuyog District Hospital": ("0837", "10")
+        "BHS Unizzon AFHF": ("0837", "01"),
+        "RHU Mayorga": ("0837", "02"),
+        "RHU Gandara": ("0860", "03"),
+        "RHU Pagsanghan": ("0860", "04"),
+        "Gandara DH AFHF": ("0860", "05"),
+        "Gandara AFHF": ("0860", "06"),
+        "Abuyog DH AFHF": ("0837", "07"),
+        "RHU Matuguinao": ("0860", "08"),
+        "RHU Javier": ("0837", "09"),
+        "RHU Abuyog": ("0837", "10")
     }
 
     center_name = admin.center_name
@@ -364,16 +364,16 @@ def admin_login():
 
             # Determine source from center_name
             center_source_map = {
-                "Gandara AFHF/RHU": "rhu",
-                "Pagsanghan AFHF/RHU": "rhu",
-                "Matuguinao AFHF/RHU": "rhu",
-                "Gandara District Hospital": "hospital",
                 "BHS Union AFHF": "brgy",
-                "Mayorga AFHF/RHU": "rhu",
-                "MacArthur AFHF/RHU": "rhu",
-                "Javier AFHF/RHU": "rhu",
-                "Abuyog AFHF/RHU": "rhu",
-                "Abuyog District Hospital": "hospital"
+                "RHU Mayorga": "rhu",
+                "Gandara AFHF": "hospital",
+                "RHU Gandara": "rhu",
+                "RHU Pagsanghan": "rhu",
+                "Abuyog DH AFHF": "hospital",
+                "Gandara DH AFHF": "hospital",
+                "RHU Matuguinao": "rhu",
+                "RHU Javier": "rhu",
+                "RHU Abuyog": "rhu"
             }
 
             session['source'] = center_source_map.get(admin_data.center_name, 'unknown')
@@ -401,16 +401,27 @@ def get_grouped_counts_by_question(question_number, start_date, end_date, admin)
 
     # Define the center codes mapping
     center_codes = {
-        "Gandara AFHF/RHU": ("0860", "01"),
-        "Pagsanghan AFHF/RHU": ("0860", "02"),
-        "Matuguinao AFHF/RHU": ("0860", "03"),
-        "Gandara District Hospital": ("0860", "04"),
-        "BHS Union AFHF": ("0837", "05"),
-        "Mayorga AFHF/RHU": ("0837", "06"),
-        "MacArthur AFHF/RHU": ("0837", "07"),
-        "Javier AFHF/RHU": ("0837", "08"),
-        "Abuyog AFHF/RHU": ("0837", "09"),
-        "Abuyog District Hospital": ("0837", "10")
+        # "Gandazzra AFHF/RHU": ("0860", "01"),z   
+        # "Pagsanghan AFHF/RHU": ("0860", "02"),z
+        # "Matuguinao AFHF/RHU": ("0860", "03"),
+        # "Gandara District Hospital": ("0860", "04"),z
+        # "BHS Union AFHF": ("0837", "05"),z
+        # "Mayorga AFHF/RHU": ("0837", "06"),z
+        # "MacArthur AFHF/RHU": ("0837", "07"),
+        # "Javier AFHF/RHU": ("0837", "08"),
+        # "Abuyog AFHF/RHU": ("0837", "09"),
+        # "Abuyog District Hospital": ("0837", "10")z
+
+        "BHS Union AFHF": ("0837", "01"),
+        "RHU Mayorga": ("0837", "02"),
+        "RHU Gandara": ("0860", "03"),
+        "RHU Pagsanghan": ("0860", "04"),
+        "Gandara DH AFHF": ("0860", "05"),
+        "Gandara AFHF": ("0860", "06"),
+        "Abuyog DH AFHF": ("0837", "07"),
+        "RHU Matuguinao": ("0860", "08"),
+        "RHU Javier": ("0837", "09"),
+        "RHU Abuyog": ("0837", "10")
     }
 
     # Get the province and city codes from the admin's center
@@ -859,29 +870,40 @@ def admin_list():
 
     # Center code and source mapping
     center_codes = {
-        "Gandara AFHF/RHU": ("0860", "01"),
-        "Pagsanghan AFHF/RHU": ("0860", "02"),
-        "Matuguinao AFHF/RHU": ("0860", "03"),
-        "Gandara District Hospital": ("0860", "04"),
-        "BHS Union AFHF": ("0837", "05"),
-        "Mayorga AFHF/RHU": ("0837", "06"),
-        "MacArthur AFHF/RHU": ("0837", "07"),
-        "Javier AFHF/RHU": ("0837", "08"),
-        "Abuyog AFHF/RHU": ("0837", "09"),
-        "Abuyog District Hospital": ("0837", "10")
+        "BHS Union AFHF": ("0837", "01"),
+        "RHU Mayorga": ("0837", "02"),
+        "RHU Gandara": ("0860", "03"),
+        "RHU Pagsanghan": ("0860", "04"),
+        "Gandara DH AFHF": ("0860", "05"),
+        "Gandara AFHF": ("0860", "06"),
+        "Abuyog DH AFHF": ("0837", "07"),
+        "RHU Matuguinao": ("0860", "08"),
+        "RHU Javier": ("0837", "09"),
+        "RHU Abuyog": ("0837", "10")
     }
 
     center_source_map = {
-        "Gandara AFHF/RHU": "rhu",
-        "Pagsanghan AFHF/RHU": "rhu",
-        "Matuguinao AFHF/RHU": "rhu",
-        "Gandara District Hospital": "hospital",
+        # "Gandara AFHF/RHU": "rhu",z
+        # "Pagsanghan AFHF/RHU": "rhu",z
+        # "Matuguinao AFHF/RHU": "rhu",
+        # "Gandara District Hospital": "hospital",z
+        # "BHS Union AFHF": "brgy",z
+        # "Mayorga AFHF/RHU": "rhu",z
+        # "MacArthur AFHF/RHU": "rhu",
+        # "Javier AFHF/RHU": "rhu",
+        # "Abuyog AFHF/RHU": "rhu",
+        # "Abuyog District Hospital": "hospital"z
+
         "BHS Union AFHF": "brgy",
-        "Mayorga AFHF/RHU": "rhu",
-        "MacArthur AFHF/RHU": "rhu",
-        "Javier AFHF/RHU": "rhu",
-        "Abuyog AFHF/RHU": "rhu",
-        "Abuyog District Hospital": "hospital"
+        "RHU Mayorga": "rhu",
+        "Gandara AFHF": "hospital",
+        "RHU Gandara": "rhu",
+        "RHU Pagsanghan": "rhu",
+        "Abuyog DH AFHF": "hospital",
+        "Gandara DH AFHF": "hospital",
+        "RHU Matuguinao": "rhu",
+        "RHU Javier": "rhu",
+        "RHU Abuyog": "rhu"
     }
 
     center_info = center_codes.get(admin.center_name)
@@ -1310,16 +1332,16 @@ def save_services():
 
 
 center_codes = {
-    "Gandara AFHF/RHU": ("0860", "01"),
-    "Pagsanghan AFHF/RHU": ("0860", "02"),
-    "Matuguinao AFHF/RHU": ("0860", "03"),
-    "Gandara District Hospital": ("0860", "04"),
-    "BHS Union AFHF": ("0837", "05"),
-    "Mayorga AFHF/RHU": ("0837", "06"),
-    "MacArthur AFHF/RHU": ("0837", "07"),
-    "Javier AFHF/RHU": ("0837", "08"),
-    "Abuyog AFHF/RHU": ("0837", "09"),
-    "Abuyog District Hospital": ("0837", "10")
+    "BHS Union AFHF": ("0837", "01"),
+    "RHU Mayorga": ("0837", "02"),
+    "RHU Gandara": ("0860", "03"),
+    "RHU Pagsanghan": ("0860", "04"),
+    "Gandara DH AFHF": ("0860", "05"),
+    "Gandara AFHF": ("0860", "06"),
+    "Abuyog DH AFHF": ("0837", "07"),
+    "RHU Matuguinao": ("0860", "08"),
+    "RHU Javier": ("0837", "09"),
+    "RHU Abuyog": ("0837", "10")
 }
 
 
@@ -1368,16 +1390,16 @@ def send_to_rhu():
 
     # ✅ Update visibility: Keep brgy if already visible
     center_source_map = {
-        "Gandara AFHF/RHU": "rhu",
-        "Pagsanghan AFHF/RHU": "rhu",
-        "Matuguinao AFHF/RHU": "rhu",
-        "Gandara District Hospital": "hospital",
         "BHS Union AFHF": "brgy",
-        "Mayorga AFHF/RHU": "rhu",
-        "MacArthur AFHF/RHU": "rhu",
-        "Javier AFHF/RHU": "rhu",
-        "Abuyog AFHF/RHU": "rhu",
-        "Abuyog District Hospital": "hospital"
+        "RHU Mayorga": "rhu",
+        "Gandara AFHF": "hospital",
+        "RHU Gandara": "rhu",
+        "RHU Pagsanghan": "rhu",
+        "Abuyog DH AFHF": "hospital",
+        "Gandara DH AFHF": "hospital",
+        "RHU Matuguinao": "rhu",
+        "RHU Javier": "rhu",
+        "RHU Abuyog": "rhu"
     }
 
     center_source = center_source_map.get(next_center)
@@ -2074,16 +2096,16 @@ def get_age_distribution():
 
     # Define center codes mapping
     center_codes = {
-        "Gandara AFHF/RHU": ("0860", "01"),
-        "Pagsanghan AFHF/RHU": ("0860", "02"),
-        "Matuguinao AFHF/RHU": ("0860", "03"),
-        "Gandara District Hospital": ("0860", "04"),
-        "BHS Union AFHF": ("0837", "05"),
-        "Mayorga AFHF/RHU": ("0837", "06"),
-        "MacArthur AFHF/RHU": ("0837", "07"),
-        "Javier AFHF/RHU": ("0837", "08"),
-        "Abuyog AFHF/RHU": ("0837", "09"),
-        "Abuyog District Hospital": ("0837", "10")
+        "BHS Union AFHF": ("0837", "01"),
+        "RHU Mayorga": ("0837", "02"),
+        "RHU Gandara": ("0860", "03"),
+        "RHU Pagsanghan": ("0860", "04"),
+        "Gandara DH AFHF": ("0860", "05"),
+        "Gandara AFHF": ("0860", "06"),
+        "Abuyog DH AFHF": ("0837", "07"),
+        "RHU Matuguinao": ("0860", "08"),
+        "RHU Javier": ("0837", "09"),
+        "RHU Abuyog": ("0837", "10")
     }
 
     center_name = admin.center_name  # Assuming `location` is the center name for the admin

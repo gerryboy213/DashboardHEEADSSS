@@ -210,7 +210,8 @@ def get_yes_no_distribution():
         "Abuyog DH AFHF": ("0837", "07"),
         "RHU Matuguinao": ("0860", "08"),
         "RHU Javier": ("0837", "09"),
-        "RHU Abuyog": ("0837", "10")
+        "RHU Abuyog": ("0837", "10"),
+        "RHU San Jorge": ("0860", "11")
     }
 
     center_name = admin.center_name
@@ -421,7 +422,8 @@ def get_grouped_counts_by_question(question_number, start_date, end_date, admin)
         "Abuyog DH AFHF": ("0837", "07"),
         "RHU Matuguinao": ("0860", "08"),
         "RHU Javier": ("0837", "09"),
-        "RHU Abuyog": ("0837", "10")
+        "RHU Abuyog": ("0837", "10"),
+        "RHU San Jorge": ("0860", "11")
     }
 
     # Get the province and city codes from the admin's center
@@ -879,7 +881,8 @@ def admin_list():
         "Abuyog DH AFHF": ("0837", "07"),
         "RHU Matuguinao": ("0860", "08"),
         "RHU Javier": ("0837", "09"),
-        "RHU Abuyog": ("0837", "10")
+        "RHU Abuyog": ("0837", "10"),
+        "RHU San Jorge": ("0860", "11")
     }
 
     center_source_map = {
@@ -1341,7 +1344,8 @@ center_codes = {
     "Abuyog DH AFHF": ("0837", "07"),
     "RHU Matuguinao": ("0860", "08"),
     "RHU Javier": ("0837", "09"),
-    "RHU Abuyog": ("0837", "10")
+    "RHU Abuyog": ("0837", "10"),
+    "RHU San Jorge": ("0860", "11")
 }
 
 
@@ -2105,7 +2109,8 @@ def get_age_distribution():
         "Abuyog DH AFHF": ("0837", "07"),
         "RHU Matuguinao": ("0860", "08"),
         "RHU Javier": ("0837", "09"),
-        "RHU Abuyog": ("0837", "10")
+        "RHU Abuyog": ("0837", "10"),
+        "RHU San Jorge": ("0860", "11")
     }
 
     center_name = admin.center_name  # Assuming `location` is the center name for the admin

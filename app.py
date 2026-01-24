@@ -374,7 +374,8 @@ def admin_login():
                 "Gandara DH AFHF": "hospital",
                 "RHU Matuguinao": "rhu",
                 "RHU Javier": "rhu",
-                "RHU Abuyog": "rhu"
+                "RHU Abuyog": "rhu",
+                "RHU San Jorge": "rhu"
             }
 
             session['source'] = center_source_map.get(admin_data.center_name, 'unknown')
@@ -906,7 +907,8 @@ def admin_list():
         "Gandara DH AFHF": "hospital",
         "RHU Matuguinao": "rhu",
         "RHU Javier": "rhu",
-        "RHU Abuyog": "rhu"
+        "RHU Abuyog": "rhu",
+        "RHU San Jorge": "rhu"
     }
 
     center_info = center_codes.get(admin.center_name)
@@ -1403,7 +1405,8 @@ def send_to_rhu():
         "Gandara DH AFHF": "hospital",
         "RHU Matuguinao": "rhu",
         "RHU Javier": "rhu",
-        "RHU Abuyog": "rhu"
+        "RHU Abuyog": "rhu",
+        "RHU San Jorge": "rhu"
     }
 
     center_source = center_source_map.get(next_center)

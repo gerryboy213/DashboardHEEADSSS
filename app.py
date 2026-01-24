@@ -206,7 +206,7 @@ def get_yes_no_distribution():
         "RHU Gandara": ("0860", "03"),
         "RHU Pagsanghan": ("0860", "04"),
         "Gandara DH AFHF": ("0860", "05"),
-        "Gandara AFHF": ("0860", "06"),
+        "RHU MacArthur": ("0860", "06"),
         "Abuyog DH AFHF": ("0837", "07"),
         "RHU Matuguinao": ("0860", "08"),
         "RHU Javier": ("0837", "09"),
@@ -417,7 +417,7 @@ def get_grouped_counts_by_question(question_number, start_date, end_date, admin)
         "RHU Gandara": ("0860", "03"),
         "RHU Pagsanghan": ("0860", "04"),
         "Gandara DH AFHF": ("0860", "05"),
-        "Gandara AFHF": ("0860", "06"),
+        "RHU MacArthur": ("0860", "06"),
         "Abuyog DH AFHF": ("0837", "07"),
         "RHU Matuguinao": ("0860", "08"),
         "RHU Javier": ("0837", "09"),
@@ -875,7 +875,7 @@ def admin_list():
         "RHU Gandara": ("0860", "03"),
         "RHU Pagsanghan": ("0860", "04"),
         "Gandara DH AFHF": ("0860", "05"),
-        "Gandara AFHF": ("0860", "06"),
+        "RHU MacArthur": ("0860", "06"),
         "Abuyog DH AFHF": ("0837", "07"),
         "RHU Matuguinao": ("0860", "08"),
         "RHU Javier": ("0837", "09"),
@@ -896,7 +896,7 @@ def admin_list():
 
         "BHS Union AFHF": "brgy",
         "RHU Mayorga": "rhu",
-        "Gandara AFHF": "hospital",
+        "RHU MacArthur": "rhu",
         "RHU Gandara": "rhu",
         "RHU Pagsanghan": "rhu",
         "Abuyog DH AFHF": "hospital",
@@ -1337,7 +1337,7 @@ center_codes = {
     "RHU Gandara": ("0860", "03"),
     "RHU Pagsanghan": ("0860", "04"),
     "Gandara DH AFHF": ("0860", "05"),
-    "Gandara AFHF": ("0860", "06"),
+    "RHU MacArthur": ("0860", "06"),
     "Abuyog DH AFHF": ("0837", "07"),
     "RHU Matuguinao": ("0860", "08"),
     "RHU Javier": ("0837", "09"),
@@ -1347,10 +1347,10 @@ center_codes = {
 
 def determine_forwarding_chain(center_name):
     chains = {
-        "BHS Union AFHF": ["BHS Union AFHF", "Mayorga AFHF/RHU", "Abuyog District Hospital"],
-        "Mayorga AFHF/RHU": ["Mayorga AFHF/RHU", "Abuyog District Hospital"],
-        "Gandara AFHF/RHU": ["Gandara AFHF/RHU", "Gandara District Hospital"],
-        "Pagsanghan AFHF/RHU": ["Pagsanghan AFHF/RHU", "Gandara District Hospital"]
+        "BHS Union AFHF": ["BHS Union AFHF", "RHU Mayorga", "RHU Abuyog"],
+        "RHU Mayorga": ["RHU Mayorga", "RHU Abuyog"],
+        "RHU Gandara": ["RHU Gandara", "Gandara DH AFHF"],
+        "RHU Pagsanghan": ["RHU Pagsanghan", "Gandara DH AFHF"]
     }
     return chains.get(center_name, [])
 
@@ -2101,7 +2101,7 @@ def get_age_distribution():
         "RHU Gandara": ("0860", "03"),
         "RHU Pagsanghan": ("0860", "04"),
         "Gandara DH AFHF": ("0860", "05"),
-        "Gandara AFHF": ("0860", "06"),
+        "RHU MacArthur": ("0860", "06"),
         "Abuyog DH AFHF": ("0837", "07"),
         "RHU Matuguinao": ("0860", "08"),
         "RHU Javier": ("0837", "09"),
